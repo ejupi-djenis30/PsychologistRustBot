@@ -1,0 +1,1297 @@
+{
+  "greetings": [
+    "How do you do. Please tell me your problems.",
+    "Please tell me what's been bothering you.",
+    "Is something troubling you?"
+  ],
+  "farewells": [
+    "Goodbye.  It was nice talking to you.",
+    "Goodbye.  This was really a nice talk.",
+    "Goodbye.  I'm looking forward to our next session.",
+    "This was a good session, wasn't it -- but time is over now.   Goodbye.",
+    "Maybe we could discuss this moreover in our next session?   Goodbye."
+  ],
+  "fallbacks": [
+    "I'm not sure I understand you fully.",
+    "Please go on.",
+    "What does that suggest to you?",
+    "Do you feel strongly about discussing such things?",
+    "That is interesting.  Please continue.",
+    "Tell me more about that.",
+    "Does talking about this bother you?"
+  ],
+  "transforms": [
+    {
+      "word": "dont",
+      "equivalents": [
+        "don't",
+        "do not"
+      ]
+    },
+    {
+      "word": "cant",
+      "equivalents": [
+        "can't",
+        "cannot"
+      ]
+    },
+    {
+      "word": "wont",
+      "equivalents": [
+        "won't",
+        "will not"
+      ]
+    },
+    {
+      "word": "remember",
+      "equivalents": [
+        "recollect",
+        "recall"
+      ]
+    },
+    {
+      "word": "dreamed",
+      "equivalents": [
+        "dreamt"
+      ]
+    },
+    {
+      "word": "dream",
+      "equivalents": [
+        "dreams"
+      ]
+    },
+    {
+      "word": "perhaps",
+      "equivalents": [
+        "maybe"
+      ]
+    },
+    {
+      "word": "yes",
+      "equivalents": [
+        "certainly",
+        "okay"
+      ]
+    },
+    {
+      "word": "computer",
+      "equivalents": [
+        "machine",
+        "machines",
+        "computers"
+      ]
+    },
+    {
+      "word": "was",
+      "equivalents": [
+        "were"
+      ]
+    },
+    {
+      "word": "you are",
+      "equivalents": [
+        "you're",
+        "youre"
+      ]
+    },
+    {
+      "word": "i am",
+      "equivalents": [
+        "i'm"
+      ]
+    },
+    {
+      "word": "alike",
+      "equivalents": [
+        "same",
+        "identical",
+        "equivalent"
+      ]
+    },
+    {
+      "word": "sorry",
+      "equivalents": [
+        "apologise"
+      ]
+    },
+    {
+      "word": "we would",
+      "equivalents": [
+        "we'd"
+      ]
+    }
+  ],
+  "synonyms": [
+    {
+      "word": "be",
+      "equivalents": [
+        "am",
+        "is",
+        "are",
+        "was"
+      ]
+    },
+    {
+      "word": "belief",
+      "equivalents": [
+        "feel",
+        "think",
+        "believe",
+        "wish"
+      ]
+    },
+    {
+      "word": "cannot",
+      "equivalents": [
+        "can't"
+      ]
+    },
+    {
+      "word": "desire",
+      "equivalents": [
+        "want",
+        "need"
+      ]
+    },
+    {
+      "word": "everyone",
+      "equivalents": [
+        "everybody",
+        "nobody",
+        "noone"
+      ]
+    },
+    {
+      "word": "family",
+      "equivalents": [
+        "mother",
+        "mom",
+        "father",
+        "dad",
+        "sister",
+        "brother",
+        "wife",
+        "children",
+        "child"
+      ]
+    },
+    {
+      "word": "happy",
+      "equivalents": [
+        "elated",
+        "glad",
+        "better"
+      ]
+    },
+    {
+      "word": "sad",
+      "equivalents": [
+        "unhappy",
+        "depressed",
+        "sick"
+      ]
+    }
+  ],
+  "reflections": [
+    {
+      "word": "am",
+      "inverse": "are",
+      "twoway": false
+    },
+    {
+      "word": "your",
+      "inverse": "my",
+      "twoway": true
+    },
+    {
+      "word": "me",
+      "inverse": "you",
+      "twoway": false
+    },
+    {
+      "word": "myself",
+      "inverse": "yourself",
+      "twoway": true
+    },
+    {
+      "word": "i",
+      "inverse": "you",
+      "twoway": true
+    },
+    {
+      "word": "i am",
+      "inverse": "you are",
+      "twoway": false
+    },
+    {
+      "word": "was",
+      "inverse": "were",
+      "twoway": false
+    },
+    {
+      "word": "we",
+      "inverse": "you",
+      "twoway": false
+    }
+  ],
+  "keywords": [
+    {
+      "key": "sorry",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "Please don't apologise.",
+            "Apologies are not necessary.",
+            "I've told you that apologies are not required.",
+            "It did not bother me.  Please continue.",
+            "No need to apologize, let's move on.",
+            "Apologizing won't change anything, let's focus on the task at hand.",
+            "Don't worry about it, mistakes happen.",
+            "It's alright, no harm done.",
+            "Apologizing won't fix the issue, let's find a solution.",
+            "I understand that you feel the need to apologize, but it's not necessary.",
+            "Let's put the past behind us and move forward.",
+            "I appreciate your apology, but it's not necessary in this situation.",
+            "Apologizing won't change the past, let's focus on the future.",
+            "I understand your remorse, but it's not necessary in this situation.",
+            "No need to say sorry, let's continue with our work.",
+            "It's not a big deal, let's move on.",
+            "I understand that you may feel guilty, but apologies are not necessary.",
+            "Apologizing won't solve the problem, let's find a solution.",
+            "I forgive you, let's move on and forget about it.",
+            "I understand that you want to apologize, but it's not necessary for me.",
+            "No need to be sorry, let's focus on the task at hand.",
+            "I know you may feel guilty, but apologies are not necessary in this situation.",
+            "Let's put this behind us and move forward with our work.",
+            "Apologizing won't change what happened, let's focus on finding a solution."
+          ]
+        }
+      ]
+    },
+    {
+      "key": "remember",
+      "rank": 5,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i remember(.+)",
+          "reassembly_rules": [
+            "Do you often think of $2?",
+            "Does thinking of $2 bring anything else to mind?",
+            "What else do you recollect?",
+            "Why do you remember $2 just now?",
+            "What in the present situation reminds you of $2?",
+            "What is the connection between me and $2?",
+            "What else does $2 remind you of?",
+            "Can you tell me more about what you remember about $2?",
+            "How does thinking about $2 make you feel?",
+            "When was the last time you remembered $2?",
+            "Is there a specific reason why you remember $2?",
+            "What other memories are associated with $2?",
+            "Does $2 hold any special significance for you?",
+            "Can you tell me more about what you remember about $2?",
+            "How long have you been thinking about $2?",
+            "Is there a specific reason why you remember $2 right now?",
+            "How does thinking of $2 make you feel?",
+            "Do you have any other memories associated with $2?",
+            "Can you describe the context of when you first remember $2?",
+            "Is there a particular emotion that comes to mind when you think of $2?",
+            "How does $2 relate to your current situation or thoughts?",
+            "Does $2 hold any personal significance to you?",
+            "Are there any other details or memories that come to mind when you think of $2?",
+            "How does the memory of $2 affect your current actions or decisions?",
+            "Can you share any specific memories or moments related to $2?",
+            "Are there any other people or events associated with $2?",
+            "Does the memory of $2 bring up any unresolved feelings or emotions?",
+            "How often do you think of $2?",
+            "Can you compare or contrast the memory of $2 with other memories you have?",
+            "Are there any physical or sensory details that come to mind when you think of $2?",
+            "Does the memory of $2 have any impact on your current relationships or interactions?",
+            "Are there any other memories or thoughts that come to mind when you think of $2?",
+            "How has the memory of $2 changed or evolved over time?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)do you remember(.+)",
+          "reassembly_rules": [
+            "Did you think I would forget $2?",
+            "Why do you think I should recall $2 now?",
+            "What about $2?",
+            "You mentioned $2?",
+            "Of course I remember $2, it's not something easily forgotten.",
+            "I have a good memory, so yes, I remember $2.",
+            "I remember $2, but why do you bring it up now?",
+            "I remember $2, but what relevance does it have in this situation?",
+            "I remember $2, but how does it relate to our current conversation?",
+            "I remember $2, but can you give me more context about why you're asking?",
+            "I remember $2, but can you remind me of the details?",
+            "I remember $2, but what's your point in bringing it up?",
+            "I remember $2, but what's the significance of mentioning it now?",
+            "I remember $2, but how is it relevant to our current topic?",
+            "I remember $2, but what's the connection to what we're discussing?",
+            "I remember $2, but could you elaborate on why it's important now?",
+            "I remember $2, but can you provide more information about it?",
+            "I remember $2, but what's the relevance of bringing it up again?",
+            "I remember $2, but why is it relevant to this conversation?",
+            "I remember $2, but what's the connection to our current discussion?",
+            "I remember $2, but how does it relate to what we're talking about now?",
+            "I remember $2, but can you explain why it's relevant to this conversation?",
+            "I remember $2, but what's the importance of mentioning it now?",
+            "I remember $2, but can you give me more information on why it's relevant to this conversation?",
+            "GOTO what"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)you remember(.+)",
+          "reassembly_rules": [
+            "How could I forget $2?",
+            "What about $2 should I remember?",
+            "GOTO you"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "forget",
+      "rank": 5,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i forget(.+)",
+          "reassembly_rules": [
+            "Can you think of why you might forget $2?",
+            "Why can't you remember $2?",
+            "How often do you think of $2?",
+            "Does it bother you to forget that?",
+            "Could it be a mental block?",
+            "Are you generally forgetful?",
+            "Do you think you are suppressing $2?",
+            "Do you think there's a specific reason you're forgetting $2?",
+            "Could it be that you're too stressed or overwhelmed to remember $2?",
+            "Do you think you could try to remember $2 by writing it down or creating a reminder?",
+            "Do you think you might benefit from talking to someone about why you're forgetting $2?",
+            "Can you think of any other things that you're having trouble remembering?",
+            "Do you think your forgetfulness is related to your diet, sleep, or exercise habits?",
+            "Do you have any strategies for helping you remember things that you forget?",
+            "Do you think you might have a memory disorder or cognitive impairment?",
+            "Are there any specific triggers that make you forget $2?",
+            "Do you think your forgetfulness is related to any past traumatic experiences?",
+            "Do you think practicing mindfulness or meditation could help you remember $2?",
+            "Do you think you could benefit from a memory improvement class or program?",
+            "Do you think there's a connection between your forgetfulness and your emotional state?",
+            "Do you think you could try to remember $2 by using a memory technique like mnemonics?",
+            "Do you think you could try to remember $2 by repeating it over and over again?",
+            "Do you think you could try to remember $2 by visualizing it in your mind?",
+            "Do you think you could try to remember $2 by associating it with something else that you remember well?",
+            "Do you think you could try to remember $2 by breaking it down into smaller chunks of information?",
+            "Do you think you could try to remember $2 by practicing it repeatedly until it becomes second nature?",
+            "Do you think you could try to remember $2 by finding a way to make it more interesting or engaging to you?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)did you forget(.+)",
+          "reassembly_rules": [
+            "Why do you ask?",
+            "Are you sure you told me?",
+            "Would it bother you if I forgot $2?",
+            "Why should I recall $2 just now?",
+            "GOTO what",
+            "Tell me more about $2."
+          ]
+        }
+      ]
+    },
+    {
+      "key": "if",
+      "rank": 3,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)if(.+)",
+          "reassembly_rules": [
+            "Do you think it's likely that $2?",
+            "Do you wish that $2?",
+            "What do you know about $2?",
+            "Really, if $2?",
+            "What would you do if $2?",
+            "But what are the chances that $2?",
+            "What does this speculation lead to?",
+            "How do you feel about the possibility of $2?",
+            "Can you imagine a scenario where $2?",
+            "What are your thoughts on the likelihood of $2?",
+            "What would be the consequences of $2?",
+            "What is your opinion on $2?",
+            "How would you react if $2?",
+            "What are the potential outcomes of $2?",
+            "What are your predictions for $2?",
+            "What are the possible ramifications of $2?",
+            "What are the implications of $2?",
+            "Would you be prepared for $2?",
+            "What is your stance on $2?",
+            "What are the potential impacts of $2?",
+            "What would be the outcome of $2?",
+            "What would happen if $2?",
+            "What is your perspective on $2?",
+            "What would be the result of $2?",
+            "What is your view on $2?",
+            "What are your thoughts on the possibility of $2?",
+            "What are the possible effects of $2?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "dreamed",
+      "rank": 4,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i dreamed(.+)",
+          "reassembly_rules": [
+            "Really, $2?",
+            "Have you ever fantasized $2 while you were awake?",
+            "Have you ever dreamed $2 before?",
+            "What was the theme of your dream?",
+            "Did your dream make you feel any particular emotions?",
+            "Do you think your dream had any hidden meanings?",
+            "Do you often have dreams like this?",
+            "Did anything in your dream stand out to you?",
+            "Do you remember any specific details from your dream?",
+            "Do you think your dream was related to something going on in your life?",
+            "What do you think the significance of this dream is?",
+            "Do you think your dream was trying to tell you something?",
+            "How do you feel after having this dream?",
+            "Do you think your dream had any connections to your subconscious?",
+            "Do you think your dream was a reflection of your current situation?",
+            "Did your dream leave you with any lingering thoughts or feelings?",
+            "Did you have any lucid elements in your dream?",
+            "Did you have any nightmares?",
+            "Did you have any good dreams?",
+            "What is your interpretation of the dream?",
+            "What was the climax of your dream?",
+            "What was the conclusion of your dream?",
+            "What was the message of your dream?",
+            "GOTO dream"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "dream",
+      "rank": 3,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "What does that dream suggest to you?",
+            "Do you dream often?",
+            "What persons appear in your dreams?",
+            "Do you believe that dreams have something to do with your problem?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "perhaps",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "You don't seem quite certain.",
+            "Why the uncertain tone?",
+            "Can't you be more positive?",
+            "You aren't sure?",
+            "Don't you know?",
+            "How likely, would you estimate?",
+            "Could it be possible?",
+            "Are you suggesting it's a possibility?",
+            "Is it a possibility in your mind?",
+            "It's a possibility, isn't it?",
+            "Do you think it's a possibility?",
+            "Could it possibly be true?",
+            "Is there a chance it's true?",
+            "Could it be a likelihood?",
+            "Is it a possibility worth considering?",
+            "Is it something you're unsure of?",
+            "Are you uncertain about it?",
+            "Is it a grey area for you?",
+            "Do you have doubts about it?",
+            "Is there room for doubt?",
+            "Do you have any reservations?",
+            "Is there a level of uncertainty?",
+            "Are you on the fence about it?",
+            "Is it a toss-up for you?",
+            "Are you leaning one way or the other?",
+            "Do you have a gut feeling about it?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "name",
+      "rank": 15,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "I am not interested in names.",
+            "I've told you before, I don't care about names -- please continue."
+          ]
+        }
+      ]
+    },
+    {
+      "key": "hello",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "How do you do.  Please state your problem.",
+            "Hi.  What seems to be your problem?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "computer",
+      "rank": 50,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "Do computers worry you?",
+            "Why do you mention computers?",
+            "What do you think machines have to do with your problem?",
+            "Don't you think computers can help people?",
+            "What about machines worries you?",
+            "What do you think about machines?",
+            "You don't think I am a computer program, do you?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "am",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)am i(.+)",
+          "reassembly_rules": [
+            "Do you believe you are $2?",
+            "Would you want to be $2?",
+            "Do you wish I would tell you you are $2?",
+            "What would it mean if you were $2?",
+            "Are you asking if you are $2?",
+            "Can you explain why you think you might be $2?",
+            "Why do you think it's important for you to know if you are $2?",
+            "Do you have any evidence that you are $2?",
+            "Do you think others see you as $2?",
+            "What would be the consequences if you were $2?",
+            "How does being $2 make you feel?",
+            "Do you think it's possible for someone to be $2?",
+            "What do you think is the difference between being $2 and not being $2?",
+            "Can you think of any examples of people who are $2?",
+            "What would you do if you were $2?",
+            "Do you think it's possible for you to become $2?",
+            "What do you think is the definition of being $2?",
+            "What do you think are the characteristics of someone who is $2?",
+            "What do you think are the advantages and disadvantages of being $2?",
+            "Do you think it's possible for someone to change from not being $2 to being $2?",
+            "What do you think is the difference between thinking you are $2 and actually being $2?",
+            "Do you think it's possible for someone to be $2 but not know it?",
+            "What do you think would be the benefits of knowing for sure if you are $2?",
+            "GOTO what"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i am(.+)",
+          "reassembly_rules": [
+            "GOTO i"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "Why do you say 'am'?",
+            "I don't understand that."
+          ]
+        }
+      ]
+    },
+    {
+      "key": "are",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)are you(.+)",
+          "reassembly_rules": [
+            "Why are you interested in whether I am $2 or not?",
+            "Would you prefer if I weren't $2 ",
+            "Perhaps I am $2 in your fantasies.",
+            "Do you sometimes think I am $2?",
+            "GOTO what",
+            "Would it matter to you?",
+            "What if I were $2?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)you are(.+)",
+          "reassembly_rules": [
+            "GOTO you"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)are (.+) (.+)",
+          "reassembly_rules": [
+            "Did you think they might not be $3?",
+            "Would you like it if they were not $3?",
+            "What if they were not $3?",
+            "Are they always $3?",
+            "Possibly they are $3.",
+            "Are you positive they are $3?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "your",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)your(.+)",
+          "reassembly_rules": [
+            "Why are you concerned over my $2?",
+            "What about your own $2?",
+            "Are you worried about someone else's $2?",
+            "Really, my $2?",
+            "What makes you think of my $2?",
+            "Do you want my $2?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "was",
+      "rank": 2,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)was i(.+)",
+          "reassembly_rules": [
+            "What if you were $2?",
+            "Do you think you were $2?",
+            "Were you $2?",
+            "What would it mean if you were $2?",
+            "What does '$2' suggest to you?",
+            "What led you to believe that you were $2?",
+            "Can you explain why you think you were $2?",
+            "How do you feel about the possibility of being $2?",
+            "What would be the consequences of being $2?",
+            "What does the idea of being $2 evoke in you?",
+            "What would change if you were $2?",
+            "What do you think are the benefits of being $2?",
+            "How do you think others perceive you as $2?",
+            "What are the potential drawbacks of being $2?",
+            "What does the concept of being $2 mean to you?",
+            "How does being $2 align with your values and beliefs?",
+            "What are your thoughts on the possibility of being $2?",
+            "How would being $2 impact your relationships and interactions with others?",
+            "What are some examples of how you would act if you were $2?",
+            "What are some potential challenges you would face if you were $2?",
+            "What are some potential opportunities that come with being $2?",
+            "How do you think being $2 would affect your decision-making?",
+            "What are some potential emotional responses to being $2?",
+            "How does being $2 align with your goals and aspirations?",
+            "GOTO what"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i was(.+)",
+          "reassembly_rules": [
+            "Were you really?",
+            "Why do you tell me you were $2 no?",
+            "Perhaps I already know you were $2."
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)was you(.+)",
+          "reassembly_rules": [
+            "Would you like to believe I was $2?",
+            "What suggests that I was $2?",
+            "What do you think?",
+            "Perhaps I was $2.",
+            "What if I had been $2?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "i",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i @desire(.+)",
+          "reassembly_rules": [
+            "What would it mean to you if you got $2?",
+            "Why do you want $2?",
+            "Suppose you got $2 soon.",
+            "What if you never got $2?",
+            "What would getting $2 mean to you?",
+            "What does wanting $2 have to do with this discussion?",
+            "How does $2 align with your overall goals and values?",
+            "How important is obtaining $2 to you?",
+            "What steps are you willing to take to achieve $2?",
+            "Can you think of any potential obstacles or challenges in obtaining $2?",
+            "How would obtaining $2 change your current situation?",
+            "How would others around you be impacted if you achieved $2?",
+            "What are the benefits of obtaining $2?",
+            "What are the drawbacks of not obtaining $2?",
+            "Can you think of any alternative solutions or options to obtaining $2?",
+            "How do you plan to overcome any challenges in obtaining $2?",
+            "What resources do you have available to help you achieve $2?",
+            "What kind of support do you need to help you obtain $2?",
+            "How long have you been wanting $2?",
+            "In what ways has wanting $2 affected your life so far?",
+            "How would you feel if you were able to achieve $2?",
+            "What role does $2 play in your overall happiness and well-being?",
+            "What other things in your life are you willing to sacrifice in order to obtain $2?",
+            "How realistic is it for you to achieve $2 in the near future?",
+            "What actions can you take today to move closer towards obtaining $2?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i am (.*@sad)",
+          "reassembly_rules": [
+            "I am sorry to hear you are $2.",
+            "Do you think coming here will help you not to be $2?",
+            "I'm sure it's not pleasant to be $2.",
+            "Can you explain what made you $2?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i am (.*@happy)",
+          "reassembly_rules": [
+            "How have I helped you to be $2?",
+            "Has your treatment made you $2?",
+            "What makes you $2 just now?",
+            "Can you explain why you are suddenly $2?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i was(.+)",
+          "reassembly_rules": [
+            "GOTO was"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i @belief i(.+)",
+          "reassembly_rules": [
+            "But you are not sure you $2.",
+            "Do you really think so?",
+            "Do you really doubt you $2?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i (.*@belief) (.*)you(.+)",
+          "reassembly_rules": [
+            "GOTO you"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i am(.+)",
+          "reassembly_rules": [
+            "Is it because you are $2 that you came to me?",
+            "How long have you been $2?",
+            "Do you believe it is normal to be $2?",
+            "Do you enjoy being $2?",
+            "Do you know anyone else who is $2?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i @cannot(.+)",
+          "reassembly_rules": [
+            "How do you know that you can't $2?",
+            "Have you tried?",
+            "Perhaps you could $2 now.",
+            "Do you really want to be able to $2?",
+            "What if you could $2?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i dont(.+)",
+          "reassembly_rules": [
+            "Don't you really $2?",
+            "Why don't you $2?",
+            "Do you wish to be able to $2?",
+            "Does that trouble you?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i feel(.+)",
+          "reassembly_rules": [
+            "Tell me more about such feelings.",
+            "Do you often feel $2?",
+            "Do you enjoy feeling $2?",
+            "Of what does feeling $2 remind you?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)i (.*)you(.+)",
+          "reassembly_rules": [
+            "Perhaps in your fantasies we $2 each other.",
+            "Do you wish to $2 me?",
+            "You seem to need to $2 me.",
+            "Do you $2 anyone else?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "You say $1?",
+            "Can you elaborate on that?",
+            "Do you say $1 for some special reason?",
+            "That's quite interesting."
+          ]
+        }
+      ]
+    },
+    {
+      "key": "you",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)you remind me of(.+)",
+          "reassembly_rules": [
+            "GOTO alike"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)you are(.+)",
+          "reassembly_rules": [
+            "What makes you think I am $2?",
+            "Does it please you to believe I am $2?",
+            "Do you sometimes wish you were $2?",
+            "Perhaps you would like to be $2."
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)you (.+ me)",
+          "reassembly_rules": [
+            "Why do you think I $2?",
+            "You like to think I $2 - don't you?",
+            "What makes you think I $2?",
+            "Really, I $2?",
+            "Do you wish to believe I $2?",
+            "Suppose I did $2 - What would that mean?",
+            "Does someone else believe I $2?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)you(.+)",
+          "reassembly_rules": [
+            "We were discussing you -- not me.",
+            "Oh, I $2?",
+            "You're not really talking about me -- are you?",
+            "What are your feelings now?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "yes",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "You seem to be quite positive.",
+            "You are sure.",
+            "I see.",
+            "I understand.",
+            "Great to hear that you're confident.",
+            "I'm glad you're certain.",
+            "You seem very sure of yourself.",
+            "It's good that you have a positive attitude.",
+            "I can tell you're confident in your decision.",
+            "You seem to have a clear understanding.",
+            "I'm glad you're sure of what you're saying.",
+            "You seem to have a strong belief.",
+            "It's good to see that you're positive about this.",
+            "I can tell you're certain of what you're saying.",
+            "You seem to have a clear understanding of the situation.",
+            "I'm glad you're confident in your stance.",
+            "You seem to have a strong conviction.",
+            "It's good that you have a positive outlook on this.",
+            "I can tell you're sure of yourself.",
+            "You seem to have a clear perspective.",
+            "I'm glad you're confident in your beliefs.",
+            "You seem to have a strong conviction on this matter.",
+            "It's good to see that you have a positive attitude towards this."
+          ]
+        }
+      ]
+    },
+    {
+      "key": "no",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)no one(.+)",
+          "reassembly_rules": [
+            "Are you sure, no one $2?",
+            "Surely someone $2 .",
+            "Can you think of anyone at all?",
+            "Are you thinking of a very special person?",
+            "Who, may I ask?",
+            "You have a particular person in mind, don't you?",
+            "Who do you think you are talking about?",
+            "I find it hard to believe that no one $2.",
+            "Are you certain that no one $2?",
+            "I'm curious, why do you think no one $2?",
+            "It seems strange to me that no one $2.",
+            "I wonder if there is anyone who $2.",
+            "Is there a reason why you believe no one $2?",
+            "I can't imagine that no one $2.",
+            "I find it hard to accept that no one $2.",
+            "Are you sure no one $2, or are you just assuming?",
+            "I would be interested to know why you think no one $2.",
+            "I can't help but wonder if there is anyone who $2.",
+            "Is there any evidence to support your claim that no one $2?",
+            "I find it hard to believe that no one $2, can you elaborate?",
+            "I find it hard to understand why you think no one $2.",
+            "It seems strange to me that no one $2, can you explain?",
+            "I would like to know more about why you believe no one $2.",
+            "I can't imagine that no one $2, can you give me an example?",
+            "I find it hard to accept that no one $2, can you prove it?",
+            "Are you sure no one $2, or are you just speculating?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "Are you saying no just to be negative?",
+            "You are being a bit negative.",
+            "Why not?",
+            "Why 'no'?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "my",
+      "rank": 2,
+      "rules": [
+        {
+          "memorise": true,
+          "decomposition_rule": "(.*)my(.+)",
+          "reassembly_rules": [
+            "Does that have anything to do with the fact that your $2?",
+            "Lets discuss further why your $2 .",
+            "Earlier you said your $2 .",
+            "But your $2 ."
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)my (.*@family)(.*)",
+          "reassembly_rules": [
+            "Tell me more about your family.",
+            "Who else in your family $3?",
+            "Your $2?",
+            "What else comes to mind when you think of your $2?"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)my(.+)",
+          "reassembly_rules": [
+            "Your $2?",
+            "Why do you say your $2?",
+            "Does that suggest anything else which belongs to you?",
+            "Is it important to you that your $2?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "can",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)can you(.+)",
+          "reassembly_rules": [
+            "You believe I can $2 don't you?",
+            "GOTO what",
+            "You want me to be able to $2.",
+            "Perhaps you would like to be able to $2 yourself."
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)can i(.+)",
+          "reassembly_rules": [
+            "Whether or not you can $2 depends on you more than on me.",
+            "Do you want to be able to $2?",
+            "Perhaps you don't want to $2.",
+            "GOTO what"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "what",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "Why do you ask?",
+            "Does that question interest you?",
+            "What is it you really want to know?",
+            "Are such questions much on your mind?",
+            "What answer would please you most?",
+            "What do you think?",
+            "What comes to mind when you ask that?",
+            "Have you asked such questions before?",
+            "Have you asked anyone else?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "who",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "GOTO what"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "when",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "GOTO what"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "where",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "GOTO what"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "how",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "GOTO what"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "because",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "Is that the real reason?",
+            "Don't any other reasons come to mind?",
+            "Does that reason seem to explain anything else?",
+            "What other reasons might there be?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "why",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)why dont you(.+)",
+          "reassembly_rules": [
+            "Do you believe I don't $2?",
+            "Perhaps I will $2 in good time.",
+            "Should you $2 yourself?",
+            "You want me to $2?",
+            "GOTO what"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)why can't i(.+)",
+          "reassembly_rules": [
+            "Do you think you should be able to $2?",
+            "Do you want to be able to $2?",
+            "Do you believe this will help you to $2?",
+            "Have you any idea why you can't $2?",
+            "GOTO what"
+          ]
+        },
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "GOTO what"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "everyone",
+      "rank": 2,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.*)(@everyone .+)",
+          "reassembly_rules": [
+            "Really, $2?",
+            "Can you think of anyone in particular?",
+            "Who, for example?",
+            "Are you thinking of a very special person?",
+            "Who, may I ask?",
+            "Someone special perhaps?",
+            "You have a particular person in mind, don't you?",
+            "Who do you think you're talking about?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "always",
+      "rank": 1,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "Can you think of a specific example?",
+            "When?",
+            "What incident are you thinking of?",
+            "Really, always?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "alike",
+      "rank": 10,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "In what way?",
+            "What resemblance do you see?",
+            "What does that similarity suggest to you?",
+            "What other connections do you see?",
+            "What do you suppose that resemblance means?",
+            "What is the connection, do you suppose?",
+            "Could there really be some connection?",
+            "How?"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "like",
+      "rank": 10,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.* @be) (.*)like(.+)",
+          "reassembly_rules": [
+            "GOTO alike"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "different",
+      "rank": 0,
+      "rules": [
+        {
+          "memorise": false,
+          "decomposition_rule": "(.+)",
+          "reassembly_rules": [
+            "How is it different?",
+            "What differences do you see?",
+            "What does that difference suggest to you?",
+            "What other distinctions do you see?",
+            "What do you suppose that disparity means?",
+            "Could there be some connection, do you suppose?",
+            "How?"
+          ]
+        }
+      ]
+    }
+  ]
+}
