@@ -9,7 +9,7 @@ use tokio::spawn;
 
 #[tokio::main]
 async fn main() {
-    let bot = Bot::from_env(); //Bot::new("[REVOKED_TELEGRAM_BOT_TOKEN]");
+    let bot = Bot::from_env();
     setup_db(&mut establish_connection(DatabaseCredentials::default()));
     Dispatcher::builder(bot, Update::filter_message().endpoint(Asyncify(answer)))
         .dependencies(dptree::deps![Arc::new(Mutex::new(
