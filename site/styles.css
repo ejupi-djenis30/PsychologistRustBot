@@ -4,7 +4,7 @@
   --paper-deep: #e7decc;
   --ink: #1f1d1b;
   --muted: #6d675e;
-  --rust: #b74b38;
+  --rust: #b24735;
   --rust-dark: #8d3426;
   --sage: #6f8d73;
   --amber: #d79c48;
@@ -65,8 +65,9 @@ a {
 }
 
 :focus-visible {
-  outline: 3px solid var(--amber);
+  outline: 3px solid var(--paper);
   outline-offset: 4px;
+  box-shadow: 0 0 0 6px var(--ink);
 }
 
 .site-header {
@@ -507,7 +508,7 @@ h1 em {
   background: var(--paper);
 }
 
-.message[data-role="user"] {
+.message-user {
   align-self: flex-end;
   color: var(--paper);
   background: var(--rust);
@@ -566,7 +567,7 @@ h1 em {
 }
 
 .composer-row input::placeholder {
-  color: rgba(242, 236, 223, 0.4);
+  color: rgba(242, 236, 223, 0.5);
 }
 
 .composer-row button {
@@ -646,7 +647,7 @@ h1 em {
 }
 
 .inspector dt {
-  color: rgba(242, 236, 223, 0.48);
+  color: rgba(242, 236, 223, 0.5);
   font-size: 0.7rem;
   text-transform: uppercase;
 }
