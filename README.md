@@ -47,7 +47,7 @@ cargo test --all
 src/lib.rs       pure rule engine and trace model
 src/main.rs      local CLI adapter
 site/            static explanatory interface for GitHub Pages
-config/          historical ELIZA rule corpus, retained as reference only
+site/tests/      browser-engine regression tests
 ```
 
 The production engine has no third-party runtime dependencies. It keeps only a turn counter in
