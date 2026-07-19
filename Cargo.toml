@@ -1,7 +1,8 @@
 [package]
 name = "eliza-lab"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
+rust-version = "1.81"
 description = "A transparent, local-only ELIZA conversation engine for learning how rule-based dialogue systems work."
 repository = "https://github.com/ejupi-djenis30/PsychologistRustBot"
 keywords = ["eliza", "dialogue", "education", "privacy"]
@@ -17,3 +18,8 @@ name = "eliza-lab"
 path = "src/main.rs"
 
 [dependencies]
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+strip = true

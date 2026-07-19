@@ -3,7 +3,24 @@
 //! The engine is intentionally local and deterministic. It keeps only a turn counter,
 //! never writes conversation content, and exposes the rule used for every response.
 
-const MAX_INPUT_CHARS: usize = 512;
+pub const MAX_INPUT_CHARS: usize = 512;
+
+const SAFETY_PHRASES: [&str; 14] = [
+    "suicide",
+    "suicidal",
+    "kill myself",
+    "end my life",
+    "take my life",
+    "hurt myself",
+    "harm myself",
+    "self harm",
+    "want to die",
+    "don't want to live",
+    "do not want to live",
+    "can't go on",
+    "cannot go on",
+    "immediate danger",
+];
 
 /// A response together with the rule trace shown by the learning interface.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,7 +48,7 @@ impl ElizaEngine {
     }
 
     pub fn respond(&mut self, input: &str) -> Reply {
-        self.turn += 1;
+        self.turn = self.turn.saturating_add(1);
         let turn = self.turn;
         let trimmed = input.trim();
 
@@ -45,7 +62,7 @@ impl ElizaEngine {
             );
         }
 
-        if trimmed.chars().count() > MAX_INPUT_CHARS {
+        if trimmed.chars().nth(MAX_INPUT_CHARS).is_some() {
             return reply(
                 "That is more text than this small teaching demo can inspect at once. Try one short thought.",
                 "input-boundary",
@@ -57,20 +74,14 @@ impl ElizaEngine {
 
         let normalized = normalize(trimmed);
 
-        if contains_any(
-            &normalized,
-            &[
-                "suicide",
-                "kill myself",
-                "self harm",
-                "hurt myself",
-                "immediate danger",
-            ],
-        ) {
+        if SAFETY_PHRASES
+            .iter()
+            .any(|phrase| contains_phrase(&normalized, phrase))
+        {
             return reply(
-                "This educational demo cannot help with urgent safety needs. If you may be in immediate danger, contact local emergency services or a trusted person now.",
+                "This demo cannot assess or support an emergency. If you might act on thoughts of suicide or self-harm, call your local emergency number now or reach a trusted person who can stay with you.",
                 "safety-boundary",
-                Some("urgent safety language"),
+                Some("matched safety phrase"),
                 None,
                 turn,
             );
@@ -167,28 +178,43 @@ fn reply(
 }
 
 fn normalize(value: &str) -> String {
-    value
-        .to_lowercase()
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ")
+    let lowercase = value
+        .chars()
+        .flat_map(char::to_lowercase)
+        .map(|character| match character {
+            '’' | '‘' => '\'',
+            _ => character,
+        })
+        .collect::<String>();
+    lowercase.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 fn contains_word(haystack: &str, needle: &str) -> bool {
-    haystack
-        .split(|character: char| !character.is_alphanumeric() && character != '\'')
-        .any(|word| word == needle)
+    words(haystack).iter().any(|word| word == needle)
 }
 
-fn contains_any(haystack: &str, needles: &[&str]) -> bool {
-    needles.iter().any(|needle| haystack.contains(needle))
+fn contains_phrase(haystack: &str, needle: &str) -> bool {
+    let haystack_words = words(haystack);
+    let needle_words = words(needle);
+    !needle_words.is_empty()
+        && haystack_words
+            .windows(needle_words.len())
+            .any(|window| window == needle_words)
+}
+
+fn words(value: &str) -> Vec<String> {
+    value
+        .split(|character: char| !character.is_alphanumeric() && character != '\'')
+        .map(|word| word.trim_matches('\''))
+        .filter(|word| !word.is_empty())
+        .map(str::to_string)
+        .collect()
 }
 
 fn reflect(value: &str) -> String {
-    value
-        .trim_matches(|character: char| character.is_ascii_punctuation())
-        .split_whitespace()
-        .map(|word| match word {
+    words(value)
+        .iter()
+        .map(|word| match word.as_str() {
             "i" => "you",
             "me" => "you",
             "my" => "your",
@@ -253,8 +279,21 @@ mod tests {
         let response = engine.respond("I might hurt myself");
 
         assert_eq!(response.rule_id, "safety-boundary");
-        assert!(response.text.contains("emergency services"));
+        assert!(response.text.contains("emergency number"));
         assert!(!response.text.to_lowercase().contains("diagnos"));
+    }
+
+    #[test]
+    fn safety_matching_uses_word_boundaries() {
+        let mut engine = ElizaEngine::new();
+        assert_ne!(
+            engine.respond("I want to skill myself").rule_id,
+            "safety-boundary"
+        );
+
+        let response = engine.respond("I don’t want to live");
+        assert_eq!(response.rule_id, "safety-boundary");
+        assert_eq!(response.keyword.as_deref(), Some("matched safety phrase"));
     }
 
     #[test]

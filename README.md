@@ -4,6 +4,8 @@
 
 # ELIZA Lab
 
+[![CI](https://github.com/ejupi-djenis30/PsychologistRustBot/actions/workflows/ci.yml/badge.svg)](https://github.com/ejupi-djenis30/PsychologistRustBot/actions/workflows/ci.yml)
+
 > A transparent, local-only conversation engine for learning how early rule-based dialogue systems work.
 
 This repository began as a Telegram “psychologist” bot. That framing was misleading, and the
@@ -19,7 +21,11 @@ calls, transcript storage, diagnosis, or therapeutic claims.
 - **Rule traces:** every response names the pattern that produced it.
 - **Private by construction:** the Rust CLI and web demo run locally and do not store input.
 - **Deterministic:** the same turn sequence produces the same fallback sequence.
-- **Honest boundaries:** urgent-safety language exits the experiment instead of imitating care.
+- **Honest boundaries:** a small phrase list exits the experiment instead of imitating care. It
+  is deliberately not presented as crisis detection.
+- **Bounded sessions:** prompts stop at 512 Unicode code points, CLI lines are byte-bounded, and
+  the browser retains at most 40 visible turns.
+- **Cross-runtime contract:** Rust and JavaScript run against the same response corpus in CI.
 
 ## Run it
 
@@ -39,6 +45,8 @@ cargo run -- --once "I feel uncertain about my next step"
 cargo fmt --check
 cargo clippy --all-targets -- -D warnings
 cargo test --all
+node --test site/tests/*.test.mjs
+node site/scripts/validate-site.mjs
 ```
 
 ## Architecture
@@ -50,9 +58,13 @@ site/            static explanatory interface for GitHub Pages
 site/tests/      browser-engine regression tests
 ```
 
-The production engine has no third-party runtime dependencies. It keeps only a turn counter in
-memory. The browser demo mirrors the same documented rule order so visitors can inspect the
-mechanism without installing anything.
+The production engine has no third-party runtime dependencies. It keeps only a saturating turn
+counter in memory. The browser demo mirrors the same documented rule order, and both engines run
+against [`fixtures/parity.tsv`](fixtures/parity.tsv) to prevent silent response drift.
+
+The safety phrase list is only an exit condition for the experiment. It can miss urgent language
+and can match benign discussion of a phrase. Never use this project to assess a person or decide
+whether help is needed. See [the safety and privacy model](SECURITY.md).
 
 ## Provenance
 

@@ -1,23 +1,35 @@
 # Safety and privacy model
 
+## Supported versions
+
+Safety and security fixes target the current default branch. Earlier Git revisions document the
+legacy prototype and are not maintained releases.
+
 ELIZA Lab is an educational dialogue-system demonstration. It is not a psychologist, therapist,
 medical device, crisis service, or source of diagnosis.
 
 ## Data handling
 
-- The Rust engine stores only a numeric turn counter in memory.
+- The Rust engine stores only a saturating numeric turn counter in memory.
 - The command-line application does not write transcripts or analytics.
 - The GitHub Pages demo makes no network requests after its static assets load.
 - There are no accounts, cookies, databases, API keys, or remote models.
+- Prompts are capped at 512 Unicode characters. The CLI drains oversized input lines without
+  retaining them, and the browser keeps at most 40 visible turns.
 
 ## Safety boundary
 
-The engine detects a small set of urgent-safety phrases only to stop the simulation and direct the
-visitor toward immediate human help. It does not assess risk and must not be used as a safety tool.
+The engine matches a small, explicit set of safety phrases only to stop the simulation and direct
+the visitor toward immediate human help. Phrase matching uses word boundaries, but it still has
+both false positives and false negatives. It does not infer intent, assess risk, monitor a person,
+or guarantee that urgent language will be recognized. It must not be used as a safety tool.
 
 If someone may be in immediate danger, contact local emergency services or a trusted person.
 
+The public page asks visitors to use harmless fictional prompts. Do not enter real health or
+personal information even though the application is local-only.
+
 ## Reporting
 
-Please use GitHub's private vulnerability reporting feature when available. Do not include real
-conversation transcripts, credentials, or personal data in a report.
+Use GitHub private vulnerability reporting when it is available, or email `info@ejupilabs.com`.
+Do not include real conversation transcripts, credentials, or personal data in a public issue.

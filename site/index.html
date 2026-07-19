@@ -3,6 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; connect-src 'none'; worker-src 'none'; manifest-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
     <meta
       name="description"
       content="ELIZA Lab is a transparent, local-only conversation engine for exploring rule-based dialogue systems."
@@ -15,10 +20,19 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://ejupi-djenis30.github.io/PsychologistRustBot/" />
-    <meta property="og:image" content="https://ejupi-djenis30.github.io/PsychologistRustBot/assets/demo-poster.svg" />
+    <meta property="og:image" content="https://ejupi-djenis30.github.io/PsychologistRustBot/assets/social-preview.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="675" />
+    <meta property="og:image:alt" content="ELIZA Lab showing a fictional prompt, its response, and the feeling-reflection rule trace." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ELIZA Lab — A conversation you can inspect" />
+    <meta name="twitter:description" content="Try a private dialogue experiment and inspect the rule behind every response." />
+    <meta name="twitter:image" content="https://ejupi-djenis30.github.io/PsychologistRustBot/assets/social-preview.png" />
+    <meta name="twitter:image:alt" content="ELIZA Lab showing a fictional prompt, its response, and the feeling-reflection rule trace." />
     <link rel="canonical" href="https://ejupi-djenis30.github.io/PsychologistRustBot/" />
     <link rel="icon" href="assets/eliza-lab-mark.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=1.1.0" />
     <title>ELIZA Lab — A conversation you can inspect</title>
   </head>
   <body>
@@ -113,12 +127,15 @@
                   <input
                     id="message"
                     name="message"
-                    maxlength="512"
+                    maxlength="2048"
                     autocomplete="off"
+                    required
+                    aria-describedby="message-boundary"
                     placeholder="I feel uncertain about my next step…"
                   />
                   <button type="submit" aria-label="Send prompt">Send <span aria-hidden="true">↗</span></button>
                 </div>
+                <p class="composer-boundary" id="message-boundary">Fictional text only · 512-character limit · 40 visible turns</p>
               </form>
               <div class="samples" aria-label="Example prompts">
                 <button type="button" data-sample="I feel uncertain about my next step">Feeling</button>
@@ -130,7 +147,7 @@
             <aside class="inspector" aria-labelledby="inspector-title">
               <div class="inspector-heading">
                 <p id="inspector-title">Response trace</p>
-                <span data-trace-status>IDLE</span>
+                <span role="status" aria-live="polite" data-trace-status>IDLE</span>
               </div>
               <dl>
                 <div><dt>Rule</dt><dd data-rule>waiting-for-input</dd></div>
@@ -138,6 +155,7 @@
                 <div><dt>Transform</dt><dd data-transform>—</dd></div>
                 <div><dt>Network</dt><dd>0 requests</dd></div>
                 <div><dt>Persistence</dt><dd>none</dd></div>
+                <div><dt>Session cap</dt><dd>40 visible turns</dd></div>
               </dl>
               <div class="inspector-note">
                 <span aria-hidden="true">✳</span>
@@ -188,8 +206,8 @@
             assess risk, provide treatment, or replace qualified care.
           </p>
           <p>
-            Urgent-safety language stops the simulation and points toward immediate human help.
-            No attempt is made to continue the conversation.
+            A small list of explicit safety phrases stops the simulation and points toward
+            immediate human help. It is a boundary, not reliable crisis detection.
           </p>
           <a href="https://github.com/ejupi-djenis30/PsychologistRustBot/blob/master/SECURITY.md">
             Read the safety and privacy model <span aria-hidden="true">↗</span>
@@ -217,6 +235,6 @@
       <a href="https://github.com/ejupi-djenis30">Djenis Ejupi ↗</a>
     </footer>
 
-    <script type="module" src="app.js"></script>
+    <script type="module" src="app.js?v=1.1.0"></script>
   </body>
 </html>
