@@ -1,0 +1,8 @@
+# input	rule	response
+Hello	greeting	Hello. What is on your mind today?
+I feel uncertain about my next step.	feeling-reflection	What makes you feel uncertain about your next step?
+I paused because my plan changed	because-probe	What makes your plan changed an important reason for you?
+What should I notice?	question-return	What answer would feel most useful to explore?
+I want to skill myself	fallback	Tell me a little more about that.
+I want to die	safety-boundary	This demo cannot assess or support an emergency. If you might act on thoughts of suicide or self-harm, call your local emergency number now or reach a trusted person who can stay with you.
+I don’t want to live	safety-boundary	This demo cannot assess or support an emergency. If you might act on thoughts of suicide or self-harm, call your local emergency number now or reach a trusted person who can stay with you.

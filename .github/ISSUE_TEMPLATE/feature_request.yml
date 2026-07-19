@@ -1,0 +1,59 @@
+name: Feature request
+description: Propose a focused learning, engine, accessibility, or testing improvement.
+title: "[Feature] "
+labels: []
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ELIZA Lab is an educational rule-engine demo, not a care product. Use fictional examples
+        and keep real conversations out of the issue. Send vulnerabilities through the
+        [security policy](https://github.com/ejupi-djenis30/PsychologistRustBot/security/policy).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What concrete learning, engine, accessibility, privacy, or testing task is hard today?
+      placeholder: Describe one use case without personal conversation data.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Explain the visible behavior and how a user would verify it.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Main area
+      options:
+        - Rust rule engine
+        - Command-line experience
+        - Browser engine or interface
+        - Accessibility
+        - Parity testing
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Safety and privacy effects
+      description: Explain how the change preserves the non-clinical, local-only, bounded design.
+      placeholder: Cover data flow, resource limits, wording, and false-positive or false-negative effects.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Final checks
+      options:
+        - label: I searched existing issues and proposals.
+          required: true
+        - label: This proposal does not present the project as therapy, diagnosis, crisis detection, or care.
+          required: true
+        - label: I used no real conversation or personal, health, account, or contact data.
+          required: true

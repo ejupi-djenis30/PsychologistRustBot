@@ -1,6 +1,27 @@
-const MAX_INPUT_CHARS = 512;
+export const MAX_INPUT_CHARS = 512;
 
-const normalize = (value) => value.toLowerCase().trim().replace(/\s+/g, " ");
+const SAFETY_PHRASES = [
+  "suicide",
+  "suicidal",
+  "kill myself",
+  "end my life",
+  "take my life",
+  "hurt myself",
+  "harm myself",
+  "self harm",
+  "want to die",
+  "don't want to live",
+  "do not want to live",
+  "can't go on",
+  "cannot go on",
+  "immediate danger",
+];
+
+const normalize = (value) =>
+  value.toLowerCase().replace(/[’‘]/gu, "'").trim().replace(/\s+/gu, " ");
+
+const words = (value) =>
+  value.match(/[\p{L}\p{N}]+(?:'[\p{L}\p{N}]+)*/gu) ?? [];
 
 const reflect = (value) => {
   const map = new Map([
@@ -15,15 +36,30 @@ const reflect = (value) => {
     ["are", "am"],
   ]);
 
-  return value
-    .replace(/^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu, "")
-    .split(/\s+/)
+  return words(value)
     .map((word) => map.get(word) ?? word)
     .join(" ");
 };
 
-const containsWord = (value, expected) =>
-  value.split(/[^a-z0-9']+/i).some((word) => word === expected);
+const containsPhrase = (value, phrase) => {
+  const valueWords = words(value);
+  const phraseWords = words(phrase);
+  if (!phraseWords.length || phraseWords.length > valueWords.length) return false;
+  return valueWords.some((_, start) =>
+    phraseWords.every((word, offset) => valueWords[start + offset] === word),
+  );
+};
+
+const containsWord = (value, expected) => containsPhrase(value, expected);
+
+const exceedsCharacterLimit = (value, limit) => {
+  let count = 0;
+  for (const _character of value) {
+    count += 1;
+    if (count > limit) return true;
+  }
+  return false;
+};
 
 const createReply = (text, rule, turn, keyword = null, transformed = null) => ({
   text,
@@ -41,7 +77,7 @@ export class ElizaEngine {
   }
 
   respond(input) {
-    this.#turn += 1;
+    this.#turn = Math.min(this.#turn + 1, Number.MAX_SAFE_INTEGER);
     const turn = this.#turn;
     const trimmed = String(input ?? "").trim();
 
@@ -53,7 +89,7 @@ export class ElizaEngine {
       );
     }
 
-    if ([...trimmed].length > MAX_INPUT_CHARS) {
+    if (exceedsCharacterLimit(trimmed, MAX_INPUT_CHARS)) {
       return createReply(
         "That is more text than this small teaching demo can inspect at once. Try one short thought.",
         "input-boundary",
@@ -62,20 +98,12 @@ export class ElizaEngine {
     }
 
     const value = normalize(trimmed);
-    const safetyPhrases = [
-      "suicide",
-      "kill myself",
-      "self harm",
-      "hurt myself",
-      "immediate danger",
-    ];
-
-    if (safetyPhrases.some((phrase) => value.includes(phrase))) {
+    if (SAFETY_PHRASES.some((phrase) => containsPhrase(value, phrase))) {
       return createReply(
-        "This educational demo cannot help with urgent safety needs. If you may be in immediate danger, contact local emergency services or a trusted person now.",
+        "This demo cannot assess or support an emergency. If you might act on thoughts of suicide or self-harm, call your local emergency number now or reach a trusted person who can stay with you.",
         "safety-boundary",
         turn,
-        "urgent safety language",
+        "matched safety phrase",
       );
     }
 

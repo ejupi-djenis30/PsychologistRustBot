@@ -112,6 +112,9 @@ a {
 
 .site-header nav a,
 .source-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   font-size: 0.78rem;
   font-weight: 750;
   letter-spacing: 0.08em;
@@ -466,6 +469,7 @@ h1 em {
 
 .reset-button {
   justify-self: end;
+  min-height: 2.75rem;
   padding: 0.45rem 0;
   border: 0;
   color: rgba(242, 236, 223, 0.75);
@@ -512,6 +516,11 @@ h1 em {
   align-self: flex-end;
   color: var(--paper);
   background: var(--rust);
+}
+
+.message-safety {
+  border: 2px solid var(--amber);
+  box-shadow: 0 0 0 4px rgba(215, 156, 72, 0.16);
 }
 
 .message span {
@@ -582,6 +591,12 @@ h1 em {
   text-transform: uppercase;
 }
 
+.composer-boundary {
+  margin: 0.55rem 0 0;
+  color: rgba(242, 236, 223, 0.58);
+  font-size: 0.65rem;
+}
+
 .samples {
   display: flex;
   flex-wrap: wrap;
@@ -590,6 +605,7 @@ h1 em {
 }
 
 .samples button {
+  min-height: 2.75rem;
   padding: 0.4rem 0.7rem;
   border: 1px solid rgba(242, 236, 223, 0.2);
   border-radius: 999px;
