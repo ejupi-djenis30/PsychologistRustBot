@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="ELIZA Lab is a transparent, local-only conversation engine for exploring rule-based dialogue systems."
+    />
+    <meta name="theme-color" content="#f2ecdf" />
+    <meta property="og:title" content="ELIZA Lab — A conversation you can inspect" />
+    <meta
+      property="og:description"
+      content="Try a private dialogue experiment and inspect the rule behind every response."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ejupi-djenis30.github.io/PsychologistRustBot/" />
+    <meta property="og:image" content="https://ejupi-djenis30.github.io/PsychologistRustBot/assets/demo-poster.svg" />
+    <link rel="canonical" href="https://ejupi-djenis30.github.io/PsychologistRustBot/" />
+    <link rel="icon" href="assets/eliza-lab-mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>ELIZA Lab — A conversation you can inspect</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="ELIZA Lab home">
+        <img src="assets/eliza-lab-mark.svg" width="42" height="42" alt="" />
+        <span>ELIZA <strong>LAB</strong></span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#experiment">Experiment</a>
+        <a href="#method">Method</a>
+        <a href="#safety">Safety</a>
+      </nav>
+      <a class="source-link" href="https://github.com/ejupi-djenis30/PsychologistRustBot">
+        Source <span aria-hidden="true">↗</span>
+      </a>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span>01</span> Rule-based dialogue, made visible</p>
+          <h1 id="hero-title">A conversation<br />you can <em>inspect.</em></h1>
+          <p class="hero-lead">
+            ELIZA Lab turns a famous interaction pattern into a small, honest learning tool.
+            Every reply comes with its rule trace. Nothing leaves your browser.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#experiment">Try the experiment</a>
+            <a class="button button-quiet" href="#method">See how it works</a>
+          </div>
+          <ul class="hero-facts" aria-label="Product boundaries">
+            <li>No accounts</li>
+            <li>No transcript storage</li>
+            <li>Not therapy</li>
+          </ul>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+          <div class="dialogue-card dialogue-card-a">
+            <span>INPUT</span>
+            <p>I feel uncertain about my next step.</p>
+          </div>
+          <div class="dialogue-card dialogue-card-b">
+            <span>REFLECTION</span>
+            <p>What makes you feel uncertain about your next step?</p>
+          </div>
+          <div class="trace-stamp">RULE 03<br /><strong>FEELING → REFLECT</strong></div>
+        </div>
+      </section>
+
+      <section class="demo-reel section" aria-labelledby="demo-reel-title">
+        <div>
+          <p class="eyebrow"><span>90</span> Ten-second walkthrough</p>
+          <h2 id="demo-reel-title">See the experiment<br />before you start.</h2>
+        </div>
+        <video controls muted loop playsinline preload="metadata" poster="assets/demo-poster.svg">
+          <source src="assets/demo.mp4" type="video/mp4" />
+          Your browser cannot play the ELIZA Lab demonstration video.
+        </video>
+      </section>
+
+      <section class="experiment section" id="experiment" aria-labelledby="experiment-title">
+        <div class="section-heading">
+          <p class="eyebrow"><span>02</span> Live experiment</p>
+          <h2 id="experiment-title">Talk to the rulebook.<br />Then open it.</h2>
+          <p>
+            Use a harmless, fictional prompt. The inspector shows what matched and how pronouns
+            were reflected. The transcript exists only in this tab and clears on reload.
+          </p>
+        </div>
+
+        <div class="lab-shell">
+          <div class="lab-topbar">
+            <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <p>LOCAL SESSION / NO STORAGE</p>
+            <button class="reset-button" type="button" data-reset>Clear session</button>
+          </div>
+          <div class="lab-grid">
+            <div class="conversation-panel">
+              <div class="transcript" data-transcript aria-live="polite">
+                <article class="message message-system">
+                  <span>ELIZA / 00</span>
+                  <p>Hello. What is on your mind today?</p>
+                </article>
+              </div>
+              <form class="composer" data-form>
+                <label for="message">Your fictional prompt</label>
+                <div class="composer-row">
+                  <input
+                    id="message"
+                    name="message"
+                    maxlength="512"
+                    autocomplete="off"
+                    placeholder="I feel uncertain about my next step…"
+                  />
+                  <button type="submit" aria-label="Send prompt">Send <span aria-hidden="true">↗</span></button>
+                </div>
+              </form>
+              <div class="samples" aria-label="Example prompts">
+                <button type="button" data-sample="I feel uncertain about my next step">Feeling</button>
+                <button type="button" data-sample="I paused because my plan changed">Reason</button>
+                <button type="button" data-sample="What should I notice?">Question</button>
+              </div>
+            </div>
+
+            <aside class="inspector" aria-labelledby="inspector-title">
+              <div class="inspector-heading">
+                <p id="inspector-title">Response trace</p>
+                <span data-trace-status>IDLE</span>
+              </div>
+              <dl>
+                <div><dt>Rule</dt><dd data-rule>waiting-for-input</dd></div>
+                <div><dt>Keyword</dt><dd data-keyword>—</dd></div>
+                <div><dt>Transform</dt><dd data-transform>—</dd></div>
+                <div><dt>Network</dt><dd>0 requests</dd></div>
+                <div><dt>Persistence</dt><dd>none</dd></div>
+              </dl>
+              <div class="inspector-note">
+                <span aria-hidden="true">✳</span>
+                <p>A trace explains a match. It does not make the response intelligent or true.</p>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="method section" id="method" aria-labelledby="method-title">
+        <div class="section-heading compact">
+          <p class="eyebrow"><span>03</span> Under the surface</p>
+          <h2 id="method-title">Small mechanism.<br />Large illusion.</h2>
+        </div>
+        <div class="method-grid">
+          <article>
+            <span>01 / NORMALIZE</span>
+            <h3>Read the shape.</h3>
+            <p>Whitespace and casing are normalized. The engine never sends the sentence elsewhere.</p>
+          </article>
+          <article>
+            <span>02 / MATCH</span>
+            <h3>Choose one rule.</h3>
+            <p>Patterns run in a documented order: safety boundary, greeting, feeling, reason, ownership, question.</p>
+          </article>
+          <article>
+            <span>03 / REFLECT</span>
+            <h3>Turn the sentence.</h3>
+            <p>A tiny pronoun map changes “my” to “your” and returns the thought as a question.</p>
+          </article>
+          <article>
+            <span>04 / EXPLAIN</span>
+            <h3>Show the seam.</h3>
+            <p>The selected rule and transformed fragment stay visible so the illusion never hides the method.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="safety section" id="safety" aria-labelledby="safety-title">
+        <div>
+          <p class="eyebrow"><span>04</span> A clear boundary</p>
+          <h2 id="safety-title">A mirror is not a clinician.</h2>
+        </div>
+        <div class="safety-copy">
+          <p>
+            ELIZA Lab is an educational software experiment. It does not understand a person,
+            assess risk, provide treatment, or replace qualified care.
+          </p>
+          <p>
+            Urgent-safety language stops the simulation and points toward immediate human help.
+            No attempt is made to continue the conversation.
+          </p>
+          <a href="https://github.com/ejupi-djenis30/PsychologistRustBot/blob/master/SECURITY.md">
+            Read the safety and privacy model <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="provenance section" aria-labelledby="provenance-title">
+        <p class="eyebrow"><span>05</span> Refactored with intent</p>
+        <h2 id="provenance-title">The useful idea survived.<br />The unsafe product did not.</h2>
+        <p>
+          The original 2023 Telegram prototype stored conversations and implied therapeutic use.
+          This edition removes Telegram, MySQL, OpenAI and the PHP admin panel. What remains is a
+          testable Rust engine and a transparent browser demonstration.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <div class="brand footer-brand">
+        <img src="assets/eliza-lab-mark.svg" width="36" height="36" alt="" />
+        <span>ELIZA <strong>LAB</strong></span>
+      </div>
+      <p>Designed as an experiment. Built to stay local.</p>
+      <a href="https://github.com/ejupi-djenis30">Djenis Ejupi ↗</a>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

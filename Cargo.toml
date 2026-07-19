@@ -1,13 +1,19 @@
 [package]
-name = "psychologist-bot"
-version = "0.1.0"
+name = "eliza-lab"
+version = "1.0.0"
 edition = "2021"
+description = "A transparent, local-only ELIZA conversation engine for learning how rule-based dialogue systems work."
+repository = "https://github.com/ejupi-djenis30/PsychologistRustBot"
+keywords = ["eliza", "dialogue", "education", "privacy"]
+categories = ["command-line-utilities"]
+publish = false
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "eliza_lab"
+path = "src/lib.rs"
+
+[[bin]]
+name = "eliza-lab"
+path = "src/main.rs"
 
 [dependencies]
-eliza = "2.0.0"
-mysql = "23.0.1"
-openai-api = "0.1.4"
-teloxide = "0.12.0"
-tokio = { version = "1.24.2", features = ["rt-multi-thread", "macros"] }
