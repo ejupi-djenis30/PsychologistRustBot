@@ -30,6 +30,8 @@ assert.doesNotMatch(html, /(?:src|href)="\//, "Assets must remain relative for p
 assert.match(app, /"message-user"/, "The app must identify user messages");
 assert.match(app, /MAX_TRANSCRIPT_MESSAGES = 80/, "The transcript must remain bounded");
 assert.match(app, /boundedCharacters\(input\.value\)/, "The input must use the engine's Unicode-aware limit");
+assert.match(html, /maxlength="512"/, "The browser limit must match MAX_INPUT_CHARS");
+assert.doesNotMatch(html, /maxlength="2048"/, "The retired input limit must not return");
 assert.match(app, /message-safety/, "Safety exits must have a distinct accessible message");
 assert.match(styles, /\.message-user\b/, "User messages must have a matching style");
 assert.match(styles, /\.message-safety\b/, "Safety messages must have a matching style");
