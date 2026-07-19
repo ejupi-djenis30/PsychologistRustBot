@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title id="title">ELIZA Lab mark</title>
+  <rect width="96" height="96" rx="24" fill="#231f20"/>
+  <path d="M27 31h15v8H35v18h7v8H27V31Zm42 0H54v8h7v18h-7v8h15V31Z" fill="#f2ecdf"/>
+  <circle cx="48" cy="48" r="6" fill="#b94b3b"/>
+</svg>
