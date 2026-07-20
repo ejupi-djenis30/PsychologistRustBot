@@ -1,0 +1,16 @@
+name: Hidden steps action fixture
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  template:
+    runs-on: ubuntu-22.04
+    steps: &floating-steps
+      - uses: actions/checkout@main
+  verify:
+    runs-on: ubuntu-22.04
+    steps: *floating-steps

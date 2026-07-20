@@ -1,7 +1,30 @@
 # Changelog
 
-## 1.1.0 — 2026-07-19
+## Unreleased
 
+## 1.1.0 — 2026-07-20
+
+- Add a tag-gated release pipeline for Linux x64, Windows x64, macOS Intel, and Apple Silicon with
+  native CLI smoke tests and platform-appropriate archives.
+- Verify Cargo/tag/commit parity, local and remote artifact inventory, SHA-256 checksums, dependency
+  evidence, SPDX 2.3 output, and GitHub build provenance before a release can be published.
+- Resume only an exact contract-bearing draft, verify the uploaded remote bytes, and recheck both
+  tag and inventory before the draft-to-published transition.
+- Run the complete packaging contract on pull requests and manual workflow runs without publishing.
+- Pin the RustSec scanner and advisory database, and carry its no-warning result into the verified
+  release inventory.
+- Require a pushed tag at the current default-branch tip for initial authorization, a dated
+  changelog section, safe file snapshots, immutable releases, and idempotent rerun verification.
+- Independently verify every GitHub attestation identity before publication and confirm the final
+  release is both immutable and latest.
+- Discover interrupted drafts through GitHub's authenticated paginated release listing and reject
+  duplicate or foreign release state before mutation.
+- Keep publication explicitly disabled until a selected license, Cargo SPDX expression, repository
+  license file, and versioned policy all agree.
+- Enforce a maximum age for the pinned RustSec database and check that its recorded commit time
+  matches the fetched official commit.
+- Pin CI and Pages runners and toolchains, and keep Cargo checks locked to the committed dependency
+  graph.
 - Replace substring safety checks with deterministic word-boundary phrase matching.
 - Expand explicit safety exit phrases while documenting false positives and false negatives.
 - Align Rust and browser tokenization, apostrophe handling and pronoun reflection.
