@@ -67,11 +67,11 @@ Workflow policy tests parse CI, Pages, and release YAML as explicit structures. 
 aliases, tags, duplicate keys, hidden permission overrides, local actions, and any remote Action that
 is not pinned to a full commit SHA.
 
-Publication is intentionally locked while this repository has no selected license. The versioned
-policy in `.github/release-policy.json` remains disabled, `Cargo.toml` makes no license claim, and no
-license file is present. A tag run therefore stops before it can call the release API. Enabling the
-path later requires all three facts to agree: explicit policy approval, the same SPDX expression in
-`Cargo.toml`, and a non-empty repository-root license file.
+GitHub release publication is authorized under the MIT License. The versioned policy in
+`.github/release-policy.json`, the SPDX expression in `Cargo.toml`, and the repository-root
+[`LICENSE`](LICENSE) file must agree before a tag run can call the release API. The crate remains
+private to this repository (`publish = false`); the supported distribution channel is the verified
+GitHub Release assembled by the workflow.
 
 A release can only be published from a `v*` tag pushed for the version in `Cargo.toml`, with a dated
 section for that version in `CHANGELOG.md` and no pending text under `Unreleased`. For example,
@@ -142,4 +142,4 @@ behaviour for compatibility.
 
 ## License
 
-No license file is currently provided. All rights remain with their respective authors.
+ELIZA Lab is available under the [MIT License](LICENSE).

@@ -56,5 +56,5 @@ Keep commits focused. In the PR, state what was wrong, what now enforces the beh
 commands you ran. Check screenshots, fixtures, test names, and terminal output for personal or
 sensitive conversation text before pushing.
 
-This repository does not currently grant a reuse license. By submitting a contribution, you
-confirm that you have the right to provide it; the repository's licensing status does not change.
+By submitting a contribution, you confirm that you have the right to provide it and agree that it
+may be distributed under the repository's [MIT License](LICENSE).
