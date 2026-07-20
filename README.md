@@ -75,7 +75,7 @@ GitHub Release assembled by the workflow.
 
 A release can only be published from a `v*` tag pushed for the version in `Cargo.toml`, with a dated
 section for that version in `CHANGELOG.md` and no pending text under `Unreleased`. For example,
-version `1.1.1` accepts `v1.1.1` and rejects every other tag. The workflow assembles all four native
+version `1.1.2` accepts `v1.1.2` and rejects every other tag. The workflow assembles all four native
 archives from verified file-descriptor snapshots, creates a consolidated `SHA256SUMS` file covering
 every release asset, and adds GitHub provenance attestations. The publish job independently verifies
 each attestation against this repository, workflow, tag ref, and source commit before it can touch a
@@ -115,7 +115,7 @@ To test a proposed tag without creating one, start the **Release** workflow manu
 the tag in `release_tag`, or run:
 
 ```bash
-node scripts/release-contract.mjs verify --tag v1.1.1
+node scripts/release-contract.mjs verify --tag v1.1.2
 ```
 
 ## Architecture

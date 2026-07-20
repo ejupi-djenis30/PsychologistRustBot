@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 1.1.2 — 2026-07-20
+
+- Reissue the verified builds from the repository's privacy-safe history. The source tree is
+  unchanged; only commit attribution and release provenance changed.
+- Keep the retired immutable tags unavailable instead of reusing them, so the release advances to
+  `v1.1.2`.
+
 ## 1.1.1 — 2026-07-20
 
 - Wait for GitHub's release listing to expose a newly created draft before uploading any asset.
