@@ -28,7 +28,7 @@ body:
     attributes:
       label: Version or commit
       description: Paste the release number or commit SHA you tested.
-      placeholder: "1.1.1 or d502316"
+      placeholder: "1.1.2 or d502316"
     validations:
       required: true
   - type: input
