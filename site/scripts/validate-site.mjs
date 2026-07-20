@@ -7,7 +7,7 @@ const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const html = await readFile(path.join(siteRoot, "index.html"), "utf8");
 const app = await readFile(path.join(siteRoot, "app.js"), "utf8");
 const styles = await readFile(path.join(siteRoot, "styles.css"), "utf8");
-const expectedCsp = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; connect-src 'none'; worker-src 'none'; manifest-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'";
+const expectedCsp = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'none'; connect-src 'none'; worker-src 'none'; manifest-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'";
 const socialPreviewUrl = "https://ejupi-djenis30.github.io/PsychologistRustBot/assets/social-preview.png";
 
 assert.match(html, /<html lang="en">/);
@@ -54,8 +54,6 @@ for (const file of [
   "styles.css",
   "assets/eliza-lab-mark.svg",
   "assets/eliza-lab-lockup.svg",
-  "assets/demo-poster.svg",
-  "assets/demo.mp4",
   "assets/social-preview.png",
 ]) {
   await access(path.join(siteRoot, file));
