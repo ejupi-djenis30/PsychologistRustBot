@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.1.1 — 2026-07-20
+
+- Wait for GitHub's release listing to expose a newly created draft before uploading any asset.
+- Keep delayed draft discovery bounded and fail closed without mutating an undiscoverable draft.
+- Cover both eventual-consistency recovery and retry exhaustion with deterministic publisher tests.
+
 ## 1.1.0 — 2026-07-20
 
 - Add a tag-gated release pipeline for Linux x64, Windows x64, macOS Intel, and Apple Silicon with

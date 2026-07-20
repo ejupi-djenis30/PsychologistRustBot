@@ -413,6 +413,33 @@ async function waitForPublishedState({
   throw lastError;
 }
 
+async function waitForCreatedDraft({
+  api,
+  repository,
+  tag,
+  createdReleaseId,
+  pause,
+}) {
+  const maximumAttempts = 10;
+
+  for (let attempt = 0; attempt < maximumAttempts; attempt += 1) {
+    const discoveredDraft = await findReleaseForTag(api, repository, tag);
+    if (discoveredDraft) {
+      invariant(
+        discoveredDraft.id === createdReleaseId,
+        `GitHub returned release ${discoveredDraft.id} while rediscovering newly created draft ${createdReleaseId}`,
+      );
+      return discoveredDraft;
+    }
+
+    if (attempt < maximumAttempts - 1) {
+      await pause(Math.min(2 ** attempt, 5) * 1000);
+    }
+  }
+
+  throw new Error(`New draft ${createdReleaseId} could not be uniquely rediscovered before asset mutation`);
+}
+
 export async function publishRelease({
   api,
   repository,
@@ -472,11 +499,13 @@ export async function publishRelease({
     });
     validateDraft(release, tag, expectedCommit);
     const createdReleaseId = release.id;
-    const discoveredDraft = await findReleaseForTag(api, repository, tag);
-    invariant(
-      discoveredDraft?.id === createdReleaseId,
-      `New draft ${createdReleaseId} could not be uniquely rediscovered before asset mutation`,
-    );
+    const discoveredDraft = await waitForCreatedDraft({
+      api,
+      repository,
+      tag,
+      createdReleaseId,
+      pause,
+    });
     validateDraft(discoveredDraft, tag, expectedCommit);
     release = discoveredDraft;
   }
