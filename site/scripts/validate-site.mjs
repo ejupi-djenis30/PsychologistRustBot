@@ -27,6 +27,16 @@ assert.ok(html.includes(`name="twitter:image" content="${socialPreviewUrl}"`));
 assert.match(html, /name="twitter:image:alt"/);
 assert.match(html, /type="module" src="app\.js(?:\?[^"\s]+)?"/);
 assert.doesNotMatch(html, /(?:src|href)="\//, "Assets must remain relative for project Pages");
+const skipLink = '<a class="skip-link" href="#main-content">Skip to content</a>';
+assert.ok(html.includes(skipLink), "The site must expose a skip link.");
+assert.ok(
+  html.includes('<main id="main-content" tabindex="-1">'),
+  "The skip-link target must be the focusable main landmark.",
+);
+assert.ok(
+  html.indexOf(skipLink) < html.indexOf('<header class="site-header">'),
+  "The skip link must appear before the repeated header.",
+);
 assert.match(app, /"message-user"/, "The app must identify user messages");
 assert.match(app, /MAX_TRANSCRIPT_MESSAGES = 80/, "The transcript must remain bounded");
 assert.match(app, /boundedCharacters\(input\.value\)/, "The input must use the engine's Unicode-aware limit");
@@ -35,6 +45,8 @@ assert.doesNotMatch(html, /maxlength="2048"/, "The retired input limit must not 
 assert.match(app, /message-safety/, "Safety exits must have a distinct accessible message");
 assert.match(styles, /\.message-user\b/, "User messages must have a matching style");
 assert.match(styles, /\.message-safety\b/, "Safety messages must have a matching style");
+assert.match(styles, /\.skip-link\s*\{/, "The skip link must have a visible style");
+assert.match(styles, /\.skip-link:focus-visible\s*\{/, "The skip link needs a keyboard-focus state");
 
 for (const file of [
   "app.js",
