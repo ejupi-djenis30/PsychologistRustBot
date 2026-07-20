@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "publicationEnabled": false,
-  "licenseFile": null,
-  "spdxExpression": null
+  "publicationEnabled": true,
+  "licenseFile": "LICENSE",
+  "spdxExpression": "MIT"
 }

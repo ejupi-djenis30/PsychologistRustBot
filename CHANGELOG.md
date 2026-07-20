@@ -19,8 +19,8 @@
   release is both immutable and latest.
 - Discover interrupted drafts through GitHub's authenticated paginated release listing and reject
   duplicate or foreign release state before mutation.
-- Keep publication explicitly disabled until a selected license, Cargo SPDX expression, repository
-  license file, and versioned policy all agree.
+- License the project under MIT and authorize GitHub release publication only while the Cargo SPDX
+  expression, repository license file, and versioned policy agree.
 - Enforce a maximum age for the pinned RustSec database and check that its recorded commit time
   matches the fetched official commit.
 - Pin CI and Pages runners and toolchains, and keep Cargo checks locked to the committed dependency
