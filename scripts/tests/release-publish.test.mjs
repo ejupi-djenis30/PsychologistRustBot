@@ -22,15 +22,10 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 function createAuthorizedRepositoryFixture() {
   const directory = mkdtempSync(path.join(tmpdir(), "eliza-authorized-release-"));
   const manifestPath = path.join(directory, "Cargo.toml");
-  const manifest = readFileSync(path.join(repositoryRoot, "Cargo.toml"), "utf8")
-    .replace('publish = false', 'publish = false\nlicense = "MIT"');
+  const manifest = readFileSync(path.join(repositoryRoot, "Cargo.toml"), "utf8");
   writeFileSync(manifestPath, manifest, "utf8");
   writeFileSync(path.join(directory, "CHANGELOG.md"), readFileSync(path.join(repositoryRoot, "CHANGELOG.md")));
-  writeFileSync(
-    path.join(directory, "LICENSE"),
-    "MIT License\n\nPermission is hereby granted to use this fixture solely for automated release-policy tests.\n",
-    "utf8",
-  );
+  writeFileSync(path.join(directory, "LICENSE"), readFileSync(path.join(repositoryRoot, "LICENSE")));
   const policyPath = path.join(directory, "release-policy.json");
   writeFileSync(policyPath, `${JSON.stringify({
     schemaVersion: 1,
@@ -42,6 +37,20 @@ function createAuthorizedRepositoryFixture() {
 }
 
 const authorizedRepository = createAuthorizedRepositoryFixture();
+
+function createDisabledRepositoryFixture() {
+  const directory = mkdtempSync(path.join(tmpdir(), "eliza-disabled-release-"));
+  const manifestPath = path.join(directory, "Cargo.toml");
+  writeFileSync(manifestPath, readFileSync(path.join(repositoryRoot, "Cargo.toml")));
+  const policyPath = path.join(directory, "release-policy.json");
+  writeFileSync(policyPath, `${JSON.stringify({
+    schemaVersion: 1,
+    publicationEnabled: false,
+    licenseFile: null,
+    spdxExpression: null,
+  }, null, 2)}\n`, "utf8");
+  return Object.freeze({ manifestPath, policyPath });
+}
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -275,10 +284,11 @@ test("refuses workflow_dispatch even when it targets a tag ref", async () => {
 
 test("fails closed before any GitHub API call while publication has no approved license", async () => {
   const api = new FakeGitHubApi();
+  const disabledRepository = createDisabledRepositoryFixture();
   await assert.rejects(
     publishWith(api, createReleaseAssets(), {
-      manifestPath: path.join(repositoryRoot, "Cargo.toml"),
-      publicationPolicyPath: path.join(repositoryRoot, ".github", "release-policy.json"),
+      manifestPath: disabledRepository.manifestPath,
+      publicationPolicyPath: disabledRepository.policyPath,
     }),
     /publication is disabled until a license is selected/u,
   );

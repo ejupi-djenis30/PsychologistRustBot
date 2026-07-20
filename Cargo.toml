@@ -5,6 +5,7 @@ edition = "2021"
 rust-version = "1.81"
 description = "A transparent, local-only ELIZA conversation engine for learning how rule-based dialogue systems work."
 repository = "https://github.com/ejupi-djenis30/PsychologistRustBot"
+license = "MIT"
 keywords = ["eliza", "dialogue", "education", "privacy"]
 categories = ["command-line-utilities"]
 publish = false

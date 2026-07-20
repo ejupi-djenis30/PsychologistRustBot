@@ -6,6 +6,13 @@ import test from "node:test";
 
 import { assertPublicationAuthorized, readPublicationPolicy } from "../release-policy.mjs";
 
+test("keeps the repository license, manifest, and release policy aligned", () => {
+  assert.deepEqual(assertPublicationAuthorized(), {
+    licenseFile: "LICENSE",
+    spdxExpression: "MIT",
+  });
+});
+
 function createFixture({ enabled = true, cargoLicense = "MIT", policyLicense = "MIT", licenseFile = "LICENSE" } = {}) {
   const directory = mkdtempSync(path.join(tmpdir(), "eliza-release-policy-"));
   const manifestPath = path.join(directory, "Cargo.toml");
