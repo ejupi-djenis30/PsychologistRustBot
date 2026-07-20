@@ -43,10 +43,78 @@ cargo run -- --once "I feel uncertain about my next step"
 
 ```bash
 cargo fmt --check
-cargo clippy --all-targets -- -D warnings
-cargo test --all
+cargo clippy --all-targets --locked -- -D warnings
+cargo test --all --locked
 node --test site/tests/*.test.mjs
 node site/scripts/validate-site.mjs
+node --test scripts/tests/*.test.mjs
+node scripts/release-contract.mjs verify
+node scripts/release-contract.mjs audit-policy
+```
+
+## Release verification
+
+The release workflow exercises the same contract on pull requests and manual runs before any tag
+exists. It builds and smoke-tests locked Rust binaries for Linux x64, Windows x64, macOS Intel, and
+macOS Apple Silicon. Unix binaries ship in `.tar.gz` archives that preserve their executable bit;
+Windows ships as `.zip`. The workflow checks every archive name, SHA-256 digest, source commit,
+dependency record, SPDX 2.3 entry, and RustSec result as one release set. The RustSec policy pins
+both `cargo-audit` and the advisory database commit, denies every warning, and allows no ignored
+advisories. Pull requests and manual runs cannot request OIDC attestations or publish a GitHub
+Release, even when a manual run starts from a tag ref.
+
+Workflow policy tests parse CI, Pages, and release YAML as explicit structures. They reject anchors,
+aliases, tags, duplicate keys, hidden permission overrides, local actions, and any remote Action that
+is not pinned to a full commit SHA.
+
+Publication is intentionally locked while this repository has no selected license. The versioned
+policy in `.github/release-policy.json` remains disabled, `Cargo.toml` makes no license claim, and no
+license file is present. A tag run therefore stops before it can call the release API. Enabling the
+path later requires all three facts to agree: explicit policy approval, the same SPDX expression in
+`Cargo.toml`, and a non-empty repository-root license file.
+
+A release can only be published from a `v*` tag pushed for the version in `Cargo.toml`, with a dated
+section for that version in `CHANGELOG.md` and no pending text under `Unreleased`. For example,
+version `1.1.0` accepts `v1.1.0` and rejects every other tag. The workflow assembles all four native
+archives from verified file-descriptor snapshots, creates a consolidated `SHA256SUMS` file covering
+every release asset, and adds GitHub provenance attestations. The publish job independently verifies
+each attestation against this repository, workflow, tag ref, and source commit before it can touch a
+release.
+
+The first authorization requires the pushed tag to resolve to the current remote default-branch tip.
+The publisher then creates an exact contract-bearing draft. If a run stops during upload, a later run
+finds that draft through GitHub's authenticated, paginated release listing and resumes it without
+rebuilding or guessing which commit it represents. Duplicate drafts or foreign contract metadata
+stop the run before mutation. Recovery and immutable reruns use GitHub's compare API to prove that the
+exact release commit is still identical to or an ancestor of the current default branch; a divergent
+commit is rejected without touching the draft. The release `target_commitish` must be that exact commit.
+The publisher rechecks the protected tag, branch ancestry, draft contract, and complete remote name,
+size, and SHA-256 inventory before promotion. Publication is the irreversible boundary: GitHub must
+report the result as both immutable and latest. A rerun only verifies an already-published release and
+never rewrites it.
+
+The repository protects `refs/tags/v*` against updates and deletions with a GitHub ruleset and has
+immutable releases enabled. The workflow revalidates the tag and requires GitHub to mark the final
+release immutable.
+Prerelease and build-metadata versions remain rejected until a separate prerelease policy exists.
+
+The RustSec database commit and its commit time are pinned together. CI enforces a 14-day freshness
+window on every change and once a week, so a reproducible audit cannot quietly become an outdated
+audit. Updating the pin requires reviewing the new official RustSec commit and recording its commit
+epoch in `.github/rustsec-audit-policy.json`.
+
+Verify downloaded files with:
+
+```bash
+sha256sum -c SHA256SUMS --ignore-missing
+gh attestation verify <downloaded-file> -R ejupi-djenis30/PsychologistRustBot
+```
+
+To test a proposed tag without creating one, start the **Release** workflow manually and provide
+the tag in `release_tag`, or run:
+
+```bash
+node scripts/release-contract.mjs verify --tag v1.1.0
 ```
 
 ## Architecture

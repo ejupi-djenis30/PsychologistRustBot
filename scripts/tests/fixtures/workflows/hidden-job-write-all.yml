@@ -1,0 +1,15 @@
+name: Hidden job permission fixture
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality: &privileged-job
+    permissions: write-all
+    runs-on: ubuntu-22.04
+    steps:
+      - run: echo "fixture"
+  build: *privileged-job
