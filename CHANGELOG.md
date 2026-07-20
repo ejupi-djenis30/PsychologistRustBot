@@ -4,8 +4,8 @@
 
 ## 1.1.2 — 2026-07-20
 
-- Reissue the verified builds from the repository's privacy-safe history. The source tree is
-  unchanged; only commit attribution and release provenance changed.
+- Reissue the verified builds from the repository's privacy-safe history. The ELIZA engine and
+  interface are unchanged; only commit attribution and release provenance changed.
 - Keep the retired immutable tags unavailable instead of reusing them, so the release advances to
   `v1.1.2`.
 
