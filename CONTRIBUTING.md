@@ -4,6 +4,8 @@ ELIZA Lab explains a small rule-based dialogue engine. It is not therapy, diagno
 detection, or a substitute for a person. Contributions must keep that boundary obvious in code,
 copy, tests, and screenshots.
 
+By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Before opening an issue
 
 Use harmless fictional prompts. Do not paste or attach real conversations, health information,
