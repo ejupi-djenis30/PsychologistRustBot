@@ -15,7 +15,7 @@ import {
 } from "../release-publish.mjs";
 
 const repository = "ejupi-djenis30/PsychologistRustBot";
-const tag = "v1.1.0";
+const tag = "v1.1.1";
 const expectedCommit = "a".repeat(40);
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -86,6 +86,7 @@ class FakeGitHubApi {
     latestReleaseId = 7,
     extraReleases = [],
     comparisonStatuses = [],
+    createdDraftVisibilityDelay = 0,
   } = {}) {
     this.tagCommit = tagCommit;
     this.tagCommits = tagCommits || [tagCommit];
@@ -107,6 +108,8 @@ class FakeGitHubApi {
     this.extraReleases = structuredClone(extraReleases);
     this.comparisonStatuses = [...comparisonStatuses];
     this.comparisonReadCount = 0;
+    this.createdDraftVisibilityDelay = createdDraftVisibilityDelay;
+    this.createdDraftVisibilityReadsRemaining = 0;
     this.release = releaseState === "missing" ? null : {
       id: 7,
       tag_name: tag,
@@ -159,7 +162,12 @@ class FakeGitHubApi {
     const releaseList = endpoint.match(new RegExp(`^repos/${repository}/releases\\?per_page=100&page=(\\d+)$`, "u"));
     if (releaseList && method === "GET") {
       const page = Number(releaseList[1]);
-      const releases = [...this.extraReleases, ...(this.release ? [this.release] : [])];
+      let visibleRelease = this.release;
+      if (page === 1 && this.createdDraftVisibilityReadsRemaining > 0) {
+        this.createdDraftVisibilityReadsRemaining -= 1;
+        visibleRelease = null;
+      }
+      const releases = [...this.extraReleases, ...(visibleRelease ? [visibleRelease] : [])];
       return structuredClone(releases.slice((page - 1) * 100, page * 100));
     }
     if (endpoint === `repos/${repository}/releases/latest`) {
@@ -179,6 +187,7 @@ class FakeGitHubApi {
         html_url: `https://github.test/${repository}/releases/tag/${tag}`,
         assets: [],
       };
+      this.createdDraftVisibilityReadsRemaining = this.createdDraftVisibilityDelay;
       return structuredClone(this.release);
     }
     if (endpoint.startsWith(`repos/${repository}/releases/assets/`) && method === "DELETE") {
@@ -440,6 +449,45 @@ test("creates a missing draft before uploading and verifying assets", async () =
   assert.equal(result.tag, tag);
   assert.ok(api.calls.some((call) => call.endpoint === `repos/${repository}/releases` && call.method === "POST"));
   assert.equal(api.release.draft, false);
+});
+
+test("waits for a newly created draft to become visible before mutating assets", async () => {
+  const pauses = [];
+  const api = new FakeGitHubApi({
+    releaseState: "missing",
+    createdDraftVisibilityDelay: 2,
+  });
+  const result = await publishWith(api, createReleaseAssets(), {
+    pause: async (milliseconds) => pauses.push(milliseconds),
+  });
+
+  assert.equal(result.tag, tag);
+  assert.deepEqual(pauses, [1000, 2000]);
+  assert.equal(api.release.draft, false);
+  const creationIndex = api.calls.findIndex((call) => call.endpoint === `repos/${repository}/releases` && call.method === "POST");
+  const firstUploadIndex = api.calls.findIndex((call) => call.endpoint.startsWith("https://uploads.github.test/"));
+  assert.ok(creationIndex >= 0 && firstUploadIndex > creationIndex);
+});
+
+test("keeps an undiscoverable newly created draft untouched after bounded retries", async () => {
+  const pauses = [];
+  const api = new FakeGitHubApi({
+    releaseState: "missing",
+    createdDraftVisibilityDelay: 10,
+  });
+
+  await assert.rejects(
+    publishWith(api, createReleaseAssets(), {
+      pause: async (milliseconds) => pauses.push(milliseconds),
+    }),
+    /could not be uniquely rediscovered before asset mutation/u,
+  );
+
+  assert.deepEqual(pauses, [1000, 2000, 4000, 5000, 5000, 5000, 5000, 5000, 5000]);
+  assert.equal(api.release.draft, true);
+  assert.equal(api.release.assets.length, 0);
+  assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)));
+  assert.ok(api.calls.every((call) => !call.endpoint.startsWith("https://uploads.github.test/")));
 });
 
 test("reruns verify an exact immutable release without mutating it", async () => {

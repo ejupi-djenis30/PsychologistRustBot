@@ -75,15 +75,16 @@ GitHub Release assembled by the workflow.
 
 A release can only be published from a `v*` tag pushed for the version in `Cargo.toml`, with a dated
 section for that version in `CHANGELOG.md` and no pending text under `Unreleased`. For example,
-version `1.1.0` accepts `v1.1.0` and rejects every other tag. The workflow assembles all four native
+version `1.1.1` accepts `v1.1.1` and rejects every other tag. The workflow assembles all four native
 archives from verified file-descriptor snapshots, creates a consolidated `SHA256SUMS` file covering
 every release asset, and adds GitHub provenance attestations. The publish job independently verifies
 each attestation against this repository, workflow, tag ref, and source commit before it can touch a
 release.
 
 The first authorization requires the pushed tag to resolve to the current remote default-branch tip.
-The publisher then creates an exact contract-bearing draft. If a run stops during upload, a later run
-finds that draft through GitHub's authenticated, paginated release listing and resumes it without
+The publisher then creates an exact contract-bearing draft and waits, for a bounded time, until
+GitHub's paginated release listing exposes that same draft. It does not upload assets before the draft
+is uniquely visible. If a run stops during upload, a later run finds the draft and resumes it without
 rebuilding or guessing which commit it represents. Duplicate drafts or foreign contract metadata
 stop the run before mutation. Recovery and immutable reruns use GitHub's compare API to prove that the
 exact release commit is still identical to or an ancestor of the current default branch; a divergent
@@ -114,7 +115,7 @@ To test a proposed tag without creating one, start the **Release** workflow manu
 the tag in `release_tag`, or run:
 
 ```bash
-node scripts/release-contract.mjs verify --tag v1.1.0
+node scripts/release-contract.mjs verify --tag v1.1.1
 ```
 
 ## Architecture
