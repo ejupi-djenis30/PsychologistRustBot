@@ -309,47 +309,65 @@ h1 em {
 
 .hero-art {
   position: relative;
+  display: grid;
   min-height: 38rem;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 50% 50% 2.5rem 2.5rem;
+  border-radius: 2.5rem;
   background: var(--ink);
   box-shadow: var(--shadow);
   isolation: isolate;
+  place-items: center;
 }
 
-.hero-art::before {
+.hero-art::before,
+.hero-art::after {
   position: absolute;
-  inset: 8% 9%;
+  top: 50%;
+  left: 50%;
+  aspect-ratio: 1;
   border: 1px solid rgba(242, 236, 223, 0.16);
   border-radius: 50%;
   content: "";
+  translate: -50% -50%;
 }
 
-.orbit {
+.hero-art::before {
+  width: 66%;
+}
+
+.hero-art::after {
+  width: 88%;
+  border-color: rgba(242, 236, 223, 0.09);
+}
+
+.hero-art__grid {
   position: absolute;
-  border: 1px solid rgba(242, 236, 223, 0.16);
-  border-radius: 50%;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(242, 236, 223, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(242, 236, 223, 0.045) 1px, transparent 1px);
+  background-position: center;
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at center, #000 0 42%, transparent 76%);
 }
 
-.orbit-one {
-  inset: 23% -10%;
-  transform: rotate(23deg);
-}
-
-.orbit-two {
-  inset: -6% 26%;
-  transform: rotate(-34deg);
-}
-
-.dialogue-card,
-.trace-stamp {
-  position: absolute;
+.dialogue-flow {
+  position: relative;
   z-index: 2;
+  display: grid;
+  width: min(82%, 27rem);
+  min-height: 31rem;
+  grid-template-rows: minmax(8rem, auto) 1fr auto 1fr minmax(8rem, auto);
+  justify-items: center;
+  align-items: stretch;
 }
 
 .dialogue-card {
-  width: min(80%, 24rem);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 8rem;
   padding: 1.35rem;
   border: 1px solid rgba(242, 236, 223, 0.16);
   border-radius: 1rem;
@@ -358,7 +376,8 @@ h1 em {
 }
 
 .dialogue-card span,
-.trace-stamp {
+.trace-stamp span,
+.trace-stamp strong {
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
   font-size: 0.64rem;
   letter-spacing: 0.12em;
@@ -372,26 +391,60 @@ h1 em {
 }
 
 .dialogue-card-a {
-  top: 24%;
-  left: 8%;
   background: var(--rust);
-  transform: rotate(-3deg);
 }
 
 .dialogue-card-b {
-  right: 7%;
-  bottom: 20%;
   background: #34312d;
-  transform: rotate(2deg);
 }
 
 .trace-stamp {
-  right: 8%;
-  bottom: 7%;
-  padding: 0.7rem 0.85rem;
+  z-index: 3;
+  display: grid;
+  min-width: 12.5rem;
+  min-height: 4.6rem;
+  padding: 0.75rem 1rem;
+  place-content: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(31, 29, 27, 0.3);
+  border-radius: 0.85rem;
   color: var(--ink);
   background: var(--amber);
-  transform: rotate(-4deg);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+  text-align: center;
+}
+
+.trace-stamp strong {
+  font-size: 0.68rem;
+}
+
+.flow-track {
+  position: relative;
+  width: 1px;
+  height: 100%;
+  min-height: 2rem;
+  background: rgba(242, 236, 223, 0.34);
+}
+
+.flow-track::before,
+.flow-track::after {
+  position: absolute;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--amber);
+  border-radius: 50%;
+  background: var(--ink);
+  content: "";
+  translate: -50% 0;
+}
+
+.flow-track::before {
+  top: 0;
+}
+
+.flow-track::after {
+  bottom: 0;
 }
 
 .section {
@@ -887,10 +940,27 @@ footer > a {
 
   .hero-art {
     min-height: 28rem;
+    border-radius: 1.5rem;
+  }
+
+  .dialogue-flow {
+    width: calc(100% - 2rem);
+    min-height: 24rem;
+    grid-template-rows: minmax(8.5rem, auto) 1fr auto 1fr minmax(8.5rem, auto);
   }
 
   .dialogue-card {
-    width: 84%;
+    min-height: 8.5rem;
+    padding: 1rem;
+  }
+
+  .dialogue-card p {
+    font-size: 1.05rem;
+  }
+
+  .trace-stamp {
+    min-width: 10.5rem;
+    min-height: 3.9rem;
   }
 
   .section-heading h2,
