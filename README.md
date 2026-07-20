@@ -14,7 +14,7 @@ rebuilt as **ELIZA Lab**: an educational Rust engine and browser demo with no ac
 calls, transcript storage, diagnosis, or therapeutic claims.
 
 [Open the interactive demo](https://ejupi-djenis30.github.io/PsychologistRustBot/) ·
-[Watch the demo](site/assets/demo.mp4) · [Read the safety model](SECURITY.md)
+[Watch the demo](site/assets/demo.mp4) · [Support](SUPPORT.md) · [Read the safety model](SECURITY.md)
 
 ## What makes it useful
 
