@@ -1,6 +1,6 @@
 [package]
 name = "eliza-lab"
-version = "1.1.0"
+version = "1.1.1"
 edition = "2021"
 rust-version = "1.81"
 description = "A transparent, local-only ELIZA conversation engine for learning how rule-based dialogue systems work."
