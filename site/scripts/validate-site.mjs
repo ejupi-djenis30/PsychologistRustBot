@@ -27,6 +27,13 @@ assert.ok(html.includes(`name="twitter:image" content="${socialPreviewUrl}"`));
 assert.match(html, /name="twitter:image:alt"/);
 assert.match(html, /type="module" src="app\.js(?:\?[^"\s]+)?"/);
 assert.doesNotMatch(html, /(?:src|href)="\//, "Assets must remain relative for project Pages");
+assert.ok(
+  html.includes(
+    '<a href="https://github.com/ejupi-djenis30/PsychologistRustBot">ELIZA Lab contributors ↗</a>',
+  ),
+  "The footer must use collective project attribution.",
+);
+assert.doesNotMatch(html, /Djenis\s+Ejupi/iu, "The public site must not expose a personal byline.");
 const skipLink = '<a class="skip-link" href="#main-content">Skip to content</a>';
 assert.ok(html.includes(skipLink), "The site must expose a skip link.");
 assert.ok(
