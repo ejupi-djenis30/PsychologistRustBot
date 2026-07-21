@@ -27,7 +27,30 @@ calls, transcript storage, diagnosis, or therapeutic claims.
   the browser retains at most 40 visible turns.
 - **Cross-runtime contract:** Rust and JavaScript run against the same response corpus in CI.
 
+## Install a verified build
+
+Download the archive for your system from the
+[latest release](https://github.com/ejupi-djenis30/PsychologistRustBot/releases/latest):
+
+| Platform | Release asset |
+| --- | --- |
+| Linux x64 | `eliza-lab-v<version>-linux-x86_64.tar.gz` |
+| Windows x64 | `eliza-lab-v<version>-windows-x86_64.zip` |
+| macOS Apple Silicon | `eliza-lab-v<version>-macos-aarch64.tar.gz` |
+| macOS Intel | `eliza-lab-v<version>-macos-x86_64.tar.gz` |
+
+Compare it with the matching `.sha256` file or `SHA256SUMS`, then verify its GitHub attestation:
+
+```bash
+gh attestation verify <downloaded-archive> --repo ejupi-djenis30/PsychologistRustBot
+```
+
+Extract the archive and run the included `eliza-lab` executable. It needs no account, network
+connection, model download, or database.
+
 ## Run it
+
+To build and run from source instead:
 
 ```bash
 cargo run
