@@ -160,9 +160,9 @@ whether help is needed. See [the safety and privacy model](SECURITY.md).
 
 ## Provenance
 
-The original 2023 experiment was created by Djenis Ejupi. The current refactor deliberately
-removes Telegram, MySQL, OpenAI, and the PHP administration panel rather than preserving unsafe
-behaviour for compatibility.
+ELIZA Lab grew out of a small 2023 experiment. Ejupi Labs and the project contributors rebuilt it
+around a safer premise, removing Telegram, MySQL, OpenAI, and the PHP administration panel instead
+of preserving unsafe behaviour for compatibility.
 
 ## License
 
