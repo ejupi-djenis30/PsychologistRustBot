@@ -189,6 +189,11 @@ assert.match(html, /No test row chooses a weight, temperature or threshold\./);
 assert.match(html, /majority and unigram baselines/i);
 assert.doesNotMatch(html, /data-report-metric=/u, "The primary page must not expose the legacy v1 report");
 assert.doesNotMatch(html, /SOFTMAX V1|112 synthetic examples|441 synthetic rows/iu);
+assert.doesNotMatch(
+  html,
+  /deterministic fallback/iu,
+  "The v3 presentation must describe visible abstention rather than legacy fallback framing",
+);
 
 for (const file of [
   "app.js",

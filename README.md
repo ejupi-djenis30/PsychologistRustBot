@@ -27,7 +27,7 @@ accounts, prompt submission, transcript storage, diagnosis, or therapeutic claim
 - **Reproducible artifacts:** two identical v3 runs produce byte-identical model, policy, metrics
   and split-plan files. The report records every final prediction.
 - **Real abstention:** calibration, policy selection, ID-test and OOD-test have different roles.
-  Inputs with weak evidence use a deterministic fallback.
+  Inputs with weak evidence abstain instead of being presented as confident classifications.
 - **Private by construction:** CLI and browser inference are local. Prompts are not stored or sent
   to a model service.
 - **Hard non-clinical boundary:** input limits and explicit safety-stop phrases run before ML
