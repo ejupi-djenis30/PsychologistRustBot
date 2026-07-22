@@ -280,6 +280,23 @@ h1 em {
   box-shadow: 0 16px 38px rgba(31, 29, 27, 0.28);
 }
 
+.button-release {
+  color: var(--paper);
+  background: var(--rust);
+  border-color: var(--rust);
+  box-shadow: 0 12px 30px rgba(141, 52, 38, 0.18);
+}
+
+.button-release span {
+  margin-left: 0.45rem;
+}
+
+.button-release:hover {
+  background: var(--rust-dark);
+  border-color: var(--rust-dark);
+  box-shadow: 0 16px 38px rgba(141, 52, 38, 0.25);
+}
+
 .button-quiet:hover {
   color: var(--paper);
   background: var(--rust);
@@ -1145,10 +1162,34 @@ footer > a {
 @media (max-width: 960px) {
   .site-header {
     grid-template-columns: 1fr auto;
+    row-gap: 0.25rem;
   }
 
   .site-header nav {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.35rem;
+    width: 100%;
+    padding: 0.25rem 0 0.7rem;
+  }
+
+  .site-header nav a {
+    justify-content: center;
+    min-width: 0;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(242, 236, 223, 0.72);
+    text-align: center;
+  }
+
+  .site-header nav a::after {
     display: none;
+  }
+
+  section[id] {
+    scroll-margin-top: 9rem;
   }
 
   .hero {
@@ -1244,8 +1285,22 @@ footer > a {
 
 @media (max-width: 620px) {
   .site-header {
-    min-height: 68px;
-    padding: 0 1.1rem;
+    min-height: auto;
+    padding: 0.55rem 1.1rem 0;
+  }
+
+  .site-header nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-bottom: 0.7rem;
+  }
+
+  .site-header nav a {
+    min-height: 2.75rem;
+    line-height: 1.2;
+  }
+
+  section[id] {
+    scroll-margin-top: 11rem;
   }
 
   .source-link {
@@ -1357,7 +1412,7 @@ footer > a {
   }
 
   .v3-protocol article {
-    min-height: 7rem;
+    min-block-size: 9.5rem;
   }
 
   .metric-panel {
