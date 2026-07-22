@@ -51,19 +51,17 @@ jobs:
             --report target/pages-report.json
           cmp models/eliza-intent-v1.json target/pages-model.json
           cmp reports/eliza-intent-v1.json target/pages-report.json
-          cargo run --locked -- train-v2 --output target/pages-open-set-v2
-          diff --recursive --brief artifacts/eliza-open-set-v2 target/pages-open-set-v2
-          cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v2
-          cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v2
-      - name: Stage the site with the verified model and report
+          cargo run --locked -- train-v3 --output target/pages-open-set-v3
+          diff --recursive --brief artifacts/eliza-open-set-v3 target/pages-open-set-v3
+          cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v3
+          cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v3
+      - name: Stage the site with the verified v3 bundle
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p pages-dist/data
           cp -R site/. pages-dist/
-          cp models/eliza-intent-v1.json pages-dist/data/eliza-intent-v1.json
-          cp reports/eliza-intent-v1.json pages-dist/data/model-report-v1.json
-          cp -R artifacts/eliza-open-set-v2 pages-dist/data/open-set-v2
+          cp -R artifacts/eliza-open-set-v3 pages-dist/data/open-set-v3
       - run: node site/scripts/validate-site.mjs --stage pages-dist
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

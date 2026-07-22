@@ -1,86 +1,122 @@
 # Architecture
 
-ELIZA Lab has five explicit layers:
+ELIZA Lab is a local, deterministic open-set text-classification system. The v3 bundle is the
+default inference path in the CLI and browser. The original v1 artifact remains available only
+through the explicit `--legacy-v1` compatibility flag.
 
-1. `src/ml.rs` owns data validation, splitting, feature extraction, training, evaluation,
-   calibration, inference, explanation, and strict JSON model loading.
-2. `src/lib.rs` owns bounded dialogue behavior. Empty and oversized input plus the explicit safety
-   stop run before ML inference. Rejected predictions use a deterministic fallback.
-3. `src/main.rs` exposes dataset checks, training, evaluation, single inference, interactive chat,
-   and the retained rule-only mode.
-4. `site/` implements the same inference math in JavaScript and presents the prediction trace. It
-   loads the checked-in model as a same-origin static asset. A load or validation failure is shown
-   as `RULE FALLBACK`; it is never silently described as learned inference.
-5. `src/open_set.rs` owns the version-two experimental path: grouped data, a four-way typed split,
-   temperature scaling, development-only threshold selection, independent ID/OOD tests,
-   deterministic bootstrap statistics, SHA-256-linked artifact bundles and compiled batch
-   inference. It does not change the released v1 model contract.
+## Components
 
-## Data flow
+1. `src/open_set.rs` owns the v3 dataset contracts, typed partitions, model selection, training,
+   calibration, abstention policy, evaluation, baselines, bootstrap, artifact verification and
+   compiled inference.
+2. `src/lib.rs` owns bounded dialogue behaviour. Empty or oversized input and explicit safety-stop
+   phrases are handled before learned inference.
+3. `src/main.rs` exposes v3 training, verification, reproduction, batch inference and interactive
+   commands. Legacy inference must be requested explicitly.
+4. `site/open-set-engine.mjs` verifies the same five-file bundle, reproduces its prediction
+   ledgers and runs inference in the browser. A missing trust root, digest mismatch or semantic
+   mismatch disables the interface.
+5. `site/app.js` renders only a successfully verified v3 runtime. Prompts stay in the tab.
 
-```text
-validated TSV
-    → seeded stratified split
-        → training-only TF-IDF vocabulary
-            → multinomial logistic regression
-                → versioned JSON model
-                    → confidence + margin gate
-                        → accepted intent or deterministic abstention
-```
-
-The browser sends no prompt to a server. Loading the page downloads the static model alongside its
-CSS and JavaScript; subsequent feature extraction and prediction happen in the tab. The CLI needs
-no network for training or inference once Rust dependencies are available locally.
-
-## Open-set v2 data flow
+## Experiment flow
 
 ```text
-grouped supervised TSV
-    → group-stratified SplitPlan
-        ├── train → vocabulary + classifier weights
-        ├── calibration → temperature only
-        ├── development ─┐
-        │                 ├── confidence + probability-margin policy
-        └── ID-test       │       (never visible to selection)
+validated grouped corpus
+    → deterministic family-disjoint SplitPlan
+        ├── TrainingPartition → TF-IDF + multinomial logistic regression
+        ├── DevelopmentPartition → fixed 3 × 3 model grid
+        │                           macro-F1 epsilon, simpler candidate first
+        ├── CalibrationPartition → temperature scaling
+        ├── DevelopmentPartition + OodDevelopmentPartition
+        │       → fixed 7 × 7 confidence/margin grid
+        ├── ID-test → final in-domain metrics + majority/unigram baselines
+        ├── OOD-test → aggregate and per-stratum open-set metrics
+        └── ContrastTestPartition → paired anti-shortcut metrics
 
-OOD-development ─────────┘
-OOD-test → final OOD metrics only
-
-frozen model + frozen policy + untouched tests
-    → ECE / Brier / NLL / risk-coverage / AURC
-    → OOD AUROC / AUPR / FPR@95TPR
-    → deterministic label-stratified row bootstrap 95% intervals
-    → SHA-256-linked bundle manifest
+family/domain cluster bootstrap
+    → 95% intervals
+        → model.json + policy.json + metrics.json + split-plan.json
+            → SHA-256 manifest
 ```
 
-The temperature-calibration function accepts only the calibration slice. The threshold-selection
-function accepts only development plus OOD-development. This makes the no-test-leakage rule part of
-the Rust type boundary rather than a comment or caller convention.
+The role-specific Rust types are capabilities, not labels on arbitrary slices:
 
-## Compatibility boundaries
+- the fitter accepts only `TrainingPartition`;
+- candidate selection accepts training and development capabilities;
+- temperature calibration accepts only `CalibrationPartition`;
+- threshold selection accepts development and OOD-development capabilities;
+- contrast evaluation accepts only `ContrastTestPartition`;
+- no final test is present in any selector signature.
 
-- Application version: Cargo and release archives, currently `1.3.0`.
-- Model version: learned weight semantics, currently `1.0.0`.
-- Model schema: serialized field layout, currently `1`.
-- Open-set bundle/model schema: experimental artifact layout `2`, model `2.0.0`.
-- Dataset fingerprint: canonical supervised corpus content.
+The development partition serves both candidate selection and threshold selection. That can still
+create selection optimism, so the limitation is recorded in the artifact.
 
-The loader rejects model artifacts outside these supported boundaries instead of guessing.
+## Model and policy
 
-## Failure behavior
+The vectorizer extracts word uni- and bigrams and character 3- to 5-grams, fits smoothed IDF on
+training only, keeps a development-selected feature budget and L2-normalizes sparse vectors. A
+deterministic full-batch multinomial logistic regression learns seven class scores.
 
-- Invalid or duplicate TSV rows stop training before an output is written.
-- CLI output and report paths may not collide with each other or either input fixture.
-- Model and report are serialized and synced before either destination changes. A recoverable pair
-  transaction restores both previous artifacts if either install operation returns an error. This
-  is failure recovery inside one process, not a claim of cross-file atomicity after power loss or
-  process termination.
-- Unknown JSON fields, versions, malformed fingerprints, divergent vectorizer configs, invalid
-  feature names, duplicate vocabulary entries, non-finite or overflow-scale values, and non-rectangular parameters
-  are rejected in both Rust and JavaScript.
-- An empty feature vector always abstains.
-- Safety language never reaches learned inference in the dialogue layer.
-- V2 bundle loading rejects symlinks, oversized JSON, unknown fields, malformed shapes, provenance
-  disagreement and any SHA-256 mismatch before constructing `CompiledModel`.
-- `CompiledModel` builds the vocabulary index once. Its contrastive explanation is tested so bias
-  delta plus all feature contributions reconstruct the exact top-two logit margin.
+The fixed model grid is declared in source before the final run. Candidates within `0.005`
+macro-F1 are treated as practically tied; the comparator then prefers fewer features, stronger L2
+regularization, accuracy, lower NLL and lower Brier score, in that order.
+
+Temperature scaling uses calibration only. A coarse, fixed 49-point confidence/margin grid then
+chooses the highest-coverage development operating point that reaches the minimum selective
+accuracy and maximum OOD-development coverage constraints.
+
+An empty feature vector always abstains. Accepted predictions expose all class probabilities and a
+contrastive feature explanation. Bias difference plus every feature contribution must reconstruct
+the exact top-two logit margin.
+
+## Evaluation
+
+The final ID ledger records every prediction. Metrics include accuracy, macro F1, confusion matrix,
+per-class precision/recall/F1, calibration NLL/Brier/ECE, selective coverage and AURC.
+
+Two deterministic training-only baselines are evaluated on the same ID-test rows:
+
+- alphabetical-tie-broken majority class;
+- Laplace-smoothed multinomial unigram Naive Bayes.
+
+The report includes learned-minus-unigram deltas and adds an explicit limitation if the learned
+model does not beat the unigram baseline on both accuracy and macro F1.
+
+OOD metrics include coverage, AUROC, AUPR with ID as positive and FPR at 95% TPR, both in aggregate
+and for semantic, capability and noise strata. ID intervals resample held-out families within each
+label. OOD intervals resample broader domains. A separate fourteen-pair contrast test reports
+whether small meaning-changing edits cause the prediction to change and whether both sides of each
+pair are classified correctly.
+
+## Artifact trust and reproduction
+
+The bundle contains exactly five regular files:
+
+```text
+manifest.json
+metrics.json
+model.json
+policy.json
+split-plan.json
+```
+
+Rust verification checks strict schemas, bounded sizes, provenance, model/policy consistency,
+prediction ledgers, contrast-pair summaries, baseline reconstruction and SHA-256 digests. `bundle reproduce`
+reruns the deterministic experiment and compares all four payload digests.
+
+The browser carries the expected manifest digest as its release trust root. It verifies all payload
+digests, source-row fingerprints, prediction ledgers, calibration summaries, threshold
+observations, baseline results and OOD strata before enabling controls. Verification failure is a
+hard stop, not a silent fallback presented as ML. Neither runtime accepts a contrast report that
+cannot be rebuilt row by row from the frozen split plan.
+
+## Failure boundaries
+
+- Invalid or overlapping TSV populations stop before training.
+- Dataset similarity review and bootstrap workloads have explicit upper bounds.
+- Unknown JSON fields, unsupported versions, non-finite values, oversized files, symlinks and
+  unexpected bundle files are rejected.
+- Bundle output never replaces an unrelated non-empty directory.
+- CLI and browser inference are local and do not persist prompts.
+- The safety phrase list is an exit condition, not crisis detection.
+- The classifier is not suitable for clinical, safety, employment or other decisions about people.

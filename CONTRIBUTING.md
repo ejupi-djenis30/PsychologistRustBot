@@ -30,10 +30,10 @@ cargo run --locked -- train --output target/model.json --report target/report.js
 cmp models/eliza-intent-v1.json target/model.json
 cmp reports/eliza-intent-v1.json target/report.json
 cargo build --release --locked
-cargo run --locked -- train-v2 --output target/open-set-v2
-diff -r artifacts/eliza-open-set-v2 target/open-set-v2
-cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v2
-cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v2
+cargo run --locked -- train-v3 --output target/open-set-v3
+diff -r artifacts/eliza-open-set-v3 target/open-set-v3
+cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v3
+cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v3
 node --test site/tests/*.test.mjs
 node site/scripts/validate-site.mjs
 cargo audit
@@ -49,10 +49,10 @@ If you edit a workflow, run [`actionlint`](https://github.com/rhysd/actionlint) 
 - Regenerate `models/eliza-intent-v1.json` and `reports/eliza-intent-v1.json` after any supervised
   corpus, OOD fixture, vectorizer, optimizer, or threshold-calibration change.
 - Never use holdout rows or their results to fit the vocabulary, weights, or decision thresholds.
-- In v2, preserve all six populations: train fits features and weights; calibration fits only the
+- In v3, preserve all six populations: train fits features and weights; calibration fits only the
   temperature; development plus OOD-development select thresholds; ID-test and OOD-test report
   final results only. Related `group_id` values may not cross ID partitions.
-- Regenerate all five files in `artifacts/eliza-open-set-v2/` together. Never edit a digest or a
+- Regenerate all five files in `artifacts/eliza-open-set-v3/` together. Never edit a digest or a
   generated metric by hand; the verify and reproduce commands must both pass.
 - Describe the 112-row corpus and 21-row holdout as synthetic educational fixtures. Do not turn
   their metrics into a production-language claim.

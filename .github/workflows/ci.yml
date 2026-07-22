@@ -39,14 +39,14 @@ jobs:
             --report target/reproduced-report.json
           cmp models/eliza-intent-v1.json target/reproduced-model.json
           cmp reports/eliza-intent-v1.json target/reproduced-report.json
-      - name: Reproduce and verify the open-set v2 artifact bundle
+      - name: Reproduce and verify the open-set v3 artifact bundle
         shell: bash
         run: |
           set -euo pipefail
-          cargo run --locked -- train-v2 --output target/reproduced-open-set-v2
-          diff --recursive --brief artifacts/eliza-open-set-v2 target/reproduced-open-set-v2
-          cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v2
-          cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v2
+          cargo run --locked -- train-v3 --output target/reproduced-open-set-v3
+          diff --recursive --brief artifacts/eliza-open-set-v3 target/reproduced-open-set-v3
+          cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v3
+          cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v3
 
   site:
     timeout-minutes: 5

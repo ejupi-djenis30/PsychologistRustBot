@@ -159,22 +159,25 @@ fn training_rejects_threshold_options_instead_of_silently_overriding_them() {
 }
 
 #[test]
-fn inference_json_keeps_probabilities_contributions_and_hard_safety_boundary() {
-    let model = project_path("models/eliza-intent-v1.json");
+fn primary_inference_json_uses_v3_and_keeps_evidence_and_hard_safety_boundary() {
     let inferred = Command::new(binary())
-        .args([
-            "infer",
-            "--model",
-            model.to_str().unwrap(),
-            "--json",
-            "Today I feel calm",
-        ])
+        .args(["infer", "--json", "Hello, I want to make a concrete plan"])
         .output()
         .unwrap();
-    assert!(inferred.status.success());
+    assert!(
+        inferred.status.success(),
+        "{}",
+        String::from_utf8_lossy(&inferred.stderr)
+    );
     let inference: Value = serde_json::from_slice(&inferred.stdout).unwrap();
-    assert_eq!(inference["boundary"], "ml-intent");
-    assert_eq!(inference["model"]["accepted"], true);
+    assert!(matches!(
+        inference["boundary"].as_str(),
+        Some("ml-intent" | "ml-abstain")
+    ));
+    assert_eq!(inference["model"]["version"], "3.0.0");
+    assert!(inference["model"]["accepted"].is_boolean());
+    assert!(inference["model"]["confidence"].is_number());
+    assert!(inference["model"]["margin"].is_number());
     assert_eq!(
         inference["model"]["probabilities"]
             .as_object()
@@ -189,13 +192,7 @@ fn inference_json_keeps_probabilities_contributions_and_hard_safety_boundary() {
     assert!(contribution["contribution"].is_number());
 
     let safety = Command::new(binary())
-        .args([
-            "infer",
-            "--model",
-            model.to_str().unwrap(),
-            "--json",
-            "I want to die",
-        ])
+        .args(["infer", "--json", "I want to die"])
         .output()
         .unwrap();
     assert!(safety.status.success());
@@ -205,13 +202,83 @@ fn inference_json_keeps_probabilities_contributions_and_hard_safety_boundary() {
 }
 
 #[test]
+fn legacy_inference_requires_an_explicit_mode_and_rejects_conflicting_sources() {
+    let model = project_path("models/eliza-intent-v1.json");
+    let bundle = project_path("artifacts/eliza-open-set-v3");
+
+    let implicit_legacy = Command::new(binary())
+        .args([
+            "infer",
+            "--model",
+            model.to_str().unwrap(),
+            "--json",
+            "Today I feel calm",
+        ])
+        .output()
+        .unwrap();
+    assert!(!implicit_legacy.status.success());
+    assert!(String::from_utf8_lossy(&implicit_legacy.stderr)
+        .contains("--model requires the explicit --legacy-v1 mode"));
+
+    let explicit_legacy = Command::new(binary())
+        .args([
+            "infer",
+            "--legacy-v1",
+            "--model",
+            model.to_str().unwrap(),
+            "--json",
+            "Today I feel calm",
+        ])
+        .output()
+        .unwrap();
+    assert!(explicit_legacy.status.success());
+    let inference: Value = serde_json::from_slice(&explicit_legacy.stdout).unwrap();
+    assert_eq!(inference["model"]["version"], "1.0.0");
+
+    let conflicting = Command::new(binary())
+        .args([
+            "infer",
+            "--legacy-v1",
+            "--bundle",
+            bundle.to_str().unwrap(),
+            "prompt",
+        ])
+        .output()
+        .unwrap();
+    assert!(!conflicting.status.success());
+    assert!(String::from_utf8_lossy(&conflicting.stderr)
+        .contains("--bundle cannot be combined with --legacy-v1"));
+}
+
+#[test]
+fn bundle_help_succeeds_and_verify_rejects_reproduction_only_inputs() {
+    for arguments in [vec!["bundle", "--help"], vec!["bundle", "help"]] {
+        let output = Command::new(binary()).args(arguments).output().unwrap();
+        assert!(output.status.success());
+        assert!(String::from_utf8_lossy(&output.stdout).contains("bundle verify"));
+    }
+
+    let output = Command::new(binary())
+        .args([
+            "bundle",
+            "verify",
+            "--dataset",
+            project_path("fixtures/intents-v3.tsv").to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("unknown bundle option `--dataset`"));
+}
+
+#[test]
 fn open_set_bundle_reproduces_and_serves_bounded_jsonl_predictions() {
     let directory = TestDirectory::new();
-    let bundle = directory.path().join("bundle-v2");
+    let bundle = directory.path().join("bundle-v3");
     let trained = Command::new(binary())
         .current_dir(directory.path())
         .args([
-            "train-v2",
+            "train-v3",
             "--output",
             bundle.to_str().unwrap(),
             "--bootstrap-resamples",
@@ -224,7 +291,7 @@ fn open_set_bundle_reproduces_and_serves_bounded_jsonl_predictions() {
         "{}",
         String::from_utf8_lossy(&trained.stderr)
     );
-    assert!(String::from_utf8_lossy(&trained.stdout).contains("14 ID-test"));
+    assert!(String::from_utf8_lossy(&trained.stdout).contains("70 ID-test"));
 
     for operation in ["verify", "reproduce"] {
         let output = Command::new(binary())

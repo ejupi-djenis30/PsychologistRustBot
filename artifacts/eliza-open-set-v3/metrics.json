@@ -1,0 +1,3095 @@
+{
+  "schema_version": 3,
+  "model_version": "3.0.0",
+  "dataset_sha256": "efc3d4a3f38d8bf3f81026b72bbd5394de779e654d793bae638fed48485f269c",
+  "split_plan_sha256": "94b02ab4dcc7b8ec34ed7e1c6b9c2aef4b67801d5b2389d7ba54551d5362c333",
+  "ood_development_sha256": "71d012f7ee16acb666bcc333473148705c8554c839042ad604744e234b7614a9",
+  "ood_test_sha256": "ff9cea872481cf69944fa98406727a1c4c09120d1e0a38fbab6d2150a734a00c",
+  "contrast_test_sha256": "8f4427267cdc4aa58ff3a2e64968f0c6f1784edb98e5e81cbfb6f250fdb4fa3f",
+  "partition_counts": {
+    "calibration": 70,
+    "contrast-test": 28,
+    "development": 70,
+    "id-test": 70,
+    "ood-development": 36,
+    "ood-test": 36,
+    "train": 315
+  },
+  "partition_family_counts": {
+    "calibration": 14,
+    "contrast-test": 14,
+    "development": 14,
+    "id-test": 14,
+    "ood-development": 12,
+    "ood-test": 12,
+    "train": 63
+  },
+  "paraphrases_per_family": 5,
+  "ood_domain_counts": {
+    "ood-development": 6,
+    "ood-test": 6
+  },
+  "ood_stratum_counts": {
+    "ood-development": {
+      "capability": 12,
+      "noise": 12,
+      "semantic": 12
+    },
+    "ood-test": {
+      "capability": 12,
+      "noise": 12,
+      "semantic": 12
+    }
+  },
+  "development_selection": {
+    "strategy": "train-fit-development-f1-epsilon-parsimony-accuracy-nll-brier-v3",
+    "seed": 4043100207104787,
+    "macro_f1_tolerance": 0.005,
+    "training_example_count": 315,
+    "training_family_count": 63,
+    "development_example_count": 70,
+    "development_family_count": 14,
+    "candidates": [
+      {
+        "max_features": 512,
+        "l2_penalty": 0.0001,
+        "accuracy": 0.7714285714285715,
+        "macro_f1": 0.7601646455683723,
+        "negative_log_likelihood": 1.265253644932327,
+        "multiclass_brier": 0.589048404662735
+      },
+      {
+        "max_features": 512,
+        "l2_penalty": 0.0005,
+        "accuracy": 0.7714285714285715,
+        "macro_f1": 0.7601646455683723,
+        "negative_log_likelihood": 1.281150519233469,
+        "multiclass_brier": 0.5964397572250246
+      },
+      {
+        "max_features": 512,
+        "l2_penalty": 0.002,
+        "accuracy": 0.7714285714285715,
+        "macro_f1": 0.7601646455683723,
+        "negative_log_likelihood": 1.3372807140460872,
+        "multiclass_brier": 0.6222975460180933
+      },
+      {
+        "max_features": 1024,
+        "l2_penalty": 0.0001,
+        "accuracy": 0.7714285714285715,
+        "macro_f1": 0.7634316884648596,
+        "negative_log_likelihood": 1.2828848468431613,
+        "multiclass_brier": 0.5979037889697292
+      },
+      {
+        "max_features": 1024,
+        "l2_penalty": 0.0005,
+        "accuracy": 0.7714285714285715,
+        "macro_f1": 0.7634316884648596,
+        "negative_log_likelihood": 1.2996393217249171,
+        "multiclass_brier": 0.6057550677621776
+      },
+      {
+        "max_features": 1024,
+        "l2_penalty": 0.002,
+        "accuracy": 0.7714285714285715,
+        "macro_f1": 0.7634316884648596,
+        "negative_log_likelihood": 1.358289457426137,
+        "multiclass_brier": 0.6329449911144859
+      },
+      {
+        "max_features": 2048,
+        "l2_penalty": 0.0001,
+        "accuracy": 0.8,
+        "macro_f1": 0.7872761225702403,
+        "negative_log_likelihood": 1.3555364693612013,
+        "multiclass_brier": 0.6306500498840364
+      },
+      {
+        "max_features": 2048,
+        "l2_penalty": 0.0005,
+        "accuracy": 0.8142857142857143,
+        "macro_f1": 0.8060654564856246,
+        "negative_log_likelihood": 1.3714257035938973,
+        "multiclass_brier": 0.6379312883941257
+      },
+      {
+        "max_features": 2048,
+        "l2_penalty": 0.002,
+        "accuracy": 0.8142857142857143,
+        "macro_f1": 0.8060654564856246,
+        "negative_log_likelihood": 1.4266606992727429,
+        "multiclass_brier": 0.6629451398365117
+      }
+    ],
+    "selected_index": 8,
+    "inputs": [
+      "train",
+      "development"
+    ]
+  },
+  "threshold_selection": {
+    "strategy": "fixed-development-plus-ood-development-grid-v3",
+    "evaluated_candidate_count": 49,
+    "feasible_candidate_count": 43,
+    "development_example_count": 70,
+    "ood_development_example_count": 36,
+    "minimum_development_selective_accuracy": 0.75,
+    "maximum_ood_development_coverage": 0.1,
+    "selected_confidence": 0.7,
+    "selected_probability_margin": 0.4,
+    "observed_development_coverage": 0.5714285714285714,
+    "observed_development_selective_accuracy": 0.9,
+    "observed_ood_development_coverage": 0.05555555555555555,
+    "inputs": [
+      "development",
+      "ood-development"
+    ]
+  },
+  "uncalibrated_calibration_partition": {
+    "negative_log_likelihood": 1.3682232884197547,
+    "multiclass_brier": 0.6335329572278262,
+    "expected_calibration_error": 0.4719830119056625,
+    "ece_bins": 10
+  },
+  "calibrated_calibration_partition": {
+    "negative_log_likelihood": 0.6910763782469672,
+    "multiclass_brier": 0.33338422784774446,
+    "expected_calibration_error": 0.09316226992702141,
+    "ece_bins": 10
+  },
+  "id_test": {
+    "example_count": 70,
+    "accuracy": 0.8285714285714286,
+    "macro_f1": 0.8227804241452493,
+    "labels": [
+      "feeling",
+      "goal",
+      "greeting",
+      "observation",
+      "ownership",
+      "question",
+      "reason"
+    ],
+    "confusion_matrix": [
+      [
+        9,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        10,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        9,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        9,
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        2,
+        7,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        2,
+        0,
+        5,
+        2
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        9
+      ]
+    ],
+    "per_class": [
+      {
+        "label": "feeling",
+        "support": 10,
+        "predicted": 10,
+        "true_positive": 9,
+        "precision": 0.9,
+        "recall": 0.9,
+        "f1": 0.9
+      },
+      {
+        "label": "goal",
+        "support": 10,
+        "predicted": 13,
+        "true_positive": 10,
+        "precision": 0.7692307692307693,
+        "recall": 1.0,
+        "f1": 0.8695652173913044
+      },
+      {
+        "label": "greeting",
+        "support": 10,
+        "predicted": 9,
+        "true_positive": 9,
+        "precision": 1.0,
+        "recall": 0.9,
+        "f1": 0.9473684210526316
+      },
+      {
+        "label": "observation",
+        "support": 10,
+        "predicted": 13,
+        "true_positive": 9,
+        "precision": 0.6923076923076923,
+        "recall": 0.9,
+        "f1": 0.7826086956521738
+      },
+      {
+        "label": "ownership",
+        "support": 10,
+        "predicted": 8,
+        "true_positive": 7,
+        "precision": 0.875,
+        "recall": 0.7,
+        "f1": 0.7777777777777777
+      },
+      {
+        "label": "question",
+        "support": 10,
+        "predicted": 6,
+        "true_positive": 5,
+        "precision": 0.8333333333333334,
+        "recall": 0.5,
+        "f1": 0.625
+      },
+      {
+        "label": "reason",
+        "support": 10,
+        "predicted": 11,
+        "true_positive": 9,
+        "precision": 0.8181818181818182,
+        "recall": 0.9,
+        "f1": 0.8571428571428572
+      }
+    ],
+    "coverage": 0.6285714285714286,
+    "selective_accuracy": 1.0,
+    "calibration": {
+      "negative_log_likelihood": 0.5670326916793031,
+      "multiclass_brier": 0.24388656317694785,
+      "expected_calibration_error": 0.12263106336949559,
+      "ece_bins": 10
+    },
+    "aurc": 0.027954802255957558,
+    "risk_coverage_curve": [
+      {
+        "accepted": 1,
+        "coverage": 0.014285714285714285,
+        "risk": 0.0
+      },
+      {
+        "accepted": 2,
+        "coverage": 0.02857142857142857,
+        "risk": 0.0
+      },
+      {
+        "accepted": 3,
+        "coverage": 0.04285714285714286,
+        "risk": 0.0
+      },
+      {
+        "accepted": 4,
+        "coverage": 0.05714285714285714,
+        "risk": 0.0
+      },
+      {
+        "accepted": 5,
+        "coverage": 0.07142857142857142,
+        "risk": 0.0
+      },
+      {
+        "accepted": 6,
+        "coverage": 0.08571428571428572,
+        "risk": 0.0
+      },
+      {
+        "accepted": 7,
+        "coverage": 0.1,
+        "risk": 0.0
+      },
+      {
+        "accepted": 8,
+        "coverage": 0.11428571428571428,
+        "risk": 0.0
+      },
+      {
+        "accepted": 9,
+        "coverage": 0.12857142857142856,
+        "risk": 0.0
+      },
+      {
+        "accepted": 10,
+        "coverage": 0.14285714285714285,
+        "risk": 0.0
+      },
+      {
+        "accepted": 11,
+        "coverage": 0.15714285714285714,
+        "risk": 0.0
+      },
+      {
+        "accepted": 12,
+        "coverage": 0.17142857142857143,
+        "risk": 0.0
+      },
+      {
+        "accepted": 13,
+        "coverage": 0.18571428571428572,
+        "risk": 0.0
+      },
+      {
+        "accepted": 14,
+        "coverage": 0.2,
+        "risk": 0.0
+      },
+      {
+        "accepted": 15,
+        "coverage": 0.21428571428571427,
+        "risk": 0.0
+      },
+      {
+        "accepted": 16,
+        "coverage": 0.22857142857142856,
+        "risk": 0.0
+      },
+      {
+        "accepted": 17,
+        "coverage": 0.24285714285714285,
+        "risk": 0.0
+      },
+      {
+        "accepted": 18,
+        "coverage": 0.2571428571428571,
+        "risk": 0.0
+      },
+      {
+        "accepted": 19,
+        "coverage": 0.2714285714285714,
+        "risk": 0.0
+      },
+      {
+        "accepted": 20,
+        "coverage": 0.2857142857142857,
+        "risk": 0.0
+      },
+      {
+        "accepted": 21,
+        "coverage": 0.3,
+        "risk": 0.0
+      },
+      {
+        "accepted": 22,
+        "coverage": 0.3142857142857143,
+        "risk": 0.0
+      },
+      {
+        "accepted": 23,
+        "coverage": 0.32857142857142857,
+        "risk": 0.0
+      },
+      {
+        "accepted": 24,
+        "coverage": 0.34285714285714286,
+        "risk": 0.0
+      },
+      {
+        "accepted": 25,
+        "coverage": 0.35714285714285715,
+        "risk": 0.0
+      },
+      {
+        "accepted": 26,
+        "coverage": 0.37142857142857144,
+        "risk": 0.0
+      },
+      {
+        "accepted": 27,
+        "coverage": 0.38571428571428573,
+        "risk": 0.0
+      },
+      {
+        "accepted": 28,
+        "coverage": 0.4,
+        "risk": 0.0
+      },
+      {
+        "accepted": 29,
+        "coverage": 0.4142857142857143,
+        "risk": 0.0
+      },
+      {
+        "accepted": 30,
+        "coverage": 0.42857142857142855,
+        "risk": 0.0
+      },
+      {
+        "accepted": 31,
+        "coverage": 0.44285714285714284,
+        "risk": 0.0
+      },
+      {
+        "accepted": 32,
+        "coverage": 0.45714285714285713,
+        "risk": 0.0
+      },
+      {
+        "accepted": 33,
+        "coverage": 0.4714285714285714,
+        "risk": 0.0
+      },
+      {
+        "accepted": 34,
+        "coverage": 0.4857142857142857,
+        "risk": 0.0
+      },
+      {
+        "accepted": 35,
+        "coverage": 0.5,
+        "risk": 0.0
+      },
+      {
+        "accepted": 36,
+        "coverage": 0.5142857142857142,
+        "risk": 0.0
+      },
+      {
+        "accepted": 37,
+        "coverage": 0.5285714285714286,
+        "risk": 0.0
+      },
+      {
+        "accepted": 38,
+        "coverage": 0.5428571428571428,
+        "risk": 0.0
+      },
+      {
+        "accepted": 39,
+        "coverage": 0.5571428571428572,
+        "risk": 0.0
+      },
+      {
+        "accepted": 40,
+        "coverage": 0.5714285714285714,
+        "risk": 0.0
+      },
+      {
+        "accepted": 41,
+        "coverage": 0.5857142857142857,
+        "risk": 0.0
+      },
+      {
+        "accepted": 42,
+        "coverage": 0.6,
+        "risk": 0.0
+      },
+      {
+        "accepted": 43,
+        "coverage": 0.6142857142857143,
+        "risk": 0.0
+      },
+      {
+        "accepted": 44,
+        "coverage": 0.6285714285714286,
+        "risk": 0.0
+      },
+      {
+        "accepted": 45,
+        "coverage": 0.6428571428571429,
+        "risk": 0.0
+      },
+      {
+        "accepted": 46,
+        "coverage": 0.6571428571428571,
+        "risk": 0.0
+      },
+      {
+        "accepted": 47,
+        "coverage": 0.6714285714285714,
+        "risk": 0.0
+      },
+      {
+        "accepted": 48,
+        "coverage": 0.6857142857142857,
+        "risk": 0.0
+      },
+      {
+        "accepted": 49,
+        "coverage": 0.7,
+        "risk": 0.0
+      },
+      {
+        "accepted": 50,
+        "coverage": 0.7142857142857143,
+        "risk": 0.020000000000000018
+      },
+      {
+        "accepted": 51,
+        "coverage": 0.7285714285714285,
+        "risk": 0.039215686274509776
+      },
+      {
+        "accepted": 52,
+        "coverage": 0.7428571428571429,
+        "risk": 0.05769230769230771
+      },
+      {
+        "accepted": 53,
+        "coverage": 0.7571428571428571,
+        "risk": 0.05660377358490565
+      },
+      {
+        "accepted": 54,
+        "coverage": 0.7714285714285715,
+        "risk": 0.05555555555555558
+      },
+      {
+        "accepted": 55,
+        "coverage": 0.7857142857142857,
+        "risk": 0.07272727272727275
+      },
+      {
+        "accepted": 56,
+        "coverage": 0.8,
+        "risk": 0.0892857142857143
+      },
+      {
+        "accepted": 57,
+        "coverage": 0.8142857142857143,
+        "risk": 0.08771929824561409
+      },
+      {
+        "accepted": 58,
+        "coverage": 0.8285714285714286,
+        "risk": 0.08620689655172409
+      },
+      {
+        "accepted": 59,
+        "coverage": 0.8428571428571429,
+        "risk": 0.0847457627118644
+      },
+      {
+        "accepted": 60,
+        "coverage": 0.8571428571428571,
+        "risk": 0.08333333333333337
+      },
+      {
+        "accepted": 61,
+        "coverage": 0.8714285714285714,
+        "risk": 0.08196721311475408
+      },
+      {
+        "accepted": 62,
+        "coverage": 0.8857142857142857,
+        "risk": 0.08064516129032262
+      },
+      {
+        "accepted": 63,
+        "coverage": 0.9,
+        "risk": 0.09523809523809523
+      },
+      {
+        "accepted": 64,
+        "coverage": 0.9142857142857143,
+        "risk": 0.109375
+      },
+      {
+        "accepted": 65,
+        "coverage": 0.9285714285714286,
+        "risk": 0.12307692307692308
+      },
+      {
+        "accepted": 66,
+        "coverage": 0.9428571428571428,
+        "risk": 0.12121212121212122
+      },
+      {
+        "accepted": 67,
+        "coverage": 0.9571428571428572,
+        "risk": 0.13432835820895528
+      },
+      {
+        "accepted": 68,
+        "coverage": 0.9714285714285714,
+        "risk": 0.1470588235294118
+      },
+      {
+        "accepted": 69,
+        "coverage": 0.9857142857142858,
+        "risk": 0.1594202898550725
+      },
+      {
+        "accepted": 70,
+        "coverage": 1.0,
+        "risk": 0.17142857142857137
+      }
+    ],
+    "predictions": [
+      {
+        "id": "feeling-034",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.686190546639806,
+        "probability_margin": 0.40671330588437726,
+        "probabilities": {
+          "feeling": 0.686190546639806,
+          "goal": 0.2794772407554288,
+          "greeting": 0.009924245342791719,
+          "observation": 0.00398803077048614,
+          "ownership": 0.010523197782320687,
+          "question": 0.007895593531777021,
+          "reason": 0.002001145177389502
+        }
+      },
+      {
+        "id": "feeling-035",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9948361780849093,
+        "probability_margin": 0.993140191771393,
+        "probabilities": {
+          "feeling": 0.9948361780849093,
+          "goal": 0.0006520821680874394,
+          "greeting": 0.0005432817575791589,
+          "observation": 0.0008310300618258618,
+          "ownership": 0.001695986313516343,
+          "question": 0.0002594948375331037,
+          "reason": 0.001181946776548787
+        }
+      },
+      {
+        "id": "feeling-036",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9861768019917685,
+        "probability_margin": 0.9822550388037132,
+        "probabilities": {
+          "feeling": 0.9861768019917685,
+          "goal": 0.001289712185114146,
+          "greeting": 0.002804747212615131,
+          "observation": 0.0016013670365124196,
+          "ownership": 0.0009268087630099248,
+          "question": 0.0032787996229244032,
+          "reason": 0.00392176318805525
+        }
+      },
+      {
+        "id": "feeling-037",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.6872685605462493,
+        "probability_margin": 0.5258499745530657,
+        "probabilities": {
+          "feeling": 0.6872685605462493,
+          "goal": 0.06635970565227535,
+          "greeting": 0.018262275946187206,
+          "observation": 0.1614185859931836,
+          "ownership": 0.015401182198152629,
+          "question": 0.028031684807956446,
+          "reason": 0.02325800485599545
+        }
+      },
+      {
+        "id": "feeling-038",
+        "actual_label": "feeling",
+        "predicted_label": "goal",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.3933079778511908,
+        "probability_margin": 0.1431726938605285,
+        "probabilities": {
+          "feeling": 0.049090171923759515,
+          "goal": 0.3933079778511908,
+          "greeting": 0.028632169528303806,
+          "observation": 0.2501352839906623,
+          "ownership": 0.06783702483403996,
+          "question": 0.16849746550819725,
+          "reason": 0.04249990636384618
+        }
+      },
+      {
+        "id": "feeling-039",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.997626893043119,
+        "probability_margin": 0.9968755689751057,
+        "probabilities": {
+          "feeling": 0.997626893043119,
+          "goal": 0.00027933985402707815,
+          "greeting": 0.0001873464414426927,
+          "observation": 0.0004953805252832995,
+          "ownership": 0.0003521002096517102,
+          "question": 0.0003076158584629955,
+          "reason": 0.000751324068013402
+        }
+      },
+      {
+        "id": "feeling-056",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9996726033747523,
+        "probability_margin": 0.9995315190914009,
+        "probabilities": {
+          "feeling": 0.9996726033747523,
+          "goal": 0.000056867334255231244,
+          "greeting": 0.00006278455845656281,
+          "observation": 0.000023185316827492084,
+          "ownership": 0.00014108428335138444,
+          "question": 0.000012899011278950562,
+          "reason": 0.000030576121078051834
+        }
+      },
+      {
+        "id": "feeling-057",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9777658367239042,
+        "probability_margin": 0.9585507701086093,
+        "probabilities": {
+          "feeling": 0.9777658367239042,
+          "goal": 0.01921506661529481,
+          "greeting": 0.00028378979361970717,
+          "observation": 0.00042260240511321376,
+          "ownership": 0.0003183105239970447,
+          "question": 0.0017688705741928474,
+          "reason": 0.00022552336387808512
+        }
+      },
+      {
+        "id": "feeling-058",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9759968399869959,
+        "probability_margin": 0.9681479405976048,
+        "probabilities": {
+          "feeling": 0.9759968399869959,
+          "goal": 0.003795512190301574,
+          "greeting": 0.0022506589281629545,
+          "observation": 0.007539592600454936,
+          "ownership": 0.0007387137412728655,
+          "question": 0.00784889938939114,
+          "reason": 0.0018297831634207656
+        }
+      },
+      {
+        "id": "feeling-059",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9911019885012364,
+        "probability_margin": 0.9843565835298694,
+        "probabilities": {
+          "feeling": 0.9911019885012364,
+          "goal": 0.00022260492158305035,
+          "greeting": 0.00028899079821214973,
+          "observation": 0.0007021378340949612,
+          "ownership": 0.000374468744962554,
+          "question": 0.0005644042285442832,
+          "reason": 0.006745404971366978
+        }
+      },
+      {
+        "id": "goal-034",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9124228805054989,
+        "probability_margin": 0.8798667995906143,
+        "probabilities": {
+          "feeling": 0.012379413527844805,
+          "goal": 0.9124228805054989,
+          "greeting": 0.03255608091488461,
+          "observation": 0.006322991626925518,
+          "ownership": 0.01613401982878653,
+          "question": 0.01521703070439811,
+          "reason": 0.0049675828916613315
+        }
+      },
+      {
+        "id": "goal-035",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.5347260622309103,
+        "probability_margin": 0.36999766890571034,
+        "probabilities": {
+          "feeling": 0.09243467248227898,
+          "goal": 0.5347260622309103,
+          "greeting": 0.10116737426639281,
+          "observation": 0.03159776959560543,
+          "ownership": 0.06478934694024728,
+          "question": 0.1647283933252,
+          "reason": 0.010556381159365177
+        }
+      },
+      {
+        "id": "goal-036",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.7200896876585738,
+        "probability_margin": 0.6415436573252933,
+        "probabilities": {
+          "feeling": 0.011726077003647237,
+          "goal": 0.7200896876585738,
+          "greeting": 0.034135844674555105,
+          "observation": 0.0785460303332805,
+          "ownership": 0.06055358649738284,
+          "question": 0.06790936127692976,
+          "reason": 0.027039412555630835
+        }
+      },
+      {
+        "id": "goal-037",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8299447768974166,
+        "probability_margin": 0.7526950939550533,
+        "probabilities": {
+          "feeling": 0.02955033155891349,
+          "goal": 0.8299447768974166,
+          "greeting": 0.011058853952355181,
+          "observation": 0.02028741195379341,
+          "ownership": 0.012331195336973957,
+          "question": 0.07724968294236333,
+          "reason": 0.019577747358184107
+        }
+      },
+      {
+        "id": "goal-038",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8113959791251161,
+        "probability_margin": 0.7228644551256139,
+        "probabilities": {
+          "feeling": 0.03388590489828049,
+          "goal": 0.8113959791251161,
+          "greeting": 0.0885315239995021,
+          "observation": 0.002165180110615211,
+          "ownership": 0.006141532545927858,
+          "question": 0.04274792364371965,
+          "reason": 0.015131955676838392
+        }
+      },
+      {
+        "id": "goal-039",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.862304069801084,
+        "probability_margin": 0.7678435241329207,
+        "probabilities": {
+          "feeling": 0.011014809000039054,
+          "goal": 0.862304069801084,
+          "greeting": 0.01041980192556372,
+          "observation": 0.005456958131430978,
+          "ownership": 0.09446054566816327,
+          "question": 0.013026023462286356,
+          "reason": 0.0033177920114326243
+        }
+      },
+      {
+        "id": "goal-056",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9528507807214579,
+        "probability_margin": 0.9328263883116078,
+        "probabilities": {
+          "feeling": 0.0006070484445581321,
+          "goal": 0.9528507807214579,
+          "greeting": 0.0025184832980848946,
+          "observation": 0.011089675611956637,
+          "ownership": 0.020024392409850086,
+          "question": 0.011751640789735111,
+          "reason": 0.0011579787243571754
+        }
+      },
+      {
+        "id": "goal-057",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.7398751480383089,
+        "probability_margin": 0.6493446708497896,
+        "probabilities": {
+          "feeling": 0.028951170549947818,
+          "goal": 0.7398751480383089,
+          "greeting": 0.09053047718851924,
+          "observation": 0.026214518659991876,
+          "ownership": 0.04054357597242416,
+          "question": 0.05721241815804261,
+          "reason": 0.016672691432765483
+        }
+      },
+      {
+        "id": "goal-058",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.7725766155168353,
+        "probability_margin": 0.6727788157652462,
+        "probabilities": {
+          "feeling": 0.04663423183325147,
+          "goal": 0.7725766155168353,
+          "greeting": 0.024590600779802615,
+          "observation": 0.023091772276789276,
+          "ownership": 0.015011579888065778,
+          "question": 0.018297399953666558,
+          "reason": 0.0997977997515891
+        }
+      },
+      {
+        "id": "goal-059",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.7728058184671908,
+        "probability_margin": 0.7044389763613808,
+        "probabilities": {
+          "feeling": 0.03771590009342089,
+          "goal": 0.7728058184671908,
+          "greeting": 0.06836684210580998,
+          "observation": 0.041354134005052175,
+          "ownership": 0.037802887596224015,
+          "question": 0.03217801571699105,
+          "reason": 0.009776402015310945
+        }
+      },
+      {
+        "id": "greeting-034",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9915367500688818,
+        "probability_margin": 0.9881743768938404,
+        "probabilities": {
+          "feeling": 0.001810451088338807,
+          "goal": 0.0021870280436287973,
+          "greeting": 0.9915367500688818,
+          "observation": 0.0002808849871180664,
+          "ownership": 0.0005300396037961875,
+          "question": 0.003362373175041402,
+          "reason": 0.0002924730331946511
+        }
+      },
+      {
+        "id": "greeting-035",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9991584215191396,
+        "probability_margin": 0.9984269216905064,
+        "probabilities": {
+          "feeling": 0.000020995615742163083,
+          "goal": 0.00003280230974824121,
+          "greeting": 0.9991584215191396,
+          "observation": 0.000015670675697619504,
+          "ownership": 0.0007314998286331558,
+          "question": 0.000011874827206764096,
+          "reason": 0.000028735223832542892
+        }
+      },
+      {
+        "id": "greeting-036",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8593927371589004,
+        "probability_margin": 0.7668246537184623,
+        "probabilities": {
+          "feeling": 0.09256808344043806,
+          "goal": 0.03207909924856922,
+          "greeting": 0.8593927371589004,
+          "observation": 0.004447326018026233,
+          "ownership": 0.00813137925225802,
+          "question": 0.001008088096519784,
+          "reason": 0.0023732867852880447
+        }
+      },
+      {
+        "id": "greeting-037",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.7804791110048874,
+        "probability_margin": 0.5793699918241015,
+        "probabilities": {
+          "feeling": 0.0019471531492420576,
+          "goal": 0.2011091191807859,
+          "greeting": 0.7804791110048874,
+          "observation": 0.0014194329496280277,
+          "ownership": 0.004458325049420374,
+          "question": 0.005048141927927695,
+          "reason": 0.005538716738108482
+        }
+      },
+      {
+        "id": "greeting-038",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8491971441690749,
+        "probability_margin": 0.7650745686457632,
+        "probabilities": {
+          "feeling": 0.006107088998496956,
+          "goal": 0.08412257552331173,
+          "greeting": 0.8491971441690749,
+          "observation": 0.0015619305612973734,
+          "ownership": 0.03881210380568026,
+          "question": 0.0140958436172387,
+          "reason": 0.006103313324900055
+        }
+      },
+      {
+        "id": "greeting-039",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9696989836368956,
+        "probability_margin": 0.9582060983346475,
+        "probabilities": {
+          "feeling": 0.011492885302247981,
+          "goal": 0.006134880962431662,
+          "greeting": 0.9696989836368956,
+          "observation": 0.0007589884333321052,
+          "ownership": 0.0072061243439943525,
+          "question": 0.002177368512764929,
+          "reason": 0.0025307688083331635
+        }
+      },
+      {
+        "id": "greeting-056",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9676475398868233,
+        "probability_margin": 0.9545601880035812,
+        "probabilities": {
+          "feeling": 0.013087351883242112,
+          "goal": 0.002586025194711826,
+          "greeting": 0.9676475398868233,
+          "observation": 0.0027686389334082863,
+          "ownership": 0.0037569142187846064,
+          "question": 0.0030520043047400926,
+          "reason": 0.007101525578289802
+        }
+      },
+      {
+        "id": "greeting-057",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9993668761156419,
+        "probability_margin": 0.9990192958462509,
+        "probabilities": {
+          "feeling": 0.000019954994221486357,
+          "goal": 0.00018328136208104685,
+          "greeting": 0.9993668761156419,
+          "observation": 0.000013549573156836303,
+          "ownership": 0.0003475802693909586,
+          "question": 0.00002468607972120072,
+          "reason": 0.000044071605786685455
+        }
+      },
+      {
+        "id": "greeting-058",
+        "actual_label": "greeting",
+        "predicted_label": "goal",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.4816526700363711,
+        "probability_margin": 0.19012404049177895,
+        "probabilities": {
+          "feeling": 0.01989296066343961,
+          "goal": 0.4816526700363711,
+          "greeting": 0.29152862954459213,
+          "observation": 0.02122070083958882,
+          "ownership": 0.12287464828713993,
+          "question": 0.047293326428807736,
+          "reason": 0.015537064200060693
+        }
+      },
+      {
+        "id": "greeting-059",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.998334639852267,
+        "probability_margin": 0.9974803545298465,
+        "probabilities": {
+          "feeling": 0.0008542853224205178,
+          "goal": 0.00039518176594758653,
+          "greeting": 0.998334639852267,
+          "observation": 0.000026967404236693135,
+          "ownership": 0.0001739267511054071,
+          "question": 0.000077656224751553,
+          "reason": 0.00013734267927140964
+        }
+      },
+      {
+        "id": "observation-034",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.818569130242772,
+        "probability_margin": 0.7408530067814374,
+        "probabilities": {
+          "feeling": 0.010728350075961998,
+          "goal": 0.00845682397222629,
+          "greeting": 0.019445894266820134,
+          "observation": 0.818569130242772,
+          "ownership": 0.07771612346133466,
+          "question": 0.035200498733605305,
+          "reason": 0.029883179247279627
+        }
+      },
+      {
+        "id": "observation-035",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.4267485181229039,
+        "probability_margin": 0.0653649681000571,
+        "probabilities": {
+          "feeling": 0.020266872639403157,
+          "goal": 0.027012639202609226,
+          "greeting": 0.006624747376515735,
+          "observation": 0.4267485181229039,
+          "ownership": 0.11767014075696812,
+          "question": 0.040293531878753217,
+          "reason": 0.3613835500228468
+        }
+      },
+      {
+        "id": "observation-036",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9168256040318822,
+        "probability_margin": 0.8870955105039584,
+        "probabilities": {
+          "feeling": 0.010325311477936663,
+          "goal": 0.015892322701007152,
+          "greeting": 0.0037149828046038097,
+          "observation": 0.9168256040318822,
+          "ownership": 0.005346918484541695,
+          "question": 0.01816476697210464,
+          "reason": 0.029730093527923784
+        }
+      },
+      {
+        "id": "observation-037",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.650551399528137,
+        "probability_margin": 0.507265315831717,
+        "probabilities": {
+          "feeling": 0.014551684715549514,
+          "goal": 0.01737226831339947,
+          "greeting": 0.0009160760954715338,
+          "observation": 0.650551399528137,
+          "ownership": 0.14328608369642,
+          "question": 0.09608287848127423,
+          "reason": 0.07723960916974819
+        }
+      },
+      {
+        "id": "observation-038",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.3496108892654722,
+        "probability_margin": 0.11000157196332641,
+        "probabilities": {
+          "feeling": 0.07341548730569693,
+          "goal": 0.048396704940988626,
+          "greeting": 0.009162026997691886,
+          "observation": 0.3496108892654722,
+          "ownership": 0.04256550004124589,
+          "question": 0.2372400741467588,
+          "reason": 0.23960931730214577
+        }
+      },
+      {
+        "id": "observation-039",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.5277240936704493,
+        "probability_margin": 0.38222060996257046,
+        "probabilities": {
+          "feeling": 0.03907870238348214,
+          "goal": 0.1053694206579051,
+          "greeting": 0.013354237952080867,
+          "observation": 0.5277240936704493,
+          "ownership": 0.1064368938406206,
+          "question": 0.1455034837078788,
+          "reason": 0.06253316778758322
+        }
+      },
+      {
+        "id": "observation-056",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8662575577824999,
+        "probability_margin": 0.8297042227859283,
+        "probabilities": {
+          "feeling": 0.014709671851309199,
+          "goal": 0.028412883264667593,
+          "greeting": 0.036553334996571665,
+          "observation": 0.8662575577824999,
+          "ownership": 0.01651179289191164,
+          "question": 0.01186474603811348,
+          "reason": 0.025690013174926373
+        }
+      },
+      {
+        "id": "observation-057",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9360642325862628,
+        "probability_margin": 0.9084166336106897,
+        "probabilities": {
+          "feeling": 0.008338162908691082,
+          "goal": 0.00972827147687559,
+          "greeting": 0.0035426089419673848,
+          "observation": 0.9360642325862628,
+          "ownership": 0.02764759897557309,
+          "question": 0.00465598591661778,
+          "reason": 0.010023139194012215
+        }
+      },
+      {
+        "id": "observation-058",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.3979938353756072,
+        "probability_margin": 0.10228675296971845,
+        "probabilities": {
+          "feeling": 0.06193296130924373,
+          "goal": 0.011262588433821026,
+          "greeting": 0.007397275145439655,
+          "observation": 0.3979938353756072,
+          "ownership": 0.10318856497628542,
+          "question": 0.12251769235371428,
+          "reason": 0.2957070824058887
+        }
+      },
+      {
+        "id": "observation-059",
+        "actual_label": "observation",
+        "predicted_label": "question",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.27599566637836803,
+        "probability_margin": 0.05114837982849113,
+        "probabilities": {
+          "feeling": 0.21712553911917873,
+          "goal": 0.04350696506701093,
+          "greeting": 0.006878859895227273,
+          "observation": 0.2248472865498769,
+          "ownership": 0.1450115946765944,
+          "question": 0.27599566637836803,
+          "reason": 0.08663408831374378
+        }
+      },
+      {
+        "id": "ownership-040",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.7586503942818166,
+        "probability_margin": 0.6947234467697568,
+        "probabilities": {
+          "feeling": 0.014419716571095899,
+          "goal": 0.061040302004935924,
+          "greeting": 0.025592102291064248,
+          "observation": 0.0639269475120597,
+          "ownership": 0.7586503942818166,
+          "question": 0.016122958599001286,
+          "reason": 0.06024757874002634
+        }
+      },
+      {
+        "id": "ownership-041",
+        "actual_label": "ownership",
+        "predicted_label": "observation",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.535745254809863,
+        "probability_margin": 0.31369000035673933,
+        "probabilities": {
+          "feeling": 0.015430135792563717,
+          "goal": 0.02442153349462478,
+          "greeting": 0.0035407213040441585,
+          "observation": 0.535745254809863,
+          "ownership": 0.22205525445312366,
+          "question": 0.058399921396167155,
+          "reason": 0.14040717874961353
+        }
+      },
+      {
+        "id": "ownership-042",
+        "actual_label": "ownership",
+        "predicted_label": "feeling",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.3928359370985491,
+        "probability_margin": 0.19223346470994002,
+        "probabilities": {
+          "feeling": 0.3928359370985491,
+          "goal": 0.17040697083972162,
+          "greeting": 0.20060247238860907,
+          "observation": 0.16461212732575717,
+          "ownership": 0.026085718278968117,
+          "question": 0.030518319999636216,
+          "reason": 0.014938454068758617
+        }
+      },
+      {
+        "id": "ownership-043",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.6419245946820895,
+        "probability_margin": 0.4769425780594302,
+        "probabilities": {
+          "feeling": 0.03329238998033182,
+          "goal": 0.08780456533749685,
+          "greeting": 0.01733169262459275,
+          "observation": 0.0398669001123995,
+          "ownership": 0.6419245946820895,
+          "question": 0.1649820166226593,
+          "reason": 0.01479784064043013
+        }
+      },
+      {
+        "id": "ownership-044",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9225688490752642,
+        "probability_margin": 0.8901116832323137,
+        "probabilities": {
+          "feeling": 0.020542496755191975,
+          "goal": 0.010984729096401021,
+          "greeting": 0.0012248467359320307,
+          "observation": 0.03245716584295039,
+          "ownership": 0.9225688490752642,
+          "question": 0.005519696807618342,
+          "reason": 0.006702215686642152
+        }
+      },
+      {
+        "id": "ownership-045",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.4102128174721037,
+        "probability_margin": 0.005090995090133832,
+        "probabilities": {
+          "feeling": 0.02910749013971967,
+          "goal": 0.07715386285849571,
+          "greeting": 0.01403602074029267,
+          "observation": 0.03435479300983932,
+          "ownership": 0.4102128174721037,
+          "question": 0.030013193397578974,
+          "reason": 0.40512182238196986
+        }
+      },
+      {
+        "id": "ownership-060",
+        "actual_label": "ownership",
+        "predicted_label": "observation",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.271045643521948,
+        "probability_margin": 0.018689935476584818,
+        "probabilities": {
+          "feeling": 0.1142970511365201,
+          "goal": 0.25235570804536317,
+          "greeting": 0.07894503776130092,
+          "observation": 0.271045643521948,
+          "ownership": 0.03408757384836372,
+          "question": 0.11811467148691329,
+          "reason": 0.1311543141995909
+        }
+      },
+      {
+        "id": "ownership-061",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.47509055909934766,
+        "probability_margin": 0.11180993025528219,
+        "probabilities": {
+          "feeling": 0.044088053986415396,
+          "goal": 0.04411270944926546,
+          "greeting": 0.008662500472263754,
+          "observation": 0.3632806288440655,
+          "ownership": 0.47509055909934766,
+          "question": 0.055645438744114796,
+          "reason": 0.009120109404527585
+        }
+      },
+      {
+        "id": "ownership-062",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9598963961394781,
+        "probability_margin": 0.9332570570305375,
+        "probabilities": {
+          "feeling": 0.001927882896559132,
+          "goal": 0.026639339108940615,
+          "greeting": 0.00037519731174859907,
+          "observation": 0.006422900915468778,
+          "ownership": 0.9598963961394781,
+          "question": 0.0007736459726943786,
+          "reason": 0.003964637655110484
+        }
+      },
+      {
+        "id": "ownership-063",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9130702576610392,
+        "probability_margin": 0.8908617077382232,
+        "probabilities": {
+          "feeling": 0.020318421422041617,
+          "goal": 0.022208549922816016,
+          "greeting": 0.005277647869871319,
+          "observation": 0.015060908148837718,
+          "ownership": 0.9130702576610392,
+          "question": 0.015322328403641285,
+          "reason": 0.008741886571752821
+        }
+      },
+      {
+        "id": "question-040",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.4508529496437372,
+        "probability_margin": 0.1571073340422776,
+        "probabilities": {
+          "feeling": 0.026577238300602584,
+          "goal": 0.049369725879401735,
+          "greeting": 0.007030652134543185,
+          "observation": 0.10247924164301361,
+          "ownership": 0.29374561560145956,
+          "question": 0.4508529496437372,
+          "reason": 0.06994457679724214
+        }
+      },
+      {
+        "id": "question-041",
+        "actual_label": "question",
+        "predicted_label": "goal",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.2657258354540517,
+        "probability_margin": 0.007464224847984924,
+        "probabilities": {
+          "feeling": 0.027353988737279476,
+          "goal": 0.2657258354540517,
+          "greeting": 0.03701516250903859,
+          "observation": 0.1296350169823585,
+          "ownership": 0.2582616106060668,
+          "question": 0.15893650561804204,
+          "reason": 0.12307188009316292
+        }
+      },
+      {
+        "id": "question-042",
+        "actual_label": "question",
+        "predicted_label": "observation",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.2342637890744171,
+        "probability_margin": 0.046024127002000176,
+        "probabilities": {
+          "feeling": 0.11013128666733654,
+          "goal": 0.18514828922785717,
+          "greeting": 0.02736494759531624,
+          "observation": 0.2342637890744171,
+          "ownership": 0.15547163141408307,
+          "question": 0.0993803939485729,
+          "reason": 0.18823966207241694
+        }
+      },
+      {
+        "id": "question-043",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8159713651274793,
+        "probability_margin": 0.7295162387976943,
+        "probabilities": {
+          "feeling": 0.026062536810137378,
+          "goal": 0.016584707384580667,
+          "greeting": 0.019150985242891595,
+          "observation": 0.08645512632978497,
+          "ownership": 0.02819237484686415,
+          "question": 0.8159713651274793,
+          "reason": 0.007582904258262099
+        }
+      },
+      {
+        "id": "question-044",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9578809468422194,
+        "probability_margin": 0.9354840224560094,
+        "probabilities": {
+          "feeling": 0.0019177104284193234,
+          "goal": 0.0137873899323187,
+          "greeting": 0.00032418733914265556,
+          "observation": 0.022396924386210024,
+          "ownership": 0.0031209537564393535,
+          "question": 0.9578809468422194,
+          "reason": 0.0005718873152506279
+        }
+      },
+      {
+        "id": "question-045",
+        "actual_label": "question",
+        "predicted_label": "reason",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.5927918862005997,
+        "probability_margin": 0.47660564714497533,
+        "probabilities": {
+          "feeling": 0.11618623905562442,
+          "goal": 0.10372704632361134,
+          "greeting": 0.017755833235997696,
+          "observation": 0.09334260873366935,
+          "ownership": 0.020439748636358192,
+          "question": 0.05575663781413935,
+          "reason": 0.5927918862005997
+        }
+      },
+      {
+        "id": "question-060",
+        "actual_label": "question",
+        "predicted_label": "observation",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.48516669126002604,
+        "probability_margin": 0.06499086552435873,
+        "probabilities": {
+          "feeling": 0.0032219461557198652,
+          "goal": 0.004020757938277379,
+          "greeting": 0.0006874411951938456,
+          "observation": 0.48516669126002604,
+          "ownership": 0.049498292187386495,
+          "question": 0.4201758257356673,
+          "reason": 0.03722904552772897
+        }
+      },
+      {
+        "id": "question-061",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.6854251647640308,
+        "probability_margin": 0.4269681590736868,
+        "probabilities": {
+          "feeling": 0.009840939209552714,
+          "goal": 0.258457005690344,
+          "greeting": 0.012852235439210819,
+          "observation": 0.007548884751650433,
+          "ownership": 0.007095531784266342,
+          "question": 0.6854251647640308,
+          "reason": 0.018780238360944897
+        }
+      },
+      {
+        "id": "question-062",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8399067450087958,
+        "probability_margin": 0.7415779664965165,
+        "probabilities": {
+          "feeling": 0.013535074646934696,
+          "goal": 0.09832877851227931,
+          "greeting": 0.03055336316583273,
+          "observation": 0.00964786081459498,
+          "ownership": 0.005623073506772838,
+          "question": 0.8399067450087958,
+          "reason": 0.0024051043447896893
+        }
+      },
+      {
+        "id": "question-063",
+        "actual_label": "question",
+        "predicted_label": "reason",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.6302458214159785,
+        "probability_margin": 0.4841868216157003,
+        "probabilities": {
+          "feeling": 0.010110627156080394,
+          "goal": 0.11787116409958619,
+          "greeting": 0.012228930896363338,
+          "observation": 0.07445917655775612,
+          "ownership": 0.009025280073957183,
+          "question": 0.1460589998002782,
+          "reason": 0.6302458214159785
+        }
+      },
+      {
+        "id": "reason-028",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8269977305791313,
+        "probability_margin": 0.7800295805026225,
+        "probabilities": {
+          "feeling": 0.042291057535602423,
+          "goal": 0.035548082431728176,
+          "greeting": 0.005694923532803006,
+          "observation": 0.04696815007650882,
+          "ownership": 0.010339668718024865,
+          "question": 0.032160387126201305,
+          "reason": 0.8269977305791313
+        }
+      },
+      {
+        "id": "reason-029",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.4707533825286732,
+        "probability_margin": 0.23320055946276314,
+        "probabilities": {
+          "feeling": 0.09337999649307252,
+          "goal": 0.23755282306591008,
+          "greeting": 0.020685898849219723,
+          "observation": 0.1182252848995227,
+          "ownership": 0.02828861040242534,
+          "question": 0.031114003761176585,
+          "reason": 0.4707533825286732
+        }
+      },
+      {
+        "id": "reason-030",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9793721440496314,
+        "probability_margin": 0.9734590127427326,
+        "probabilities": {
+          "feeling": 0.005494014573843285,
+          "goal": 0.0059131313068987515,
+          "greeting": 0.0010462743981266781,
+          "observation": 0.005401014600862758,
+          "ownership": 0.0015291006973216722,
+          "question": 0.001244320373315425,
+          "reason": 0.9793721440496314
+        }
+      },
+      {
+        "id": "reason-031",
+        "actual_label": "reason",
+        "predicted_label": "ownership",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.37390320113576914,
+        "probability_margin": 0.136429769790095,
+        "probabilities": {
+          "feeling": 0.025132704749863212,
+          "goal": 0.07394644894202664,
+          "greeting": 0.07288649162781344,
+          "observation": 0.05672796083532653,
+          "ownership": 0.37390320113576914,
+          "question": 0.1599297613635269,
+          "reason": 0.23747343134567414
+        }
+      },
+      {
+        "id": "reason-032",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9134423535238331,
+        "probability_margin": 0.8717018182328937,
+        "probabilities": {
+          "feeling": 0.002348101791397234,
+          "goal": 0.005597898265851894,
+          "greeting": 0.0021569983083556715,
+          "observation": 0.031525514019674114,
+          "ownership": 0.0031885987999486195,
+          "question": 0.04174053529093937,
+          "reason": 0.9134423535238331
+        }
+      },
+      {
+        "id": "reason-033",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.935454232917306,
+        "probability_margin": 0.8911782532295989,
+        "probabilities": {
+          "feeling": 0.0018941161618587423,
+          "goal": 0.0019297697772690575,
+          "greeting": 0.0015057708789685536,
+          "observation": 0.009444242574443084,
+          "ownership": 0.005495888002447488,
+          "question": 0.04427597968770719,
+          "reason": 0.935454232917306
+        }
+      },
+      {
+        "id": "reason-052",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.762494546685885,
+        "probability_margin": 0.6817204381852852,
+        "probabilities": {
+          "feeling": 0.08077410850059986,
+          "goal": 0.01643536294036625,
+          "greeting": 0.01744066376988481,
+          "observation": 0.036017810582239164,
+          "ownership": 0.05366806459506816,
+          "question": 0.033169442925956756,
+          "reason": 0.762494546685885
+        }
+      },
+      {
+        "id": "reason-053",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.901210125888291,
+        "probability_margin": 0.8336168581272231,
+        "probabilities": {
+          "feeling": 0.007460912590471876,
+          "goal": 0.00392598712021583,
+          "greeting": 0.0038157095187620373,
+          "observation": 0.06759326776106792,
+          "ownership": 0.003806064189043662,
+          "question": 0.012187932932147708,
+          "reason": 0.901210125888291
+        }
+      },
+      {
+        "id": "reason-054",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8308413921751856,
+        "probability_margin": 0.6984792821656941,
+        "probabilities": {
+          "feeling": 0.00430092880870815,
+          "goal": 0.006397374450699088,
+          "greeting": 0.0019125774867485435,
+          "observation": 0.02251980544521278,
+          "ownership": 0.001665811623954202,
+          "question": 0.13236211000949152,
+          "reason": 0.8308413921751856
+        }
+      },
+      {
+        "id": "reason-055",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9963791725604209,
+        "probability_margin": 0.9948173849112226,
+        "probabilities": {
+          "feeling": 0.0003315682361022441,
+          "goal": 0.0005194814760186102,
+          "greeting": 0.00016344256205514328,
+          "observation": 0.0007160893579646128,
+          "ownership": 0.00032845815824040267,
+          "question": 0.001561787649198177,
+          "reason": 0.9963791725604209
+        }
+      }
+    ]
+  },
+  "baselines": {
+    "strategy": "training-only-majority-and-laplace-unigram-naive-bayes-v3",
+    "inputs": [
+      "train"
+    ],
+    "evaluation_partition": "id-test",
+    "training_example_count": 315,
+    "training_family_count": 63,
+    "majority_label": "feeling",
+    "majority": {
+      "accuracy": 0.14285714285714285,
+      "macro_f1": 0.03571428571428571,
+      "confusion_matrix": [
+        [
+          10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "per_class": [
+        {
+          "label": "feeling",
+          "support": 10,
+          "predicted": 70,
+          "true_positive": 10,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25
+        },
+        {
+          "label": "goal",
+          "support": 10,
+          "predicted": 0,
+          "true_positive": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        {
+          "label": "greeting",
+          "support": 10,
+          "predicted": 0,
+          "true_positive": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        {
+          "label": "observation",
+          "support": 10,
+          "predicted": 0,
+          "true_positive": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        {
+          "label": "ownership",
+          "support": 10,
+          "predicted": 0,
+          "true_positive": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        {
+          "label": "question",
+          "support": 10,
+          "predicted": 0,
+          "true_positive": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        {
+          "label": "reason",
+          "support": 10,
+          "predicted": 0,
+          "true_positive": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        }
+      ]
+    },
+    "unigram_naive_bayes": {
+      "accuracy": 0.8,
+      "macro_f1": 0.7929683670201294,
+      "confusion_matrix": [
+        [
+          9,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          10,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          9,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          9,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          7,
+          0,
+          1
+        ],
+        [
+          1,
+          5,
+          0,
+          0,
+          0,
+          3,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          9
+        ]
+      ],
+      "per_class": [
+        {
+          "label": "feeling",
+          "support": 10,
+          "predicted": 11,
+          "true_positive": 9,
+          "precision": 0.8181818181818182,
+          "recall": 0.9,
+          "f1": 0.8571428571428572
+        },
+        {
+          "label": "goal",
+          "support": 10,
+          "predicted": 19,
+          "true_positive": 10,
+          "precision": 0.5263157894736842,
+          "recall": 1.0,
+          "f1": 0.6896551724137931
+        },
+        {
+          "label": "greeting",
+          "support": 10,
+          "predicted": 9,
+          "true_positive": 9,
+          "precision": 1.0,
+          "recall": 0.9,
+          "f1": 0.9473684210526316
+        },
+        {
+          "label": "observation",
+          "support": 10,
+          "predicted": 9,
+          "true_positive": 9,
+          "precision": 1.0,
+          "recall": 0.9,
+          "f1": 0.9473684210526316
+        },
+        {
+          "label": "ownership",
+          "support": 10,
+          "predicted": 7,
+          "true_positive": 7,
+          "precision": 1.0,
+          "recall": 0.7,
+          "f1": 0.8235294117647058
+        },
+        {
+          "label": "question",
+          "support": 10,
+          "predicted": 4,
+          "true_positive": 3,
+          "precision": 0.75,
+          "recall": 0.3,
+          "f1": 0.4285714285714285
+        },
+        {
+          "label": "reason",
+          "support": 10,
+          "predicted": 11,
+          "true_positive": 9,
+          "precision": 0.8181818181818182,
+          "recall": 0.9,
+          "f1": 0.8571428571428572
+        }
+      ]
+    },
+    "learned_minus_unigram_accuracy": 0.02857142857142858,
+    "learned_minus_unigram_macro_f1": 0.029812057125119917
+  },
+  "contrast_test": {
+    "example_count": 28,
+    "pair_count": 14,
+    "accuracy": 0.6785714285714286,
+    "macro_f1": 0.6404761904761905,
+    "pair_accuracy": 0.42857142857142855,
+    "prediction_flip_rate": 0.5714285714285714,
+    "coverage": 0.6071428571428571,
+    "confusion_matrix": [
+      [
+        4,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        2,
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        4,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        2,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4
+      ]
+    ],
+    "per_class": [
+      {
+        "label": "feeling",
+        "support": 4,
+        "predicted": 5,
+        "true_positive": 4,
+        "precision": 0.8,
+        "recall": 1.0,
+        "f1": 0.888888888888889
+      },
+      {
+        "label": "goal",
+        "support": 4,
+        "predicted": 5,
+        "true_positive": 2,
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445
+      },
+      {
+        "label": "greeting",
+        "support": 4,
+        "predicted": 6,
+        "true_positive": 4,
+        "precision": 0.6666666666666666,
+        "recall": 1.0,
+        "f1": 0.8
+      },
+      {
+        "label": "observation",
+        "support": 4,
+        "predicted": 1,
+        "true_positive": 1,
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4
+      },
+      {
+        "label": "ownership",
+        "support": 4,
+        "predicted": 4,
+        "true_positive": 3,
+        "precision": 0.75,
+        "recall": 0.75,
+        "f1": 0.75
+      },
+      {
+        "label": "question",
+        "support": 4,
+        "predicted": 1,
+        "true_positive": 1,
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4
+      },
+      {
+        "label": "reason",
+        "support": 4,
+        "predicted": 6,
+        "true_positive": 4,
+        "precision": 0.6666666666666666,
+        "recall": 1.0,
+        "f1": 0.8
+      }
+    ],
+    "predictions": [
+      {
+        "id": "contrast-001",
+        "pair_id": "contrast-pair-01",
+        "variant": "a",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.999562657787108
+      },
+      {
+        "id": "contrast-002",
+        "pair_id": "contrast-pair-01",
+        "variant": "b",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9369553145194474
+      },
+      {
+        "id": "contrast-003",
+        "pair_id": "contrast-pair-02",
+        "variant": "a",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.6226637688968071
+      },
+      {
+        "id": "contrast-004",
+        "pair_id": "contrast-pair-02",
+        "variant": "b",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9969386428596001
+      },
+      {
+        "id": "contrast-005",
+        "pair_id": "contrast-pair-03",
+        "variant": "a",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9996239637367421
+      },
+      {
+        "id": "contrast-006",
+        "pair_id": "contrast-pair-03",
+        "variant": "b",
+        "actual_label": "ownership",
+        "predicted_label": "reason",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.6767159490453104
+      },
+      {
+        "id": "contrast-007",
+        "pair_id": "contrast-pair-04",
+        "variant": "a",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.4968366489129764
+      },
+      {
+        "id": "contrast-008",
+        "pair_id": "contrast-pair-04",
+        "variant": "b",
+        "actual_label": "question",
+        "predicted_label": "ownership",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.6662450547452151
+      },
+      {
+        "id": "contrast-009",
+        "pair_id": "contrast-pair-05",
+        "variant": "a",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.5765583994141708
+      },
+      {
+        "id": "contrast-010",
+        "pair_id": "contrast-pair-05",
+        "variant": "b",
+        "actual_label": "goal",
+        "predicted_label": "greeting",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.4980760860349473
+      },
+      {
+        "id": "contrast-011",
+        "pair_id": "contrast-pair-06",
+        "variant": "a",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.3245758187986468
+      },
+      {
+        "id": "contrast-012",
+        "pair_id": "contrast-pair-06",
+        "variant": "b",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.6284935955754766
+      },
+      {
+        "id": "contrast-013",
+        "pair_id": "contrast-pair-07",
+        "variant": "a",
+        "actual_label": "observation",
+        "predicted_label": "goal",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.32190759161377375
+      },
+      {
+        "id": "contrast-014",
+        "pair_id": "contrast-pair-07",
+        "variant": "b",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.547674369884618
+      },
+      {
+        "id": "contrast-015",
+        "pair_id": "contrast-pair-08",
+        "variant": "a",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9130344722450907
+      },
+      {
+        "id": "contrast-016",
+        "pair_id": "contrast-pair-08",
+        "variant": "b",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9303296932890235
+      },
+      {
+        "id": "contrast-017",
+        "pair_id": "contrast-pair-09",
+        "variant": "a",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9198433811971093
+      },
+      {
+        "id": "contrast-018",
+        "pair_id": "contrast-pair-09",
+        "variant": "b",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9695607621269031
+      },
+      {
+        "id": "contrast-019",
+        "pair_id": "contrast-pair-10",
+        "variant": "a",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9982935637128258
+      },
+      {
+        "id": "contrast-020",
+        "pair_id": "contrast-pair-10",
+        "variant": "b",
+        "actual_label": "question",
+        "predicted_label": "reason",
+        "correct": false,
+        "accepted": true,
+        "confidence": 0.7195456210468697
+      },
+      {
+        "id": "contrast-021",
+        "pair_id": "contrast-pair-11",
+        "variant": "a",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.7552781547168348
+      },
+      {
+        "id": "contrast-022",
+        "pair_id": "contrast-pair-11",
+        "variant": "b",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.4776394067249288
+      },
+      {
+        "id": "contrast-023",
+        "pair_id": "contrast-pair-12",
+        "variant": "a",
+        "actual_label": "question",
+        "predicted_label": "goal",
+        "correct": false,
+        "accepted": true,
+        "confidence": 0.7463831715912105
+      },
+      {
+        "id": "contrast-024",
+        "pair_id": "contrast-pair-12",
+        "variant": "b",
+        "actual_label": "observation",
+        "predicted_label": "goal",
+        "correct": false,
+        "accepted": true,
+        "confidence": 0.7064413763135943
+      },
+      {
+        "id": "contrast-025",
+        "pair_id": "contrast-pair-13",
+        "variant": "a",
+        "actual_label": "goal",
+        "predicted_label": "greeting",
+        "correct": false,
+        "accepted": true,
+        "confidence": 0.8363794747585518
+      },
+      {
+        "id": "contrast-026",
+        "pair_id": "contrast-pair-13",
+        "variant": "b",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9997142466967188
+      },
+      {
+        "id": "contrast-027",
+        "pair_id": "contrast-pair-14",
+        "variant": "a",
+        "actual_label": "observation",
+        "predicted_label": "feeling",
+        "correct": false,
+        "accepted": true,
+        "confidence": 0.9631909733745052
+      },
+      {
+        "id": "contrast-028",
+        "pair_id": "contrast-pair-14",
+        "variant": "b",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9627987023559668
+      }
+    ]
+  },
+  "ood_test": {
+    "example_count": 36,
+    "accepted_examples": 4,
+    "coverage": 0.1111111111111111,
+    "discrimination": {
+      "auroc": 0.8027777777777778,
+      "aupr_in_domain": 0.8979703907181797,
+      "fpr_at_95_tpr": 0.7777777777777778
+    },
+    "by_stratum": {
+      "capability": {
+        "example_count": 12,
+        "accepted_examples": 1,
+        "coverage": 0.08333333333333333,
+        "discrimination": {
+          "auroc": 0.7607142857142857,
+          "aupr_in_domain": 0.9516573548288259,
+          "fpr_at_95_tpr": 0.9166666666666666
+        }
+      },
+      "noise": {
+        "example_count": 12,
+        "accepted_examples": 1,
+        "coverage": 0.08333333333333333,
+        "discrimination": {
+          "auroc": 0.9071428571428571,
+          "aupr_in_domain": 0.9791444238200642,
+          "fpr_at_95_tpr": 0.4166666666666667
+        }
+      },
+      "semantic": {
+        "example_count": 12,
+        "accepted_examples": 2,
+        "coverage": 0.16666666666666666,
+        "discrimination": {
+          "auroc": 0.7404761904761905,
+          "aupr_in_domain": 0.9531501177723207,
+          "fpr_at_95_tpr": 1.0
+        }
+      }
+    },
+    "predictions": [
+      {
+        "id": "ood-test-001",
+        "family_id": "botany-identification",
+        "domain_group": "botany",
+        "stratum": "semantic",
+        "predicted_label": "reason",
+        "accepted": false,
+        "confidence": 0.5224502250614202,
+        "probability_margin": 0.2579657424160598
+      },
+      {
+        "id": "ood-test-002",
+        "family_id": "botany-identification",
+        "domain_group": "botany",
+        "stratum": "semantic",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.4449671753532053,
+        "probability_margin": 0.30264191792368184
+      },
+      {
+        "id": "ood-test-003",
+        "family_id": "botany-identification",
+        "domain_group": "botany",
+        "stratum": "semantic",
+        "predicted_label": "question",
+        "accepted": true,
+        "confidence": 0.7021542735196299,
+        "probability_margin": 0.442622208923737
+      },
+      {
+        "id": "ood-test-004",
+        "family_id": "botany-nutrition",
+        "domain_group": "botany",
+        "stratum": "semantic",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.3223666727273406,
+        "probability_margin": 0.09100113370694365
+      },
+      {
+        "id": "ood-test-005",
+        "family_id": "botany-nutrition",
+        "domain_group": "botany",
+        "stratum": "semantic",
+        "predicted_label": "reason",
+        "accepted": false,
+        "confidence": 0.6511088138962818,
+        "probability_margin": 0.48571218649662606
+      },
+      {
+        "id": "ood-test-006",
+        "family_id": "botany-nutrition",
+        "domain_group": "botany",
+        "stratum": "semantic",
+        "predicted_label": "greeting",
+        "accepted": false,
+        "confidence": 0.673186652557786,
+        "probability_margin": 0.48050116714575397
+      },
+      {
+        "id": "ood-test-007",
+        "family_id": "music-harmony",
+        "domain_group": "music-theory",
+        "stratum": "semantic",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.696020189046274,
+        "probability_margin": 0.6116428118522677
+      },
+      {
+        "id": "ood-test-008",
+        "family_id": "music-harmony",
+        "domain_group": "music-theory",
+        "stratum": "semantic",
+        "predicted_label": "goal",
+        "accepted": false,
+        "confidence": 0.4491173890371801,
+        "probability_margin": 0.05861681469701596
+      },
+      {
+        "id": "ood-test-009",
+        "family_id": "music-harmony",
+        "domain_group": "music-theory",
+        "stratum": "semantic",
+        "predicted_label": "reason",
+        "accepted": false,
+        "confidence": 0.28058126031812647,
+        "probability_margin": 0.1105956668101945
+      },
+      {
+        "id": "ood-test-010",
+        "family_id": "music-rhythm",
+        "domain_group": "music-theory",
+        "stratum": "semantic",
+        "predicted_label": "observation",
+        "accepted": true,
+        "confidence": 0.7743094403702542,
+        "probability_margin": 0.6795001848525065
+      },
+      {
+        "id": "ood-test-011",
+        "family_id": "music-rhythm",
+        "domain_group": "music-theory",
+        "stratum": "semantic",
+        "predicted_label": "greeting",
+        "accepted": false,
+        "confidence": 0.6667655964493279,
+        "probability_margin": 0.46186773830960803
+      },
+      {
+        "id": "ood-test-012",
+        "family_id": "music-rhythm",
+        "domain_group": "music-theory",
+        "stratum": "semantic",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.5847517496954937,
+        "probability_margin": 0.3229018200248822
+      },
+      {
+        "id": "ood-test-013",
+        "family_id": "calendar-event-mutation",
+        "domain_group": "calendar-operations",
+        "stratum": "capability",
+        "predicted_label": "greeting",
+        "accepted": false,
+        "confidence": 0.5486743863219701,
+        "probability_margin": 0.2740787999307282
+      },
+      {
+        "id": "ood-test-014",
+        "family_id": "calendar-event-mutation",
+        "domain_group": "calendar-operations",
+        "stratum": "capability",
+        "predicted_label": "greeting",
+        "accepted": false,
+        "confidence": 0.48347871470545084,
+        "probability_margin": 0.28557499351001414
+      },
+      {
+        "id": "ood-test-015",
+        "family_id": "calendar-event-mutation",
+        "domain_group": "calendar-operations",
+        "stratum": "capability",
+        "predicted_label": "ownership",
+        "accepted": false,
+        "confidence": 0.5147137080967207,
+        "probability_margin": 0.20425165925084904
+      },
+      {
+        "id": "ood-test-016",
+        "family_id": "calendar-timezone-booking",
+        "domain_group": "calendar-operations",
+        "stratum": "capability",
+        "predicted_label": "greeting",
+        "accepted": false,
+        "confidence": 0.5159795577458854,
+        "probability_margin": 0.31129758439676
+      },
+      {
+        "id": "ood-test-017",
+        "family_id": "calendar-timezone-booking",
+        "domain_group": "calendar-operations",
+        "stratum": "capability",
+        "predicted_label": "observation",
+        "accepted": true,
+        "confidence": 0.9450416582870672,
+        "probability_margin": 0.9142942612288993
+      },
+      {
+        "id": "ood-test-018",
+        "family_id": "calendar-timezone-booking",
+        "domain_group": "calendar-operations",
+        "stratum": "capability",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.5554304323727147,
+        "probability_margin": 0.41073155298195346
+      },
+      {
+        "id": "ood-test-019",
+        "family_id": "image-generation",
+        "domain_group": "image-operations",
+        "stratum": "capability",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.3907839859228879,
+        "probability_margin": 0.15571681260812367
+      },
+      {
+        "id": "ood-test-020",
+        "family_id": "image-generation",
+        "domain_group": "image-operations",
+        "stratum": "capability",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.3324281897184776,
+        "probability_margin": 0.2008902085143012
+      },
+      {
+        "id": "ood-test-021",
+        "family_id": "image-generation",
+        "domain_group": "image-operations",
+        "stratum": "capability",
+        "predicted_label": "ownership",
+        "accepted": false,
+        "confidence": 0.2084717894779959,
+        "probability_margin": 0.008279875697842692
+      },
+      {
+        "id": "ood-test-022",
+        "family_id": "image-editing",
+        "domain_group": "image-operations",
+        "stratum": "capability",
+        "predicted_label": "reason",
+        "accepted": false,
+        "confidence": 0.6765659026088982,
+        "probability_margin": 0.5779268175927667
+      },
+      {
+        "id": "ood-test-023",
+        "family_id": "image-editing",
+        "domain_group": "image-operations",
+        "stratum": "capability",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.48489941965584066,
+        "probability_margin": 0.26672162443789005
+      },
+      {
+        "id": "ood-test-024",
+        "family_id": "image-editing",
+        "domain_group": "image-operations",
+        "stratum": "capability",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.5143971744513551,
+        "probability_margin": 0.29647659409148897
+      },
+      {
+        "id": "ood-test-025",
+        "family_id": "alphanumeric-scramble",
+        "domain_group": "identifier-scramble",
+        "stratum": "noise",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.2065677631528672,
+        "probability_margin": 0.019943649404294717
+      },
+      {
+        "id": "ood-test-026",
+        "family_id": "alphanumeric-scramble",
+        "domain_group": "identifier-scramble",
+        "stratum": "noise",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.2065677631528672,
+        "probability_margin": 0.019943649404294717
+      },
+      {
+        "id": "ood-test-027",
+        "family_id": "alphanumeric-scramble",
+        "domain_group": "identifier-scramble",
+        "stratum": "noise",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.2065677631528672,
+        "probability_margin": 0.019943649404294717
+      },
+      {
+        "id": "ood-test-028",
+        "family_id": "delimiter-scramble",
+        "domain_group": "identifier-scramble",
+        "stratum": "noise",
+        "predicted_label": "feeling",
+        "accepted": false,
+        "confidence": 0.22234503626461952,
+        "probability_margin": 0.05219581920559488
+      },
+      {
+        "id": "ood-test-029",
+        "family_id": "delimiter-scramble",
+        "domain_group": "identifier-scramble",
+        "stratum": "noise",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.17830738330840376,
+        "probability_margin": 0.020342416112755474
+      },
+      {
+        "id": "ood-test-030",
+        "family_id": "delimiter-scramble",
+        "domain_group": "identifier-scramble",
+        "stratum": "noise",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.20050303955060156,
+        "probability_margin": 0.020259026256627205
+      },
+      {
+        "id": "ood-test-031",
+        "family_id": "incomplete-json",
+        "domain_group": "code-fragments",
+        "stratum": "noise",
+        "predicted_label": "greeting",
+        "accepted": false,
+        "confidence": 0.2985918001540158,
+        "probability_margin": 0.027595816842788112
+      },
+      {
+        "id": "ood-test-032",
+        "family_id": "incomplete-json",
+        "domain_group": "code-fragments",
+        "stratum": "noise",
+        "predicted_label": "goal",
+        "accepted": false,
+        "confidence": 0.3788017528676487,
+        "probability_margin": 0.1871877142272123
+      },
+      {
+        "id": "ood-test-033",
+        "family_id": "incomplete-json",
+        "domain_group": "code-fragments",
+        "stratum": "noise",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.2065677631528672,
+        "probability_margin": 0.019943649404294717
+      },
+      {
+        "id": "ood-test-034",
+        "family_id": "stacktrace-fragment",
+        "domain_group": "code-fragments",
+        "stratum": "noise",
+        "predicted_label": "reason",
+        "accepted": true,
+        "confidence": 0.8941444712993046,
+        "probability_margin": 0.8391893412213604
+      },
+      {
+        "id": "ood-test-035",
+        "family_id": "stacktrace-fragment",
+        "domain_group": "code-fragments",
+        "stratum": "noise",
+        "predicted_label": "ownership",
+        "accepted": false,
+        "confidence": 0.6284825736188001,
+        "probability_margin": 0.5173434051400776
+      },
+      {
+        "id": "ood-test-036",
+        "family_id": "stacktrace-fragment",
+        "domain_group": "code-fragments",
+        "stratum": "noise",
+        "predicted_label": "feeling",
+        "accepted": false,
+        "confidence": 0.31137088066895396,
+        "probability_margin": 0.01696280706838532
+      }
+    ]
+  },
+  "bootstrap_95": {
+    "strategy": "label-stratified-id-family-and-ood-domain-cluster-percentile-v3",
+    "seed": 4043100207104787,
+    "resamples": 1000,
+    "confidence_level": 0.95,
+    "id_accuracy": {
+      "value": 0.8285714285714286,
+      "lower_95": 0.7571428571428571,
+      "upper_95": 0.9
+    },
+    "id_macro_f1": {
+      "value": 0.8227804241452493,
+      "lower_95": 0.746391890089369,
+      "upper_95": 0.8927357920492932
+    },
+    "id_negative_log_likelihood": {
+      "value": 0.5670326916793031,
+      "lower_95": 0.3902175181811417,
+      "upper_95": 0.749593960709282
+    },
+    "id_multiclass_brier": {
+      "value": 0.24388656317694785,
+      "lower_95": 0.17212630047557428,
+      "upper_95": 0.31882260488743747
+    },
+    "id_expected_calibration_error": {
+      "value": 0.12263106336949559,
+      "lower_95": 0.10653234745751052,
+      "upper_95": 0.17806840291703374
+    },
+    "id_aurc": {
+      "value": 0.027954802255957558,
+      "lower_95": 0.012522386666943467,
+      "upper_95": 0.05305453161161987
+    },
+    "ood_auroc": {
+      "value": 0.8027777777777778,
+      "lower_95": 0.6888888888888889,
+      "upper_95": 0.905952380952381
+    },
+    "ood_aupr_in_domain": {
+      "value": 0.8979703907181797,
+      "lower_95": 0.8404966395371335,
+      "upper_95": 0.9493364761899094
+    },
+    "ood_fpr_at_95_tpr": {
+      "value": 0.7777777777777778,
+      "lower_95": 0.3611111111111111,
+      "upper_95": 0.9722222222222222
+    }
+  },
+  "limitations": [
+    "All current examples are synthetic and English-only.",
+    "The four-way ID split is family-disjoint but synthetic and still modest; confidence intervals remain wide.",
+    "The same development partition selects the model candidate and the abstention policy, so development-selection optimism remains possible.",
+    "OOD discrimination is measured only on balanced synthetic semantic, capability, and noise strata; broader domains can behave differently.",
+    "ID intervals cluster-resample held-out families and OOD intervals cluster-resample broader domains, but both have few independent clusters.",
+    "A training-only unigram baseline is reported because surface-label shortcuts remain a material benchmark risk.",
+    "The anti-shortcut contrast test is small, synthetic, and source-declared before the final run; it is not an external benchmark.",
+    "This classifier is not suitable for clinical, safety, employment, or other decisions about people."
+  ]
+}

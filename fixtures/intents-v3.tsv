@@ -1,0 +1,526 @@
+id	group_id	label	text
+greeting-001	greeting-family-01	greeting	Hello, it is nice to meet you
+greeting-002	greeting-family-01	greeting	Hi, I am pleased to meet you
+greeting-003	greeting-family-02	greeting	Good morning, I hope your day is starting well
+greeting-004	greeting-family-02	greeting	A warm morning greeting to you
+greeting-005	greeting-family-03	greeting	Good afternoon, I have just arrived
+greeting-006	greeting-family-03	greeting	Wishing you a pleasant afternoon
+greeting-007	greeting-family-04	greeting	Good evening, thanks for making time
+greeting-008	greeting-family-04	greeting	I wanted to wish you a pleasant evening
+greeting-009	greeting-family-05	greeting	Welcome back after the break
+greeting-010	greeting-family-05	greeting	Your return is a welcome sight
+greeting-011	greeting-family-06	greeting	I am glad we can begin this conversation
+greeting-012	greeting-family-06	greeting	It is a pleasure to start our conversation
+greeting-013	greeting-family-07	greeting	Greetings from the local lab
+greeting-014	greeting-family-07	greeting	Salutations from this small experiment
+greeting-015	greeting-family-08	greeting	Hey, how have things been lately
+greeting-016	greeting-family-08	greeting	It has been ages; how are things with you?
+greeting-017	greeting-family-01	greeting	Hello, I am happy to make your acquaintance
+greeting-018	greeting-family-02	greeting	Rise and shine; sending you a morning hello
+greeting-019	greeting-family-03	greeting	Good afternoon, welcome to the session
+greeting-020	greeting-family-04	greeting	The night has arrived, so let me offer a warm hello
+greeting-021	greeting-family-05	greeting	Welcome back, it is nice to see you again
+greeting-022	greeting-family-06	greeting	Hello, I appreciate you joining this conversation
+greeting-023	greeting-family-07	greeting	A friendly greeting from our offline project
+greeting-024	greeting-family-08	greeting	Hi again, it has been a while
+greeting-025	greeting-family-09	greeting	Hello there, thanks for stopping by
+greeting-026	greeting-family-09	greeting	Hi there, thank you for visiting
+greeting-027	greeting-family-09	greeting	Hey there, thanks for coming in
+greeting-028	greeting-family-10	greeting	Welcome, this must be your first visit
+greeting-029	greeting-family-10	greeting	A warm welcome on your first time here
+greeting-030	greeting-family-10	greeting	We are delighted you chose us for your first visit
+greeting-031	greeting-family-11	greeting	Good day to the whole project team
+greeting-032	greeting-family-11	greeting	Greetings to everyone on the team
+greeting-033	greeting-family-11	greeting	Hello to all of you working on the project
+greeting-034	greeting-family-12	greeting	Dear colleagues, I hope this message finds you well
+greeting-035	greeting-family-12	greeting	Hello team, thank you for reading my note
+greeting-036	greeting-family-12	greeting	Good day, I am writing with a brief update
+greeting-037	greeting-family-13	greeting	Hi, I wanted to say hello before we start
+greeting-038	greeting-family-13	greeting	A quick hello before we get to work
+greeting-039	greeting-family-13	greeting	Hey, let me greet you before we begin
+greeting-040	greeting-family-14	greeting	Welcome aboard, we are glad you joined
+greeting-041	greeting-family-14	greeting	Hello and welcome to our new participant
+greeting-042	greeting-family-14	greeting	A warm welcome to the newest person here
+greeting-043	greeting-family-15	greeting	Hey, I spotted you across the room
+greeting-044	greeting-family-15	greeting	Hi, nice seeing you here
+greeting-045	greeting-family-15	greeting	Your arrival brightened the room; hello
+greeting-046	greeting-family-07	greeting	Hello from this small local demonstration
+greeting-047	greeting-family-07	greeting	Greetings from our compact offline lab
+greeting-048	greeting-family-08	greeting	Hey again, how have you been
+greeting-049	greeting-family-08	greeting	How have you been? It has been too long
+greeting-050	greeting-family-09	greeting	Hello there, I am glad you stopped by
+greeting-051	greeting-family-09	greeting	Hi there, welcome in and make yourself comfortable
+greeting-052	greeting-family-10	greeting	Welcome to the lab on your first visit
+greeting-053	greeting-family-10	greeting	Hello, and a special welcome for joining us today
+greeting-054	greeting-family-11	greeting	Good day, everyone on the engineering team
+greeting-055	greeting-family-11	greeting	Hello to each member of our project group
+greeting-056	greeting-family-12	greeting	Dear reader, I appreciate your time today
+greeting-057	greeting-family-12	greeting	Hello from my desk; I hope all is well on your side
+greeting-058	greeting-family-13	greeting	A quick greeting before today's work begins
+greeting-059	greeting-family-13	greeting	Hi, let me welcome you before we get started
+greeting-060	greeting-family-14	greeting	Welcome aboard, and hello from the whole team
+greeting-061	greeting-family-14	greeting	A friendly welcome to the person who just joined
+greeting-062	greeting-family-15	greeting	What a pleasant surprise to find you here
+greeting-063	greeting-family-15	greeting	Hi there; your company is always welcome
+feeling-001	feeling-family-01	feeling	I feel uncertain about the decision ahead
+feeling-002	feeling-family-01	feeling	The next decision leaves me unsure
+feeling-003	feeling-family-02	feeling	The repeated delay is frustrating me
+feeling-004	feeling-family-02	feeling	I am irritated that progress keeps slipping
+feeling-005	feeling-family-03	feeling	Today I feel calm and settled
+feeling-006	feeling-family-03	feeling	There is a quiet sense of ease in me today
+feeling-007	feeling-family-04	feeling	That unexpected result has me worried
+feeling-008	feeling-family-04	feeling	I am anxious about what the result means
+feeling-009	feeling-family-05	feeling	The prototype has me genuinely excited
+feeling-010	feeling-family-05	feeling	I feel enthusiastic about testing the prototype
+feeling-011	feeling-family-06	feeling	The approaching deadline makes me nervous
+feeling-012	feeling-family-06	feeling	I feel tense whenever I think about the deadline
+feeling-013	feeling-family-07	feeling	I am disappointed by how the review ended
+feeling-014	feeling-family-07	feeling	The review outcome left me discouraged
+feeling-015	feeling-family-08	feeling	I am proud of the progress we made
+feeling-016	feeling-family-08	feeling	The progress fills me with a sense of pride
+feeling-017	feeling-family-01	feeling	I am uneasy about choosing the next direction
+feeling-018	feeling-family-02	feeling	The lack of movement leaves me frustrated
+feeling-019	feeling-family-03	feeling	I am feeling peaceful and composed today
+feeling-020	feeling-family-04	feeling	The surprising outcome makes me feel concerned
+feeling-021	feeling-family-05	feeling	I am thrilled to try the new prototype
+feeling-022	feeling-family-06	feeling	The deadline brings out a lot of anxiety in me
+feeling-023	feeling-family-07	feeling	I feel let down by the final review
+feeling-024	feeling-family-08	feeling	What we achieved makes me feel proud
+feeling-025	feeling-family-09	feeling	I feel relieved now that the checks pass
+feeling-026	feeling-family-09	feeling	Passing every check has lifted a weight from me
+feeling-027	feeling-family-09	feeling	I am relieved that the verification succeeded
+feeling-028	feeling-family-10	feeling	I am curious about the unexpected pattern
+feeling-029	feeling-family-10	feeling	The unusual pattern has sparked my curiosity
+feeling-030	feeling-family-10	feeling	I feel intrigued by what the data is showing
+feeling-031	feeling-family-11	feeling	Too many open tasks leave me overwhelmed
+feeling-032	feeling-family-11	feeling	I feel overloaded by the unfinished work
+feeling-033	feeling-family-11	feeling	The backlog is making me feel overwhelmed
+feeling-034	feeling-family-12	feeling	I am hopeful that the next run will improve
+feeling-035	feeling-family-12	feeling	The early signs leave me feeling optimistic
+feeling-036	feeling-family-12	feeling	I feel hopeful after seeing the first results
+feeling-037	feeling-family-13	feeling	I am annoyed by the repeated interruption
+feeling-038	feeling-family-13	feeling	The constant interruption is really bothering me
+feeling-039	feeling-family-13	feeling	I feel irritated each time the process stops
+feeling-040	feeling-family-14	feeling	I am satisfied with the clean final output
+feeling-041	feeling-family-14	feeling	The finished result gives me a sense of satisfaction
+feeling-042	feeling-family-14	feeling	I feel content with how the output turned out
+feeling-043	feeling-family-15	feeling	I feel confused by these conflicting messages
+feeling-044	feeling-family-15	feeling	The contradictory messages have left me puzzled
+feeling-045	feeling-family-15	feeling	I am confused about which message to trust
+feeling-046	feeling-family-03	feeling	The quiet morning makes me feel relaxed
+feeling-047	feeling-family-03	feeling	I am at ease after a calm start to the day
+feeling-048	feeling-family-08	feeling	I feel proud when I look at our progress
+feeling-049	feeling-family-08	feeling	What we accomplished leaves me feeling pleased
+feeling-050	feeling-family-09	feeling	I am feeling relieved after the successful checks
+feeling-051	feeling-family-09	feeling	The passing result makes me feel much less tense
+feeling-052	feeling-family-10	feeling	I feel curious whenever that odd pattern appears
+feeling-053	feeling-family-10	feeling	The pattern leaves me feeling genuinely intrigued
+feeling-054	feeling-family-11	feeling	I am feeling overwhelmed by the size of the backlog
+feeling-055	feeling-family-11	feeling	All these unfinished tasks make me feel overloaded
+feeling-056	feeling-family-12	feeling	The promising signs make me feel hopeful
+feeling-057	feeling-family-12	feeling	I am optimistic about what the next run may bring
+feeling-058	feeling-family-13	feeling	I feel annoyed when the interruption happens again
+feeling-059	feeling-family-13	feeling	The repeated stop makes me increasingly irritated
+feeling-060	feeling-family-14	feeling	The polished result leaves me feeling satisfied
+feeling-061	feeling-family-14	feeling	I am content with the quality of the final output
+feeling-062	feeling-family-15	feeling	The two different messages make me feel uncertain
+feeling-063	feeling-family-15	feeling	I am puzzled and confused by the conflicting advice
+reason-001	reason-family-01	reason	I paused because the requirements changed
+reason-002	reason-family-01	reason	The changed requirements are why I stopped briefly
+reason-003	reason-family-02	reason	Since the deadline moved, I reduced the scope
+reason-004	reason-family-02	reason	I reduced the scope after the deadline was moved
+reason-005	reason-family-03	reason	The missing fixture caused the build failure
+reason-006	reason-family-03	reason	A build failure resulted from the absent fixture
+reason-007	reason-family-04	reason	Strong type guarantees led me to choose Rust
+reason-008	reason-family-04	reason	Rust was selected for its strong type guarantees
+reason-009	reason-family-05	reason	That dependency explains the larger binary size
+reason-010	reason-family-05	reason	The binary is larger on account of that dependency
+reason-011	reason-family-06	reason	Noisy input produced an unstable measurement
+reason-012	reason-family-06	reason	The unstable measurement came from noisy input
+reason-013	reason-family-07	reason	We narrowed the experiment so its result stayed measurable
+reason-014	reason-family-07	reason	Keeping the result measurable required a narrower experiment
+reason-015	reason-family-08	reason	The comparison worked thanks to a reproducible seed
+reason-016	reason-family-08	reason	A reproducible seed made the successful comparison possible
+reason-017	reason-family-01	reason	The requirement update was the reason for my pause
+reason-018	reason-family-02	reason	The shifted deadline is why the scope became smaller
+reason-019	reason-family-03	reason	Because the fixture was absent, the build could not finish
+reason-020	reason-family-04	reason	I chose Rust on account of its type guarantees
+reason-021	reason-family-05	reason	The extra dependency is the reason the binary grew
+reason-022	reason-family-06	reason	The measurement varied due to noise in the input
+reason-023	reason-family-07	reason	We made the experiment narrower because measurability mattered
+reason-024	reason-family-08	reason	The comparison succeeded because its seed was reproducible
+reason-025	reason-family-09	reason	The stale cache caused yesterday's incorrect output
+reason-026	reason-family-09	reason	Yesterday's output was wrong because the cache was stale
+reason-027	reason-family-09	reason	A stale cache explains the incorrect result from yesterday
+reason-028	reason-family-10	reason	We delayed the release since one test was still failing
+reason-029	reason-family-10	reason	One failing test is why the release was postponed
+reason-030	reason-family-10	reason	The release moved to a later date because a test failed
+reason-031	reason-family-11	reason	The service stayed offline due to scheduled maintenance
+reason-032	reason-family-11	reason	Scheduled maintenance explains why the service was unavailable
+reason-033	reason-family-11	reason	Because maintenance was planned, the service remained offline
+reason-034	reason-family-12	reason	I selected the smaller file because downloads must stay fast
+reason-035	reason-family-12	reason	Fast downloads were the reason I chose the smaller file
+reason-036	reason-family-12	reason	The need for speed led me to use a smaller file
+reason-037	reason-family-13	reason	The count changed after duplicate rows were removed
+reason-038	reason-family-13	reason	Removing duplicate rows caused the total to change
+reason-039	reason-family-13	reason	The lower total resulted from deleting duplicate rows
+reason-040	reason-family-14	reason	We kept the data local to protect private information
+reason-041	reason-family-14	reason	Privacy requirements are why the data never leaves this device
+reason-042	reason-family-14	reason	The data remains on the device because privacy comes first
+reason-043	reason-family-15	reason	The command failed because its configuration was invalid
+reason-044	reason-family-15	reason	An invalid configuration led to the command failure
+reason-045	reason-family-15	reason	The failure occurred on account of a configuration error
+reason-046	reason-family-04	reason	Strong compile-time checks are why I decided to use Rust
+reason-047	reason-family-04	reason	I used Rust because its type system catches mistakes early
+reason-048	reason-family-05	reason	The binary grew larger due to the additional dependency
+reason-049	reason-family-05	reason	Adding that dependency caused the increase in binary size
+reason-050	reason-family-07	reason	Measurable results were the reason we reduced the experiment
+reason-051	reason-family-07	reason	We narrowed the scope because the outcome had to stay measurable
+reason-052	reason-family-10	reason	The failing check explains why we held the release back
+reason-053	reason-family-10	reason	We postponed shipping because one test remained red
+reason-054	reason-family-11	reason	Planned maintenance caused the temporary service outage
+reason-055	reason-family-11	reason	The service was unavailable because maintenance was under way
+reason-056	reason-family-12	reason	I chose the compact download due to the speed requirement
+reason-057	reason-family-12	reason	The smaller file won because it downloads more quickly
+reason-058	reason-family-13	reason	Deleting repeated records explains the reduced row count
+reason-059	reason-family-13	reason	The total fell because duplicate entries were taken out
+reason-060	reason-family-14	reason	We chose local storage because the records are private
+reason-061	reason-family-14	reason	Protecting private data is the reason nothing is uploaded
+reason-062	reason-family-15	reason	A configuration mistake caused the command to stop
+reason-063	reason-family-15	reason	The command stopped since its configuration could not be accepted
+ownership-001	ownership-family-01	ownership	My schedule changed before lunch
+ownership-002	ownership-family-01	ownership	The schedule that changed before lunch is mine
+ownership-003	ownership-family-02	ownership	My prototype is ready for its first review
+ownership-004	ownership-family-02	ownership	The prototype awaiting its first review belongs to me
+ownership-005	ownership-family-03	ownership	My notes occupy two separate documents
+ownership-006	ownership-family-03	ownership	The notes spread over two documents are my own
+ownership-007	ownership-family-04	ownership	My local build finally passes every check
+ownership-008	ownership-family-04	ownership	The fully passing local build is mine
+ownership-009	ownership-family-05	ownership	My dataset contains fictional examples only
+ownership-010	ownership-family-05	ownership	The fictional-only dataset belongs to my project
+ownership-011	ownership-family-06	ownership	My workstation runs the classifier offline
+ownership-012	ownership-family-06	ownership	The offline classifier runs on my workstation
+ownership-013	ownership-family-07	ownership	My preferred design has fewer moving parts
+ownership-014	ownership-family-07	ownership	The simpler design is the option I prefer
+ownership-015	ownership-family-08	ownership	I recognize the blue notebook as my own
+ownership-016	ownership-family-08	ownership	I own the blue notebook beside the keyboard
+ownership-017	ownership-family-01	ownership	The revised lunch schedule belongs to me
+ownership-018	ownership-family-02	ownership	I am the owner of the prototype awaiting review
+ownership-019	ownership-family-03	ownership	Both of those separate note files are mine
+ownership-020	ownership-family-04	ownership	I own the local build that now passes its checks
+ownership-021	ownership-family-05	ownership	That fictional dataset is part of my own project
+ownership-022	ownership-family-06	ownership	The workstation running offline inference is my machine
+ownership-023	ownership-family-07	ownership	The design with fewer components is my choice
+ownership-024	ownership-family-08	ownership	I left my notebook beside the keyboard
+ownership-025	ownership-family-09	ownership	The red bicycle outside is mine
+ownership-026	ownership-family-09	ownership	I own the red bike parked by the entrance
+ownership-027	ownership-family-09	ownership	That bicycle near the front door belongs to me
+ownership-028	ownership-family-10	ownership	This repository is my personal experiment
+ownership-029	ownership-family-10	ownership	The experimental repository belongs to my account
+ownership-030	ownership-family-10	ownership	I am the owner of this small code repository
+ownership-031	ownership-family-11	ownership	I am accountable for signing off the last review
+ownership-032	ownership-family-11	ownership	I am responsible for completing the last review
+ownership-033	ownership-family-11	ownership	Responsibility for the final review belongs to me
+ownership-034	ownership-family-12	ownership	I wrote the migration script myself
+ownership-035	ownership-family-12	ownership	The migration script is work I completed
+ownership-036	ownership-family-12	ownership	I am the person who authored the migration script
+ownership-037	ownership-family-13	ownership	Those deployment notes are my own
+ownership-038	ownership-family-13	ownership	I own the notes prepared for deployment
+ownership-039	ownership-family-13	ownership	The deployment notes belong to me
+ownership-040	ownership-family-14	ownership	I own the update to those settings
+ownership-041	ownership-family-14	ownership	The configuration change was my responsibility
+ownership-042	ownership-family-14	ownership	I am accountable for changing that configuration
+ownership-043	ownership-family-15	ownership	The access card on this desk is mine
+ownership-044	ownership-family-15	ownership	I own the access card lying on the desk
+ownership-045	ownership-family-15	ownership	The access badge beside the monitor was issued to me
+ownership-046	ownership-family-05	ownership	I own the project dataset containing the fictional records
+ownership-047	ownership-family-05	ownership	The dataset with synthetic examples belongs to my project
+ownership-048	ownership-family-06	ownership	That offline workstation is my own machine
+ownership-049	ownership-family-06	ownership	I own the computer that runs our local classifier
+ownership-050	ownership-family-07	ownership	The simpler architecture is the design I chose
+ownership-051	ownership-family-07	ownership	I take ownership of the design with fewer moving parts
+ownership-052	ownership-family-10	ownership	This code experiment is mine and lives in my repository
+ownership-053	ownership-family-10	ownership	I own the account that contains this experimental repository
+ownership-054	ownership-family-11	ownership	I take responsibility for carrying out the final review
+ownership-055	ownership-family-11	ownership	Completing that last review is my responsibility
+ownership-056	ownership-family-12	ownership	I am responsible for the migration script I authored
+ownership-057	ownership-family-12	ownership	The script for the migration is entirely my work
+ownership-058	ownership-family-13	ownership	The deployment document belongs to me
+ownership-059	ownership-family-13	ownership	Those release notes are mine and I prepared them
+ownership-060	ownership-family-14	ownership	I am accountable for the change made to the configuration
+ownership-061	ownership-family-14	ownership	I own the decision to update that configuration
+ownership-062	ownership-family-15	ownership	The card resting beside the monitor is my property
+ownership-063	ownership-family-15	ownership	That access badge is mine, not a shared card
+question-001	question-family-01	question	What should I inspect before anything else?
+question-002	question-family-01	question	What deserves the first inspection?
+question-003	question-family-02	question	Can the classifier run without a network connection?
+question-004	question-family-02	question	Can I reproduce this evaluation entirely offline?
+question-005	question-family-03	question	Which feature had the greatest influence?
+question-006	question-family-03	question	Which signal pushed the prediction furthest?
+question-007	question-family-04	question	When should the classifier be trained again?
+question-008	question-family-04	question	When is another training run appropriate?
+question-009	question-family-05	question	Does the report include class-level scores?
+question-010	question-family-05	question	Does this output contain a confusion matrix?
+question-011	question-family-06	question	Who is able to audit the serialized artifact?
+question-012	question-family-06	question	Who can confirm that these weights are authentic?
+question-013	question-family-07	question	Are all seven classes represented evenly?
+question-014	question-family-07	question	Are the labels balanced across the corpus?
+question-015	question-family-08	question	How many features remain after selection?
+question-016	question-family-08	question	How many vocabulary entries did training retain?
+question-017	question-family-01	question	What is the first thing I ought to examine?
+question-018	question-family-02	question	Is a network connection required for this classifier?
+question-019	question-family-03	question	What feature contributed most to this result?
+question-020	question-family-04	question	At what point should I retrain the classifier?
+question-021	question-family-05	question	Can I find per-class metrics in the report?
+question-022	question-family-06	question	Who can verify the artifact and its weights?
+question-023	question-family-07	question	Is the corpus balanced between all labels?
+question-024	question-family-08	question	What is the size of the selected vocabulary?
+question-025	question-family-09	question	Why did the verification reject this bundle?
+question-026	question-family-09	question	What caused this bundle to fail verification?
+question-027	question-family-09	question	Why was the artifact marked as invalid?
+question-028	question-family-10	question	Where does the local report get written?
+question-029	question-family-10	question	Which directory contains the generated report?
+question-030	question-family-10	question	Where can I find the report after the run?
+question-031	question-family-11	question	Could you explain how the threshold is chosen?
+question-032	question-family-11	question	How does the program select its acceptance threshold?
+question-033	question-family-11	question	What process determines the final threshold?
+question-034	question-family-12	question	Is this command safe to run more than once?
+question-035	question-family-12	question	Can the same command be repeated safely?
+question-036	question-family-12	question	Would running this command again be safe?
+question-037	question-family-13	question	When was the manifest generated?
+question-038	question-family-13	question	At what time did the program create the manifest?
+question-039	question-family-13	question	When did manifest generation finish?
+question-040	question-family-14	question	Should I keep the original data file?
+question-041	question-family-14	question	Do I need to retain the source dataset?
+question-042	question-family-14	question	Is preserving the original fixture necessary?
+question-043	question-family-15	question	How can I inspect one prediction in detail?
+question-044	question-family-15	question	What command shows the full prediction trace?
+question-045	question-family-15	question	How do I view the explanation for a single result?
+question-046	question-family-04	question	When would another classifier training run be appropriate?
+question-047	question-family-04	question	How can I tell that the model should be trained again?
+question-048	question-family-05	question	What class-specific measurements does the report provide?
+question-049	question-family-05	question	Can the report show me the confusion matrix?
+question-050	question-family-07	question	Which labels have the same number of examples?
+question-051	question-family-07	question	Does every class contain an equal number of records?
+question-052	question-family-10	question	Where should I look for the report generated by this run?
+question-053	question-family-10	question	What folder receives the completed evaluation report?
+question-054	question-family-11	question	How is the minimum confidence threshold determined?
+question-055	question-family-11	question	Could you tell me what selects the probability margin?
+question-056	question-family-12	question	Can I safely repeat the exact same operation?
+question-057	question-family-12	question	What happens if I run this command for a second time?
+question-058	question-family-13	question	When did the application finish writing its manifest?
+question-059	question-family-13	question	What timestamp belongs to the generated manifest?
+question-060	question-family-14	question	Should the original dataset remain in the repository?
+question-061	question-family-14	question	Which source files do I need to keep for reproduction?
+question-062	question-family-15	question	How do I display every feature behind this prediction?
+question-063	question-family-15	question	Where can I read the complete explanation for one result?
+goal-001	goal-family-01	goal	The prototype needs to be ready before this week closes
+goal-002	goal-family-01	goal	I want the prototype completed before the week ends
+goal-003	goal-family-02	goal	My next step is writing the evaluation tests
+goal-004	goal-family-02	goal	The evaluation tests are the next step I will take
+goal-005	goal-family-03	goal	I plan to simplify the command line interface
+goal-006	goal-family-03	goal	My plan is to make the command line simpler
+goal-007	goal-family-04	goal	I would like to publish a reproducible benchmark
+goal-008	goal-family-04	goal	Publishing a reproducible benchmark is what I would like
+goal-009	goal-family-05	goal	The goal is to remove the network dependency
+goal-010	goal-family-05	goal	Removing the network dependency is my goal
+goal-011	goal-family-06	goal	I aim to make every error message clearer
+goal-012	goal-family-06	goal	Clearer error messages are what I am aiming for
+goal-013	goal-family-07	goal	I need to validate the model artifact
+goal-014	goal-family-07	goal	Validating the model artifact is something I need to do
+goal-015	goal-family-08	goal	I intend to keep inference entirely local
+goal-016	goal-family-08	goal	Keeping all inference local is my intention
+goal-017	goal-family-01	goal	Completing the prototype by Friday is what I want
+goal-018	goal-family-02	goal	I will write the evaluation tests next
+goal-019	goal-family-03	goal	A simpler command line is what I plan to deliver
+goal-020	goal-family-04	goal	My desired outcome is a benchmark others can reproduce
+goal-021	goal-family-05	goal	I am working toward removing every network dependency
+goal-022	goal-family-06	goal	My aim is clearer feedback for every error
+goal-023	goal-family-07	goal	I want the model artifact fully validated
+goal-024	goal-family-08	goal	My intention is to run inference without remote services
+goal-025	goal-family-09	goal	I hope to publish the first stable release next month
+goal-026	goal-family-09	goal	Releasing a stable version next month is my hope
+goal-027	goal-family-09	goal	My desired result is a stable release by next month
+goal-028	goal-family-10	goal	The objective is to reduce startup time by half
+goal-029	goal-family-10	goal	I aim to cut the startup delay in half
+goal-030	goal-family-10	goal	Halving the startup time is the outcome I want
+goal-031	goal-family-11	goal	I plan to document every public command
+goal-032	goal-family-11	goal	My next goal is complete documentation for each command
+goal-033	goal-family-11	goal	I intend to give every public command clear documentation
+goal-034	goal-family-12	goal	I want to make installation work on all three platforms
+goal-035	goal-family-12	goal	Cross-platform installation is the target I am pursuing
+goal-036	goal-family-12	goal	My aim is an installer for each supported platform
+goal-037	goal-family-13	goal	I would like to shorten the feedback cycle
+goal-038	goal-family-13	goal	A faster feedback loop is what I hope to achieve
+goal-039	goal-family-13	goal	My objective is to receive test feedback sooner
+goal-040	goal-family-14	goal	My priority is to remove the last flaky test
+goal-041	goal-family-14	goal	I intend to eliminate the remaining test instability
+goal-042	goal-family-14	goal	A consistently reliable test suite is my current goal
+goal-043	goal-family-15	goal	I want to finish the migration without downtime
+goal-044	goal-family-15	goal	Completing a zero-downtime migration is my target
+goal-045	goal-family-15	goal	I plan to migrate the service while it remains available
+goal-046	goal-family-07	goal	My goal is to verify every part of the model bundle
+goal-047	goal-family-07	goal	I aim to complete a full validation of the artifact
+goal-048	goal-family-08	goal	I want all inference to stay on this computer
+goal-049	goal-family-08	goal	My objective is a classifier that never needs the network
+goal-050	goal-family-09	goal	I plan to ship a stable version during the coming month
+goal-051	goal-family-09	goal	Publishing the stable release next month is my objective
+goal-052	goal-family-10	goal	My goal is to make startup twice as fast
+goal-053	goal-family-10	goal	I want to reduce the time spent waiting for startup
+goal-054	goal-family-11	goal	Complete command documentation is the outcome I intend to deliver
+goal-055	goal-family-11	goal	I aim to document the behavior of each public command
+goal-056	goal-family-12	goal	My objective is to support installation on every target platform
+goal-057	goal-family-12	goal	I plan to provide a working installer for all supported systems
+goal-058	goal-family-13	goal	I want test results to arrive much sooner
+goal-059	goal-family-13	goal	My aim is a shorter cycle between a change and its feedback
+goal-060	goal-family-14	goal	I plan to make the full test suite reliable on every run
+goal-061	goal-family-14	goal	Removing the final intermittent failure is my current objective
+goal-062	goal-family-15	goal	My goal is to move the service with no interruption
+goal-063	goal-family-15	goal	I intend to complete this migration while users remain online
+observation-001	observation-family-01	observation	The meeting ended twenty minutes early
+observation-002	observation-family-01	observation	Everyone left the meeting twenty minutes ahead of schedule
+observation-003	observation-family-02	observation	Three warnings appeared in the latest log
+observation-004	observation-family-02	observation	The latest log shows exactly three warnings
+observation-005	observation-family-03	observation	The prototype currently contains four screens
+observation-006	observation-family-03	observation	There are four screens in the current prototype
+observation-007	observation-family-04	observation	The model artifact carries an explicit version
+observation-008	observation-family-04	observation	An explicit version is recorded inside the model artifact
+observation-009	observation-family-05	observation	A fixed seed is present in the configuration
+observation-010	observation-family-05	observation	The configuration contains one fixed seed
+observation-011	observation-family-06	observation	The terminal printed a compact summary
+observation-012	observation-family-06	observation	A concise summary appeared in the terminal
+observation-013	observation-family-07	observation	The browser retained only the visible session
+observation-014	observation-family-07	observation	Only the visible session remained in the browser
+observation-015	observation-family-08	observation	The final report lists every class separately
+observation-016	observation-family-08	observation	Each class has its own entry in the final report
+observation-017	observation-family-01	observation	I noticed that the meeting finished twenty minutes early
+observation-018	observation-family-02	observation	My review of the log found three warnings
+observation-019	observation-family-03	observation	I counted four distinct screens in the prototype
+observation-020	observation-family-04	observation	I observed a version field inside the model artifact
+observation-021	observation-family-05	observation	Inspection shows a fixed seed in the configuration
+observation-022	observation-family-06	observation	I saw a concise summary printed by the terminal
+observation-023	observation-family-07	observation	I noticed the browser kept only the visible session
+observation-024	observation-family-08	observation	The report shows one separate entry per class
+observation-025	observation-family-09	observation	The latest run completed in forty-two seconds
+observation-026	observation-family-09	observation	I measured a runtime of forty-two seconds for the latest run
+observation-027	observation-family-09	observation	The timer showed forty-two seconds when the run ended
+observation-028	observation-family-10	observation	Two files changed between the recorded builds
+observation-029	observation-family-10	observation	The comparison found changes in exactly two files
+observation-030	observation-family-10	observation	I observed that two files differ between these builds
+observation-031	observation-family-11	observation	The memory graph stays flat during repeated inference
+observation-032	observation-family-11	observation	Repeated predictions leave the memory curve unchanged
+observation-033	observation-family-11	observation	I noticed stable memory use across multiple predictions
+observation-034	observation-family-12	observation	The package contains binaries for three operating systems
+observation-035	observation-family-12	observation	I counted three platform binaries inside the package
+observation-036	observation-family-12	observation	Three different operating systems are represented in the archive
+observation-037	observation-family-13	observation	The checksum matches the value in the manifest
+observation-038	observation-family-13	observation	I compared the checksum and found an exact manifest match
+observation-039	observation-family-13	observation	The observed digest is identical to the manifest entry
+observation-040	observation-family-14	observation	The queue currently contains seven pending tasks
+observation-041	observation-family-14	observation	I can see seven tasks waiting in the queue
+observation-042	observation-family-14	observation	A count of the pending queue gives seven tasks
+observation-043	observation-family-15	observation	The exported file is smaller than the source artifact
+observation-044	observation-family-15	observation	I noticed the export uses less space than its source
+observation-045	observation-family-15	observation	The source artifact is larger than the generated export
+observation-046	observation-family-03	observation	I observed that the prototype currently has four screens
+observation-047	observation-family-03	observation	A screen count shows four views in the current prototype
+observation-048	observation-family-08	observation	I noticed a separate report entry for each class
+observation-049	observation-family-08	observation	The report shows that every label has its own section
+observation-050	observation-family-09	observation	I observed a forty-two-second duration in the latest run
+observation-051	observation-family-09	observation	The recorded runtime for the last execution is forty-two seconds
+observation-052	observation-family-10	observation	The build comparison reports exactly two modified files
+observation-053	observation-family-10	observation	I noticed two file differences between the builds
+observation-054	observation-family-11	observation	Monitoring shows constant memory use during repeated predictions
+observation-055	observation-family-11	observation	I observed no growth in memory across the inference loop
+observation-056	observation-family-12	observation	The archive listing shows binaries for three platforms
+observation-057	observation-family-12	observation	I found three operating-system builds in the package
+observation-058	observation-family-13	observation	The digest comparison shows an exact checksum match
+observation-059	observation-family-13	observation	I observed that the manifest and file checksums are identical
+observation-060	observation-family-14	observation	The current queue count is seven waiting tasks
+observation-061	observation-family-14	observation	I noticed seven pending items in the task queue
+observation-062	observation-family-15	observation	The size report shows a smaller export than source
+observation-063	observation-family-15	observation	I observed that the generated file occupies less space
+feeling-064	feeling-family-01	feeling	I keep wavering when I think about which option to take
+feeling-065	feeling-family-01	feeling	Choosing a direction leaves me feeling unsure
+feeling-066	feeling-family-02	feeling	Watching the work slip again is getting under my skin
+feeling-067	feeling-family-02	feeling	Each new postponement makes me more impatient
+feeling-068	feeling-family-04	feeling	I cannot shake my concern about that surprising result
+feeling-069	feeling-family-04	feeling	The outcome caught me off guard and now I feel apprehensive
+feeling-070	feeling-family-05	feeling	Trying this prototype gives me a real burst of anticipation
+feeling-071	feeling-family-05	feeling	I can hardly wait to put the prototype through its first test
+feeling-072	feeling-family-06	feeling	As the due date gets closer, I notice myself becoming tense
+feeling-073	feeling-family-06	feeling	Thinking about how little time remains fills me with dread
+feeling-074	feeling-family-07	feeling	I had hoped for a different review decision and feel deflated
+feeling-075	feeling-family-07	feeling	How the assessment concluded left me deeply disheartened
+goal-064	goal-family-01	goal	By the end of this week, the prototype needs to be complete
+goal-065	goal-family-01	goal	Finishing the prototype before the weekend is my immediate target
+goal-066	goal-family-02	goal	I will tackle the evaluation tests before any other task
+goal-067	goal-family-02	goal	Writing coverage for the evaluation path comes next on my list
+goal-068	goal-family-03	goal	My immediate objective is a command line with fewer options and clearer wording
+goal-069	goal-family-03	goal	I intend to pare the CLI down to its essential actions
+goal-070	goal-family-04	goal	I want other people to rerun the benchmark and obtain the same evidence
+goal-071	goal-family-04	goal	The benchmark should be publishable with every reproduction step documented
+goal-072	goal-family-05	goal	I am aiming for a build that never reaches out to the network
+goal-073	goal-family-05	goal	Eliminating remote dependencies is the outcome I am pursuing
+goal-074	goal-family-06	goal	Every failure should tell the user exactly what went wrong
+goal-075	goal-family-06	goal	I plan to replace vague errors with specific, actionable feedback
+greeting-064	greeting-family-01	greeting	Hello, I am glad we have been introduced
+greeting-065	greeting-family-01	greeting	Hi, it is lovely to make your acquaintance today
+greeting-066	greeting-family-02	greeting	Good morning; I hope the hours ahead treat you kindly
+greeting-067	greeting-family-02	greeting	A cheerful morning to you
+greeting-068	greeting-family-03	greeting	Hello this afternoon; thank you for welcoming me
+greeting-069	greeting-family-03	greeting	I hope you are having a good afternoon
+greeting-070	greeting-family-04	greeting	Good evening; I appreciate you being here
+greeting-071	greeting-family-04	greeting	I hope your evening has been pleasant so far
+greeting-072	greeting-family-05	greeting	It is wonderful to welcome you back after some time away
+greeting-073	greeting-family-05	greeting	Glad you have returned; we missed having you here
+greeting-074	greeting-family-06	greeting	Hello; shall we begin our discussion
+greeting-075	greeting-family-06	greeting	I am happy that we can sit down and talk now
+observation-064	observation-family-01	observation	The clock showed that we wrapped up with twenty minutes remaining
+observation-065	observation-family-01	observation	We adjourned at 10:40 even though the calendar held the room until 11:00
+observation-066	observation-family-02	observation	I found three warning entries while reading the newest log
+observation-067	observation-family-02	observation	The most recent log contains a trio of warning lines
+observation-068	observation-family-04	observation	The artifact metadata includes a declared model version
+observation-069	observation-family-04	observation	A version identifier is stored with the serialized model
+observation-070	observation-family-05	observation	Configuration review revealed a deterministic seed value
+observation-071	observation-family-05	observation	One seed value is pinned in the settings file
+observation-072	observation-family-06	observation	At completion, the terminal displayed a short result digest
+observation-073	observation-family-06	observation	I saw the command end with a brief terminal recap
+observation-074	observation-family-07	observation	Refreshing the page left only the conversation shown on screen
+observation-075	observation-family-07	observation	After navigation, the browser held no session beyond the one being displayed
+ownership-064	ownership-family-01	ownership	The calendar adjustment before noon applies to my day
+ownership-065	ownership-family-01	ownership	I was the person whose timetable moved earlier that morning
+ownership-066	ownership-family-02	ownership	I built the prototype that is now queued for an initial review
+ownership-067	ownership-family-02	ownership	The review-ready prototype came from my own work
+ownership-068	ownership-family-03	ownership	I keep my notes split between a pair of files
+ownership-069	ownership-family-03	ownership	Two documents contain the notes I wrote
+ownership-070	ownership-family-04	ownership	The successful local build came from my checkout
+ownership-071	ownership-family-04	ownership	Every check now passes in the build running on my machine
+ownership-072	ownership-family-08	ownership	I brought the blue notebook lying beside the keyboard
+ownership-073	ownership-family-08	ownership	The blue notebook by the computer is my personal copy
+ownership-074	ownership-family-09	ownership	I rode the red bicycle parked near the entrance
+ownership-075	ownership-family-09	ownership	The red bike waiting outside is the one I use
+question-064	question-family-01	question	Where should I begin looking?
+question-065	question-family-01	question	Which part calls for attention first?
+question-066	question-family-02	question	Will the classifier still work in airplane mode?
+question-067	question-family-02	question	Does inference need to contact any remote service?
+question-068	question-family-03	question	What signal moved the score more than the others?
+question-069	question-family-03	question	Which input term contributed the largest weight to this decision?
+question-070	question-family-06	question	Who has permission to examine the stored model?
+question-071	question-family-06	question	Who should independently check the serialized weights?
+question-072	question-family-08	question	What vocabulary count remains once selection finishes?
+question-073	question-family-08	question	After pruning, how large is the feature space?
+question-074	question-family-09	question	Which contract check caused this bundle to be refused?
+question-075	question-family-09	question	What evidence made verification stop?
+reason-064	reason-family-01	reason	I stopped for a moment after the specification was revised
+reason-065	reason-family-01	reason	A requirements update prompted the brief pause
+reason-066	reason-family-02	reason	The new due date forced me to trim what we would deliver
+reason-067	reason-family-02	reason	We cut several features in response to the revised deadline
+reason-068	reason-family-03	reason	The build stopped when it could not locate a required fixture
+reason-069	reason-family-03	reason	Without the expected fixture, compilation could not complete
+reason-070	reason-family-06	reason	Input interference made the reading fluctuate
+reason-071	reason-family-06	reason	The measurement would not settle while the source remained noisy
+reason-072	reason-family-08	reason	A fixed random seed let both comparison runs agree
+reason-073	reason-family-08	reason	The results matched because each run reused the same seed
+reason-074	reason-family-09	reason	Yesterday's bad result came from data left in an old cache
+reason-075	reason-family-09	reason	An out-of-date cache explains why the prior output was incorrect

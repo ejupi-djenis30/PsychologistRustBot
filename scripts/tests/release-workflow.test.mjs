@@ -108,6 +108,34 @@ test("release tooling and permissions stay pinned and least-privilege", () => {
   assert.match(publish, /sha256sum --check --strict/u);
 });
 
+test("every native release binary proves the V3 model contract before packaging", () => {
+  const build = jobBlock("build");
+  const buildIndex = build.indexOf("name: Build locked release binary");
+  const smokeIndex = build.indexOf("name: Smoke-test built CLI");
+  const packageIndex = build.indexOf("name: Package binary with checksum and provenance metadata");
+  assert.ok(buildIndex >= 0 && smokeIndex > buildIndex && packageIndex > smokeIndex);
+  assert.match(build, /node scripts\/release-contract\.mjs smoke/u);
+  assert.match(build, /--bundle artifacts\/eliza-open-set-v3/u);
+  assert.match(build, /--legacy-model models\/eliza-intent-v1\.json/u);
+  assert.match(build, /node scripts\/release-contract\.mjs smoke-archive/u);
+
+  const releaseContract = readFileSync(path.join(repositoryRoot, "scripts", "release-contract.mjs"), "utf8");
+  for (const required of [
+    '["infer", "--bundle", resolvedBundle, "--json"',
+    '["bundle", "verify", "--bundle", resolvedBundle]',
+    '["bundle", "reproduce", "--bundle", resolvedBundle]',
+    'trace?.model?.version === "3.0.0"',
+    'typeof trace.model.accepted === "boolean"',
+    'Number.isFinite(trace.model.confidence)',
+    'Number.isFinite(trace.model.margin)',
+    '"--legacy-v1"',
+  ]) {
+    assert.ok(releaseContract.includes(required), `release smoke is missing ${required}`);
+  }
+  assert.doesNotMatch(releaseContract, /spawnSync\(resolvedBinary, \["--once"/u);
+  assert.doesNotMatch(releaseContract, /rule=feeling-reflection/u);
+});
+
 test("the release candidate gate rejects every fail-open or contract drift mutation", () => {
   const newline = workflow.includes("\r\n") ? "\r\n" : "\n";
   const mutations = [

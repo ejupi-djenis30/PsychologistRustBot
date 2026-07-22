@@ -27,6 +27,8 @@ const repositoryRoot = path.resolve(scriptDirectory, "..");
 const defaultManifestPath = path.join(repositoryRoot, "Cargo.toml");
 const defaultLockPath = path.join(repositoryRoot, "Cargo.lock");
 const defaultAuditPolicyPath = path.join(repositoryRoot, ".github", "rustsec-audit-policy.json");
+const defaultOpenSetBundlePath = path.join(repositoryRoot, "artifacts", "eliza-open-set-v3");
+const defaultLegacyModelPath = path.join(repositoryRoot, "models", "eliza-intent-v1.json");
 const packageName = "eliza-lab";
 
 export const SUPPORTED_TARGETS = Object.freeze({
@@ -622,21 +624,99 @@ export function generateSpdx(metadata, {
   };
 }
 
-export function smokeBinary(binaryPath) {
-  const resolvedBinary = path.resolve(binaryPath);
-  invariant(existsSync(resolvedBinary), `Cannot smoke-test missing binary: ${resolvedBinary}`);
-  const result = spawnSync(resolvedBinary, ["--once", "I feel uncertain about my next step"], {
+function runBinary(binaryPath, argumentsList, label, timeout = 10_000) {
+  const result = spawnSync(binaryPath, argumentsList, {
     encoding: "utf8",
-    timeout: 10_000,
+    timeout,
     windowsHide: true,
   });
-  invariant(!result.error, `Built binary could not be executed: ${result.error?.message}`);
-  invariant(result.status === 0, `Built binary exited with status ${result.status}: ${result.stderr}`);
-  invariant(result.stdout.includes("What makes you feel uncertain about your next step?"), "Built binary returned an unexpected response");
-  invariant(result.stdout.includes("rule=feeling-reflection turn=1"), "Built binary returned an unexpected trace");
+  invariant(!result.error, `${label} could not be executed: ${result.error?.message}`);
+  invariant(result.status === 0, `${label} exited with status ${result.status}: ${result.stderr}`);
+  return result;
 }
 
-export function smokeArchive(archivePath, target) {
+export function smokeBinary(
+  binaryPath,
+  bundlePath = defaultOpenSetBundlePath,
+  legacyModelPath = defaultLegacyModelPath,
+) {
+  const resolvedBinary = path.resolve(binaryPath);
+  invariant(existsSync(resolvedBinary), `Cannot smoke-test missing binary: ${resolvedBinary}`);
+  const resolvedBundle = path.resolve(bundlePath);
+  const resolvedLegacyModel = path.resolve(legacyModelPath);
+  invariant(existsSync(resolvedBundle), `Cannot verify missing V3 bundle: ${resolvedBundle}`);
+  invariant(existsSync(resolvedLegacyModel), `Cannot smoke-test missing legacy model: ${resolvedLegacyModel}`);
+
+  const inference = runBinary(
+    resolvedBinary,
+    ["infer", "--bundle", resolvedBundle, "--json", "Hello, I want to make a concrete plan"],
+    "Primary V3 inference smoke test",
+    120_000,
+  );
+  let trace;
+  try {
+    trace = JSON.parse(inference.stdout);
+  } catch (error) {
+    throw new Error(`Primary V3 inference did not return JSON: ${error.message}`);
+  }
+  invariant(trace?.model?.version === "3.0.0", "Primary inference did not use model 3.0.0");
+  invariant(
+    trace.boundary === "ml-intent" || trace.boundary === "ml-abstain",
+    "Primary inference did not expose the learned-policy boundary",
+  );
+  invariant(typeof trace.model.accepted === "boolean", "Primary inference omitted its accept/abstain decision");
+  invariant(Number.isFinite(trace.model.confidence), "Primary inference omitted policy confidence");
+  invariant(Number.isFinite(trace.model.margin), "Primary inference omitted policy probability margin");
+  invariant(
+    trace.model.probabilities && Object.keys(trace.model.probabilities).length === 7,
+    "Primary inference omitted its seven-class probability trace",
+  );
+  invariant(Array.isArray(trace.model.top_features), "Primary inference omitted feature evidence");
+
+  const verified = runBinary(
+    resolvedBinary,
+    ["bundle", "verify", "--bundle", resolvedBundle],
+    "V3 semantic bundle verification",
+    180_000,
+  );
+  invariant(verified.stdout.includes("semantically verified"), "Built binary did not report semantic bundle verification");
+  invariant(verified.stdout.includes("model        3.0.0"), "Built binary verified an unexpected model version");
+
+  const reproduced = runBinary(
+    resolvedBinary,
+    ["bundle", "reproduce", "--bundle", resolvedBundle],
+    "V3 byte-identical bundle reproduction",
+    300_000,
+  );
+  invariant(reproduced.stdout.includes("byte-identical reproduction"), "Built binary did not reproduce the V3 bundle");
+
+  const legacy = runBinary(
+    resolvedBinary,
+    [
+      "infer",
+      "--legacy-v1",
+      "--model",
+      resolvedLegacyModel,
+      "--json",
+      "Today I feel calm",
+    ],
+    "Explicit legacy V1 compatibility smoke test",
+  );
+  let legacyTrace;
+  try {
+    legacyTrace = JSON.parse(legacy.stdout);
+  } catch (error) {
+    throw new Error(`Explicit legacy V1 inference did not return JSON: ${error.message}`);
+  }
+  invariant(legacyTrace?.model?.version === "1.0.0", "Explicit legacy inference did not use model 1.0.0");
+}
+
+export function smokeArchive(
+  archivePath,
+  target,
+  bundlePath = defaultOpenSetBundlePath,
+  legacyModelPath = defaultLegacyModelPath,
+) {
   const targetDetails = SUPPORTED_TARGETS[target];
   invariant(targetDetails, `Unsupported release target: ${target}`);
   const resolvedArchive = path.resolve(archivePath);
@@ -648,7 +728,7 @@ export function smokeArchive(archivePath, target) {
     if (targetDetails.os !== "windows") {
       chmodSync(binaryPath, 0o755);
     }
-    smokeBinary(binaryPath);
+    smokeBinary(binaryPath, bundlePath, legacyModelPath);
   } finally {
     // Windows can retain a short-lived executable image lock after CreateProcess exits. Hosted
     // runners clear RUNNER_TEMP; failing a verified package because that cleanup races the OS is
@@ -1126,16 +1206,25 @@ function runCli() {
   }
 
   if (command === "smoke") {
-    rejectUnknownOptions(options, ["binary"]);
-    smokeBinary(requireOption(options, "binary"));
-    console.log("Built CLI smoke test passed.");
+    rejectUnknownOptions(options, ["binary", "bundle", "legacy-model"]);
+    smokeBinary(
+      requireOption(options, "binary"),
+      requireOption(options, "bundle"),
+      requireOption(options, "legacy-model"),
+    );
+    console.log("Built CLI V3 verification, reproduction, inference, and explicit V1 compatibility checks passed.");
     return;
   }
 
   if (command === "smoke-archive") {
-    rejectUnknownOptions(options, ["archive", "target"]);
-    smokeArchive(requireOption(options, "archive"), requireOption(options, "target"));
-    console.log("Packaged CLI archive smoke test passed.");
+    rejectUnknownOptions(options, ["archive", "target", "bundle", "legacy-model"]);
+    smokeArchive(
+      requireOption(options, "archive"),
+      requireOption(options, "target"),
+      requireOption(options, "bundle"),
+      requireOption(options, "legacy-model"),
+    );
+    console.log("Packaged CLI V3 verification, reproduction, inference, and explicit V1 compatibility checks passed.");
     return;
   }
 

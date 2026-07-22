@@ -1,6 +1,6 @@
 //! Leak-resistant, local open-set intent classification.
 //!
-//! This module is the version-two experimental path. It deliberately keeps the legacy model and
+//! This module is the version-three experimental path. It deliberately keeps the legacy model and
 //! CLI stable while adding group-aware data partitions, probability calibration, independent OOD
 //! evaluation, cryptographically linked artifacts, and a compiled inference representation.
 
@@ -13,10 +13,12 @@ use std::fs;
 use std::io::{BufRead, Read, Write};
 use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use unicode_normalization::UnicodeNormalization;
 
-pub const OPEN_SET_SCHEMA_VERSION: u32 = 2;
-pub const OPEN_SET_MODEL_VERSION: &str = "2.0.0";
+pub const OPEN_SET_SCHEMA_VERSION: u32 = 3;
+pub const OPEN_SET_MODEL_VERSION: &str = "3.0.0";
 pub const OPEN_SET_MODEL_KIND: &str = "eliza-open-set-linear";
+pub const OPEN_SET_BUNDLE_VERSION: &str = "3.0.0";
 pub const DEFAULT_BOOTSTRAP_RESAMPLES: usize = 1_000;
 const BUNDLE_INVENTORY: [&str; 5] = [
     "manifest.json",
@@ -33,7 +35,19 @@ const MAX_JSONL_BYTES: usize = crate::MAX_INPUT_CHARS * 4 + 16_384;
 const MAX_BOOTSTRAP_SAMPLED_ROWS: usize = 5_000_000;
 const MAX_PARAMETER_MAGNITUDE: f64 = 1_000_000.0;
 const MAX_IDF: f64 = 64.0;
+const MIN_PARAPHRASES_PER_FAMILY: usize = 3;
+const COMMON_FEATURE_FAMILY_FREQUENCY: usize = 3;
+const MAX_RAW_CROSS_FAMILY_JACCARD: f64 = 0.30;
+const MAX_RESIDUAL_CROSS_FAMILY_JACCARD: f64 = 0.25;
+const MAX_SIMILARITY_CANDIDATE_PAIRS: usize = 500_000;
+const MAX_SIMILARITY_PAIR_INSERT_ATTEMPTS: usize = 5_000_000;
 static BUNDLE_TEMP_SEQUENCE: AtomicUsize = AtomicUsize::new(0);
+
+#[derive(Debug, Clone, Copy)]
+struct SimilarityCandidateBudget {
+    maximum_candidate_pairs: usize,
+    maximum_pair_insert_attempts: usize,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GroupedExample {
@@ -50,7 +64,7 @@ pub struct GroupedDataset {
 
 impl GroupedDataset {
     pub fn bundled() -> Result<Self, MlError> {
-        Self::from_tsv(include_str!("../fixtures/intents-v2.tsv"))
+        Self::from_tsv(include_str!("../fixtures/intents-v3.tsv"))
     }
 
     pub fn read(path: impl AsRef<Path>) -> Result<Self, MlError> {
@@ -73,7 +87,7 @@ impl GroupedDataset {
 
         let mut examples = Vec::new();
         let mut ids = HashSet::new();
-        let mut normalized_texts = HashSet::new();
+        let mut feature_identities = HashSet::new();
         let mut group_labels: HashMap<String, String> = HashMap::new();
         for (offset, raw_line) in lines.enumerate() {
             let line_number = offset + 2;
@@ -100,9 +114,9 @@ impl GroupedDataset {
                     "duplicate grouped example id `{id}`"
                 )));
             }
-            if !normalized_texts.insert(normalize_text(text)) {
+            if !feature_identities.insert(feature_identity(text)) {
                 return Err(MlError::InvalidDataset(format!(
-                    "grouped line {line_number} duplicates normalized text"
+                    "grouped line {line_number} duplicates a feature-equivalent text"
                 )));
             }
             match group_labels.get(group_id) {
@@ -135,6 +149,7 @@ impl GroupedDataset {
         }
         let dataset = Self { examples };
         dataset.validate_partition_support()?;
+        dataset.validate_family_contract()?;
         Ok(dataset)
     }
 
@@ -161,7 +176,7 @@ impl GroupedDataset {
                     example.id,
                     example.group_id,
                     example.label,
-                    normalize_text(&example.text)
+                    feature_identity(&example.text)
                 )
             })
             .collect::<Vec<_>>();
@@ -197,12 +212,250 @@ impl GroupedDataset {
         }
         Ok(())
     }
+
+    fn validate_family_contract(&self) -> Result<(), MlError> {
+        let mut family_sizes: BTreeMap<&str, usize> = BTreeMap::new();
+        for example in &self.examples {
+            *family_sizes.entry(&example.group_id).or_insert(0) += 1;
+        }
+        let expected_size = family_sizes.values().next().copied().unwrap_or(0);
+        if expected_size < MIN_PARAPHRASES_PER_FAMILY
+            || family_sizes.values().any(|size| *size != expected_size)
+        {
+            return Err(MlError::InvalidDataset(format!(
+                "every paraphrase family must contain the same number of examples and at least {MIN_PARAPHRASES_PER_FAMILY}"
+            )));
+        }
+        validate_cross_family_similarity(&self.examples)
+    }
+}
+
+fn validate_cross_family_similarity(examples: &[GroupedExample]) -> Result<(), MlError> {
+    let config = VectorizerConfig::default();
+    let feature_sets = examples
+        .iter()
+        .map(|example| {
+            extract_terms(&example.text, &config)
+                .into_iter()
+                .collect::<HashSet<_>>()
+        })
+        .collect::<Vec<_>>();
+    let mut group_features_by_label: BTreeMap<&str, BTreeMap<&str, HashSet<&str>>> =
+        BTreeMap::new();
+    for (example, features) in examples.iter().zip(&feature_sets) {
+        let group_features = group_features_by_label
+            .entry(&example.label)
+            .or_default()
+            .entry(&example.group_id)
+            .or_default();
+        group_features.extend(features.iter().map(String::as_str));
+    }
+    let mut common_features_by_label: BTreeMap<&str, HashSet<&str>> = BTreeMap::new();
+    for (label, groups) in &group_features_by_label {
+        let mut family_frequency: HashMap<&str, usize> = HashMap::new();
+        for features in groups.values() {
+            for feature in features {
+                *family_frequency.entry(feature).or_insert(0) += 1;
+            }
+        }
+        common_features_by_label.insert(
+            label,
+            family_frequency
+                .into_iter()
+                .filter_map(|(feature, count)| {
+                    (count >= COMMON_FEATURE_FAMILY_FREQUENCY).then_some(feature)
+                })
+                .collect(),
+        );
+    }
+    let residual_feature_sets = examples
+        .iter()
+        .zip(&feature_sets)
+        .map(|(example, features)| {
+            let common = &common_features_by_label[example.label.as_str()];
+            features
+                .iter()
+                .filter(|feature| !common.contains(feature.as_str()))
+                .cloned()
+                .collect::<HashSet<_>>()
+        })
+        .collect::<Vec<_>>();
+    let mut candidate_pairs = HashSet::new();
+    let mut pair_insert_attempts = 0usize;
+    let budget = SimilarityCandidateBudget {
+        maximum_candidate_pairs: MAX_SIMILARITY_CANDIDATE_PAIRS,
+        maximum_pair_insert_attempts: MAX_SIMILARITY_PAIR_INSERT_ATTEMPTS,
+    };
+    collect_similarity_candidates(
+        examples,
+        &feature_sets,
+        MAX_RAW_CROSS_FAMILY_JACCARD,
+        false,
+        &mut candidate_pairs,
+        &mut pair_insert_attempts,
+        budget,
+    )?;
+    collect_similarity_candidates(
+        examples,
+        &residual_feature_sets,
+        MAX_RESIDUAL_CROSS_FAMILY_JACCARD,
+        true,
+        &mut candidate_pairs,
+        &mut pair_insert_attempts,
+        budget,
+    )?;
+    let mut candidate_pairs = candidate_pairs.into_iter().collect::<Vec<_>>();
+    candidate_pairs.sort_unstable();
+    for (left_index, right_index) in candidate_pairs {
+        let left = &examples[left_index];
+        let right = &examples[right_index];
+        let raw_intersection = feature_sets[left_index]
+            .intersection(&feature_sets[right_index])
+            .count();
+        let raw_union =
+            feature_sets[left_index].len() + feature_sets[right_index].len() - raw_intersection;
+        let raw_similarity = if raw_union == 0 {
+            0.0
+        } else {
+            raw_intersection as f64 / raw_union as f64
+        };
+        if raw_similarity >= MAX_RAW_CROSS_FAMILY_JACCARD {
+            return Err(MlError::InvalidDataset(format!(
+                    "examples `{}` ({}) and `{}` ({}) cross paraphrase families with raw feature Jaccard {raw_similarity:.6}; maximum is below {MAX_RAW_CROSS_FAMILY_JACCARD:.2}",
+                    left.id, left.group_id, right.id, right.group_id
+                )));
+        }
+        if left.label != right.label {
+            continue;
+        }
+        let left_residual = &residual_feature_sets[left_index];
+        let right_residual = &residual_feature_sets[right_index];
+        let intersection = left_residual.intersection(right_residual).count();
+        let union = left_residual.len() + right_residual.len() - intersection;
+        let similarity = if union == 0 {
+            0.0
+        } else {
+            intersection as f64 / union as f64
+        };
+        if similarity >= MAX_RESIDUAL_CROSS_FAMILY_JACCARD {
+            return Err(MlError::InvalidDataset(format!(
+                    "examples `{}` ({}) and `{}` ({}) cross paraphrase families with residual feature Jaccard {similarity:.6}; maximum is below {MAX_RESIDUAL_CROSS_FAMILY_JACCARD:.2}",
+                    left.id, left.group_id, right.id, right.group_id
+                )));
+        }
+    }
+    Ok(())
+}
+
+fn collect_similarity_candidates(
+    examples: &[GroupedExample],
+    feature_sets: &[HashSet<String>],
+    threshold: f64,
+    same_label_only: bool,
+    candidates: &mut HashSet<(usize, usize)>,
+    pair_insert_attempts: &mut usize,
+    budget: SimilarityCandidateBudget,
+) -> Result<(), MlError> {
+    let mut document_frequency: HashMap<&str, usize> = HashMap::new();
+    for features in feature_sets {
+        for feature in features {
+            *document_frequency.entry(feature).or_insert(0) += 1;
+        }
+    }
+    let ordered_features = feature_sets
+        .iter()
+        .map(|features| {
+            let mut ordered = features.iter().map(String::as_str).collect::<Vec<_>>();
+            ordered.sort_unstable_by(|left, right| {
+                document_frequency[left]
+                    .cmp(&document_frequency[right])
+                    .then_with(|| left.cmp(right))
+            });
+            ordered
+        })
+        .collect::<Vec<_>>();
+    let mut postings: HashMap<&str, Vec<usize>> = HashMap::new();
+    for (index, features) in ordered_features.iter().enumerate() {
+        if features.is_empty() {
+            continue;
+        }
+        let required_overlap = (threshold * features.len() as f64).ceil() as usize;
+        let prefix_length = (features.len() - required_overlap + 1).min(features.len());
+        for feature in features.iter().take(prefix_length) {
+            if let Some(previous) = postings.get(feature) {
+                for other_index in previous {
+                    if examples[*other_index].group_id == examples[index].group_id
+                        || (same_label_only
+                            && examples[*other_index].label != examples[index].label)
+                    {
+                        continue;
+                    }
+                    let smaller = feature_sets[*other_index]
+                        .len()
+                        .min(feature_sets[index].len());
+                    let larger = feature_sets[*other_index]
+                        .len()
+                        .max(feature_sets[index].len());
+                    if larger == 0 || smaller as f64 / (larger as f64) < threshold {
+                        continue;
+                    }
+                    *pair_insert_attempts += 1;
+                    if *pair_insert_attempts > budget.maximum_pair_insert_attempts {
+                        return Err(MlError::InvalidDataset(
+                            "the paraphrase similarity review exceeds its bounded comparison budget"
+                                .into(),
+                        ));
+                    }
+                    candidates.insert((*other_index, index));
+                    if candidates.len() > budget.maximum_candidate_pairs {
+                        return Err(MlError::InvalidDataset(
+                            "the paraphrase similarity review exceeds its bounded candidate budget"
+                                .into(),
+                        ));
+                    }
+                }
+            }
+            postings.entry(feature).or_default().push(index);
+        }
+    }
+    Ok(())
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "kebab-case")]
+pub enum OodStratum {
+    Semantic,
+    Capability,
+    Noise,
+}
+
+impl OodStratum {
+    fn parse(value: &str, line_number: usize) -> Result<Self, MlError> {
+        match value {
+            "semantic" => Ok(Self::Semantic),
+            "capability" => Ok(Self::Capability),
+            "noise" => Ok(Self::Noise),
+            _ => Err(MlError::InvalidDataset(format!(
+                "OOD line {line_number} has unsupported stratum `{value}`"
+            ))),
+        }
+    }
+
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Semantic => "semantic",
+            Self::Capability => "capability",
+            Self::Noise => "noise",
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OpenSetOodExample {
     pub id: String,
-    pub group_id: String,
+    pub family_id: String,
+    pub domain_group: String,
+    pub stratum: OodStratum,
     pub text: String,
 }
 
@@ -213,11 +466,11 @@ pub struct OpenSetOodDataset {
 
 impl OpenSetOodDataset {
     pub fn bundled_development() -> Result<Self, MlError> {
-        Self::from_tsv(include_str!("../fixtures/ood-dev-v2.tsv"))
+        Self::from_tsv(include_str!("../fixtures/ood-dev-v3.tsv"))
     }
 
     pub fn bundled_test() -> Result<Self, MlError> {
-        Self::from_tsv(include_str!("../fixtures/ood-test-v2.tsv"))
+        Self::from_tsv(include_str!("../fixtures/ood-test-v3.tsv"))
     }
 
     pub fn read(path: impl AsRef<Path>) -> Result<Self, MlError> {
@@ -232,14 +485,14 @@ impl OpenSetOodDataset {
             .next()
             .map(str::trim_end)
             .ok_or_else(|| MlError::InvalidDataset("the OOD dataset is empty".into()))?;
-        if header != "id\tgroup_id\ttext" {
+        if header != "id\tfamily_id\tdomain_group\tstratum\ttext" {
             return Err(MlError::InvalidDataset(
-                "the OOD header must be exactly `id\\tgroup_id\\ttext`".into(),
+                "the OOD header must be exactly `id\\tfamily_id\\tdomain_group\\tstratum\\ttext`"
+                    .into(),
             ));
         }
         let mut examples = Vec::new();
         let mut ids = HashSet::new();
-        let mut groups = HashSet::new();
         let mut texts = HashSet::new();
         for (offset, raw_line) in lines.enumerate() {
             let line_number = offset + 2;
@@ -248,33 +501,33 @@ impl OpenSetOodDataset {
                 continue;
             }
             let fields = line.split('\t').collect::<Vec<_>>();
-            if fields.len() != 3 {
+            if fields.len() != 5 {
                 return Err(MlError::InvalidDataset(format!(
-                    "OOD line {line_number} must contain three tab-separated fields"
+                    "OOD line {line_number} must contain five tab-separated fields"
                 )));
             }
             let id = fields[0].trim();
-            let group_id = fields[1].trim();
-            let text = fields[2].trim();
+            let family_id = fields[1].trim();
+            let domain_group = fields[2].trim();
+            let stratum = OodStratum::parse(fields[3].trim(), line_number)?;
+            let text = fields[4].trim();
             validate_identifier(id, "OOD id", line_number)?;
-            validate_identifier(group_id, "OOD group id", line_number)?;
+            validate_identifier(family_id, "OOD family id", line_number)?;
+            validate_identifier(domain_group, "OOD domain group", line_number)?;
             validate_text(text, line_number, "OOD")?;
             if !ids.insert(id.to_owned()) {
                 return Err(MlError::InvalidDataset(format!("duplicate OOD id `{id}`")));
             }
-            if !groups.insert(group_id.to_owned()) {
+            if !texts.insert(feature_identity(text)) {
                 return Err(MlError::InvalidDataset(format!(
-                    "duplicate OOD group id `{group_id}`; OOD rows must be independently grouped"
-                )));
-            }
-            if !texts.insert(normalize_text(text)) {
-                return Err(MlError::InvalidDataset(format!(
-                    "OOD line {line_number} duplicates normalized text"
+                    "OOD line {line_number} duplicates a feature-equivalent text"
                 )));
             }
             examples.push(OpenSetOodExample {
                 id: id.to_owned(),
-                group_id: group_id.to_owned(),
+                family_id: family_id.to_owned(),
+                domain_group: domain_group.to_owned(),
+                stratum,
                 text: text.to_owned(),
             });
             if examples.len() > MAX_EXAMPLES {
@@ -288,7 +541,9 @@ impl OpenSetOodDataset {
                 "the OOD dataset contains no examples".into(),
             ));
         }
-        Ok(Self { examples })
+        let dataset = Self { examples };
+        dataset.validate_contract()?;
+        Ok(dataset)
     }
 
     pub fn examples(&self) -> &[OpenSetOodExample] {
@@ -301,15 +556,282 @@ impl OpenSetOodDataset {
             .iter()
             .map(|example| {
                 format!(
-                    "{}\t{}\t{}",
+                    "{}\t{}\t{}\t{}\t{}",
                     example.id,
-                    example.group_id,
-                    normalize_text(&example.text)
+                    example.family_id,
+                    example.domain_group,
+                    example.stratum.as_str(),
+                    feature_identity(&example.text)
                 )
             })
             .collect::<Vec<_>>();
         rows.sort();
         sha256_hex(rows.join("\n").as_bytes())
+    }
+
+    fn validate_contract(&self) -> Result<(), MlError> {
+        let mut family_ownership: BTreeMap<&str, (&str, OodStratum, usize)> = BTreeMap::new();
+        let mut domain_ownership: BTreeMap<&str, (OodStratum, BTreeSet<&str>)> = BTreeMap::new();
+        let mut rows_by_stratum: BTreeMap<OodStratum, usize> = BTreeMap::new();
+        let mut domains_by_stratum: BTreeMap<OodStratum, BTreeSet<&str>> = BTreeMap::new();
+        for example in &self.examples {
+            match family_ownership.entry(&example.family_id) {
+                std::collections::btree_map::Entry::Vacant(entry) => {
+                    entry.insert((&example.domain_group, example.stratum, 1));
+                }
+                std::collections::btree_map::Entry::Occupied(mut entry) => {
+                    let (domain, stratum, count) = entry.get_mut();
+                    if *domain != example.domain_group || *stratum != example.stratum {
+                        return Err(MlError::InvalidDataset(format!(
+                            "OOD family `{}` crosses domain groups or strata",
+                            example.family_id
+                        )));
+                    }
+                    *count += 1;
+                }
+            }
+            match domain_ownership.entry(&example.domain_group) {
+                std::collections::btree_map::Entry::Vacant(entry) => {
+                    entry.insert((
+                        example.stratum,
+                        BTreeSet::from([example.family_id.as_str()]),
+                    ));
+                }
+                std::collections::btree_map::Entry::Occupied(mut entry) => {
+                    let (stratum, families) = entry.get_mut();
+                    if *stratum != example.stratum {
+                        return Err(MlError::InvalidDataset(format!(
+                            "OOD domain `{}` crosses strata",
+                            example.domain_group
+                        )));
+                    }
+                    families.insert(&example.family_id);
+                }
+            }
+            *rows_by_stratum.entry(example.stratum).or_insert(0) += 1;
+            domains_by_stratum
+                .entry(example.stratum)
+                .or_default()
+                .insert(&example.domain_group);
+        }
+        let expected_family_size = family_ownership
+            .values()
+            .next()
+            .map(|(_, _, count)| *count)
+            .unwrap_or(0);
+        if expected_family_size < MIN_PARAPHRASES_PER_FAMILY
+            || family_ownership
+                .values()
+                .any(|(_, _, count)| *count != expected_family_size)
+            || domain_ownership
+                .values()
+                .any(|(_, families)| families.len() < 2)
+        {
+            return Err(MlError::InvalidDataset(
+                "OOD families must have equal multi-prompt support and every domain must contain at least two families"
+                    .into(),
+            ));
+        }
+        let strata = [
+            OodStratum::Semantic,
+            OodStratum::Capability,
+            OodStratum::Noise,
+        ];
+        let expected_rows = rows_by_stratum.get(&strata[0]).copied().unwrap_or(0);
+        let expected_domains = domains_by_stratum
+            .get(&strata[0])
+            .map(BTreeSet::len)
+            .unwrap_or(0);
+        if expected_rows == 0
+            || expected_domains == 0
+            || strata.iter().any(|stratum| {
+                rows_by_stratum.get(stratum).copied() != Some(expected_rows)
+                    || domains_by_stratum.get(stratum).map(BTreeSet::len) != Some(expected_domains)
+            })
+        {
+            return Err(MlError::InvalidDataset(
+                "OOD semantic, capability, and noise strata must have equal row and domain support"
+                    .into(),
+            ));
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "lowercase")]
+pub enum ContrastVariant {
+    A,
+    B,
+}
+
+impl ContrastVariant {
+    fn parse(value: &str, line_number: usize) -> Result<Self, MlError> {
+        match value {
+            "a" => Ok(Self::A),
+            "b" => Ok(Self::B),
+            _ => Err(MlError::InvalidDataset(format!(
+                "contrast line {line_number} has unsupported variant `{value}`"
+            ))),
+        }
+    }
+
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::A => "a",
+            Self::B => "b",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OpenSetContrastExample {
+    pub id: String,
+    pub pair_id: String,
+    pub variant: ContrastVariant,
+    pub label: String,
+    pub text: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OpenSetContrastDataset {
+    examples: Vec<OpenSetContrastExample>,
+}
+
+impl OpenSetContrastDataset {
+    pub fn bundled_test() -> Result<Self, MlError> {
+        Self::from_tsv(include_str!("../fixtures/contrast-test-v3.tsv"))
+    }
+
+    pub fn read(path: impl AsRef<Path>) -> Result<Self, MlError> {
+        let path = path.as_ref();
+        reject_oversized_file(path, MAX_JSON_BYTES, "contrast dataset")?;
+        Self::from_tsv(&fs::read_to_string(path)?)
+    }
+
+    pub fn from_tsv(input: &str) -> Result<Self, MlError> {
+        let mut lines = input.lines();
+        let header = lines
+            .next()
+            .map(str::trim_end)
+            .ok_or_else(|| MlError::InvalidDataset("the contrast dataset is empty".into()))?;
+        if header != "id\tpair_id\tvariant\tlabel\ttext" {
+            return Err(MlError::InvalidDataset(
+                "the contrast header must be exactly `id\\tpair_id\\tvariant\\tlabel\\ttext`"
+                    .into(),
+            ));
+        }
+        let mut examples = Vec::new();
+        let mut ids = HashSet::new();
+        let mut feature_identities = HashSet::new();
+        for (offset, raw_line) in lines.enumerate() {
+            let line_number = offset + 2;
+            let line = raw_line.trim_end_matches('\r');
+            if line.trim().is_empty() || line.trim_start().starts_with('#') {
+                continue;
+            }
+            let fields = line.split('\t').collect::<Vec<_>>();
+            if fields.len() != 5 {
+                return Err(MlError::InvalidDataset(format!(
+                    "contrast line {line_number} must contain five tab-separated fields"
+                )));
+            }
+            let id = fields[0].trim();
+            let pair_id = fields[1].trim();
+            let variant = ContrastVariant::parse(fields[2].trim(), line_number)?;
+            let label = fields[3].trim();
+            let text = fields[4].trim();
+            validate_identifier(id, "contrast id", line_number)?;
+            validate_identifier(pair_id, "contrast pair id", line_number)?;
+            validate_label(label, line_number)?;
+            validate_text(text, line_number, "contrast")?;
+            if !ids.insert(id.to_owned()) {
+                return Err(MlError::InvalidDataset(format!(
+                    "duplicate contrast id `{id}`"
+                )));
+            }
+            if !feature_identities.insert(feature_identity(text)) {
+                return Err(MlError::InvalidDataset(format!(
+                    "contrast line {line_number} duplicates a feature-equivalent text"
+                )));
+            }
+            examples.push(OpenSetContrastExample {
+                id: id.to_owned(),
+                pair_id: pair_id.to_owned(),
+                variant,
+                label: label.to_owned(),
+                text: text.to_owned(),
+            });
+            if examples.len() > MAX_EXAMPLES {
+                return Err(MlError::InvalidDataset(format!(
+                    "the contrast dataset exceeds {MAX_EXAMPLES} examples"
+                )));
+            }
+        }
+        let dataset = Self { examples };
+        dataset.validate_contract()?;
+        Ok(dataset)
+    }
+
+    pub fn examples(&self) -> &[OpenSetContrastExample] {
+        &self.examples
+    }
+
+    pub fn fingerprint_sha256(&self) -> String {
+        let mut rows = self
+            .examples
+            .iter()
+            .map(|example| {
+                format!(
+                    "{}\t{}\t{}\t{}\t{}",
+                    example.id,
+                    example.pair_id,
+                    example.variant.as_str(),
+                    example.label,
+                    feature_identity(&example.text)
+                )
+            })
+            .collect::<Vec<_>>();
+        rows.sort();
+        sha256_hex(rows.join("\n").as_bytes())
+    }
+
+    fn validate_contract(&self) -> Result<(), MlError> {
+        let mut pairs: BTreeMap<&str, (BTreeSet<ContrastVariant>, BTreeSet<&str>)> =
+            BTreeMap::new();
+        let mut label_counts: BTreeMap<&str, usize> = BTreeMap::new();
+        for example in &self.examples {
+            let (variants, labels) = pairs.entry(&example.pair_id).or_default();
+            if !variants.insert(example.variant) {
+                return Err(MlError::InvalidDataset(format!(
+                    "contrast pair `{}` repeats a variant",
+                    example.pair_id
+                )));
+            }
+            labels.insert(&example.label);
+            *label_counts.entry(&example.label).or_insert(0) += 1;
+        }
+        if pairs.is_empty()
+            || pairs
+                .values()
+                .any(|(variants, labels)| variants.len() != 2 || labels.len() != 2)
+        {
+            return Err(MlError::InvalidDataset(
+                "every contrast pair must contain variants a and b with different labels".into(),
+            ));
+        }
+        let expected_label_support = label_counts.values().next().copied().unwrap_or(0);
+        if label_counts.len() < 2
+            || expected_label_support < 2
+            || label_counts
+                .values()
+                .any(|count| *count != expected_label_support)
+        {
+            return Err(MlError::InvalidDataset(
+                "the contrast set must be multi-intent with equal label support".into(),
+            ));
+        }
+        Ok(())
     }
 }
 
@@ -322,13 +844,42 @@ pub enum PartitionKind {
     IdTest,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum SelectionDataRole {
+    Train,
+    Development,
+    OodDevelopment,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct SplitAssignment {
     pub id: String,
     pub group_id: String,
     pub label: String,
+    pub text: String,
     pub partition: PartitionKind,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct OodPlanRow {
+    pub id: String,
+    pub family_id: String,
+    pub domain_group: String,
+    pub stratum: OodStratum,
+    pub text: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ContrastPlanRow {
+    pub id: String,
+    pub pair_id: String,
+    pub variant: ContrastVariant,
+    pub label: String,
+    pub text: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -339,16 +890,25 @@ pub struct SplitPlanManifest {
     pub seed: u64,
     pub dataset_sha256: String,
     pub assignments: Vec<SplitAssignment>,
+    pub ood_development: Vec<OodPlanRow>,
+    pub ood_test: Vec<OodPlanRow>,
+    pub contrast_test: Vec<ContrastPlanRow>,
 }
 
 impl SplitPlanManifest {
     fn validate_contract(&self) -> Result<(), MlError> {
         if self.schema_version != OPEN_SET_SCHEMA_VERSION
-            || self.strategy != "group-stratified-scaled-four-way-v2"
+            || self.strategy != "group-stratified-scaled-four-way-v3"
             || self.seed > 9_007_199_254_740_991
             || !valid_sha256(&self.dataset_sha256)
             || self.assignments.is_empty()
             || self.assignments.len() > MAX_EXAMPLES
+            || self.ood_development.is_empty()
+            || self.ood_development.len() > MAX_EXAMPLES
+            || self.ood_test.is_empty()
+            || self.ood_test.len() > MAX_EXAMPLES
+            || self.contrast_test.is_empty()
+            || self.contrast_test.len() > MAX_EXAMPLES
         {
             return Err(MlError::InvalidDataset(
                 "the split-plan manifest has an invalid identity or size".into(),
@@ -359,11 +919,13 @@ impl SplitPlanManifest {
         let mut group_ownership: HashMap<&str, (&str, PartitionKind)> = HashMap::new();
         let mut groups_by_label: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
         let mut labels_by_partition: BTreeMap<PartitionKind, BTreeSet<&str>> = BTreeMap::new();
+        let mut feature_identities = HashSet::new();
         let mut previous_id: Option<&str> = None;
         for (index, assignment) in self.assignments.iter().enumerate() {
             validate_identifier(&assignment.id, "split assignment id", index + 1)?;
             validate_identifier(&assignment.group_id, "split assignment group id", index + 1)?;
             validate_label(&assignment.label, index + 1)?;
+            validate_text(&assignment.text, index + 1, "split assignment")?;
             if previous_id.is_some_and(|previous| previous >= assignment.id.as_str())
                 || !ids.insert(assignment.id.as_str())
             {
@@ -372,6 +934,11 @@ impl SplitPlanManifest {
                 ));
             }
             previous_id = Some(&assignment.id);
+            if !feature_identities.insert(feature_identity(&assignment.text)) {
+                return Err(MlError::InvalidDataset(
+                    "split assignments contain feature-equivalent texts".into(),
+                ));
+            }
             match group_ownership.insert(
                 assignment.group_id.as_str(),
                 (assignment.label.as_str(), assignment.partition),
@@ -443,8 +1010,155 @@ impl SplitPlanManifest {
                 }
             }
         }
+        validate_plan_ood_rows(
+            &self.ood_development,
+            &self.ood_test,
+            &ids,
+            &group_ownership,
+            &mut feature_identities,
+        )?;
+        validate_plan_contrast_rows(
+            &self.contrast_test,
+            &ids,
+            &group_ownership,
+            &self.ood_development,
+            &self.ood_test,
+            &mut feature_identities,
+        )?;
         Ok(())
     }
+}
+
+fn validate_plan_contrast_rows(
+    rows: &[ContrastPlanRow],
+    supervised_ids: &HashSet<&str>,
+    supervised_groups: &HashMap<&str, (&str, PartitionKind)>,
+    ood_development: &[OodPlanRow],
+    ood_test: &[OodPlanRow],
+    feature_identities: &mut HashSet<String>,
+) -> Result<(), MlError> {
+    let ood_ids = ood_development
+        .iter()
+        .chain(ood_test)
+        .map(|row| row.id.as_str())
+        .collect::<HashSet<_>>();
+    let ood_groups = ood_development
+        .iter()
+        .chain(ood_test)
+        .flat_map(|row| [row.family_id.as_str(), row.domain_group.as_str()])
+        .collect::<HashSet<_>>();
+    let mut previous_id: Option<&str> = None;
+    let mut ids = HashSet::new();
+    let dataset = OpenSetContrastDataset {
+        examples: rows
+            .iter()
+            .enumerate()
+            .map(|(index, row)| {
+                validate_identifier(&row.id, "contrast plan id", index + 1)?;
+                validate_identifier(&row.pair_id, "contrast plan pair id", index + 1)?;
+                validate_label(&row.label, index + 1)?;
+                validate_text(&row.text, index + 1, "contrast plan")?;
+                if previous_id.is_some_and(|previous| previous >= row.id.as_str())
+                    || supervised_ids.contains(row.id.as_str())
+                    || ood_ids.contains(row.id.as_str())
+                    || supervised_groups.contains_key(row.pair_id.as_str())
+                    || ood_groups.contains(row.pair_id.as_str())
+                    || !ids.insert(row.id.as_str())
+                    || !feature_identities.insert(feature_identity(&row.text))
+                {
+                    return Err(MlError::InvalidDataset(
+                        "contrast-test contains an overlapping id, pair, or feature-equivalent text"
+                            .into(),
+                    ));
+                }
+                previous_id = Some(&row.id);
+                Ok(OpenSetContrastExample {
+                    id: row.id.clone(),
+                    pair_id: row.pair_id.clone(),
+                    variant: row.variant,
+                    label: row.label.clone(),
+                    text: row.text.clone(),
+                })
+            })
+            .collect::<Result<Vec<_>, MlError>>()?,
+    };
+    dataset.validate_contract()
+}
+
+fn validate_plan_ood_rows(
+    development: &[OodPlanRow],
+    test: &[OodPlanRow],
+    supervised_ids: &HashSet<&str>,
+    supervised_groups: &HashMap<&str, (&str, PartitionKind)>,
+    feature_identities: &mut HashSet<String>,
+) -> Result<(), MlError> {
+    let mut ood_ids = HashSet::new();
+    let mut development_families = HashSet::new();
+    let mut test_families = HashSet::new();
+    let mut development_domains = HashSet::new();
+    let mut test_domains = HashSet::new();
+    for (population, rows, families, domains) in [
+        (
+            "OOD development",
+            development,
+            &mut development_families,
+            &mut development_domains,
+        ),
+        ("OOD test", test, &mut test_families, &mut test_domains),
+    ] {
+        let mut previous_id: Option<&str> = None;
+        for (index, row) in rows.iter().enumerate() {
+            validate_identifier(&row.id, "OOD plan id", index + 1)?;
+            validate_identifier(&row.family_id, "OOD plan family id", index + 1)?;
+            validate_identifier(&row.domain_group, "OOD plan domain group", index + 1)?;
+            validate_text(&row.text, index + 1, population)?;
+            if previous_id.is_some_and(|previous| previous >= row.id.as_str())
+                || supervised_ids.contains(row.id.as_str())
+                || !ood_ids.insert(row.id.as_str())
+                || supervised_groups.contains_key(row.family_id.as_str())
+                || supervised_groups.contains_key(row.domain_group.as_str())
+                || !feature_identities.insert(feature_identity(&row.text))
+            {
+                return Err(MlError::InvalidDataset(format!(
+                    "{population} contains an overlapping id, family, or feature-equivalent text"
+                )));
+            }
+            previous_id = Some(&row.id);
+            families.insert(row.family_id.as_str());
+            domains.insert(row.domain_group.as_str());
+        }
+    }
+    if development_families
+        .iter()
+        .any(|family| test_families.contains(family))
+    {
+        return Err(MlError::InvalidDataset(
+            "OOD development and OOD test must be disjoint by domain family".into(),
+        ));
+    }
+    if development_domains
+        .iter()
+        .any(|domain| test_domains.contains(domain))
+    {
+        return Err(MlError::InvalidDataset(
+            "OOD development and OOD test must be disjoint by broader domain group".into(),
+        ));
+    }
+    let as_dataset = |rows: &[OodPlanRow]| OpenSetOodDataset {
+        examples: rows
+            .iter()
+            .map(|row| OpenSetOodExample {
+                id: row.id.clone(),
+                family_id: row.family_id.clone(),
+                domain_group: row.domain_group.clone(),
+                stratum: row.stratum,
+                text: row.text.clone(),
+            })
+            .collect(),
+    };
+    as_dataset(development).validate_contract()?;
+    as_dataset(test).validate_contract()?;
+    Ok(())
 }
 
 #[derive(Debug, Clone)]
@@ -456,9 +1170,96 @@ pub struct SplitPlan {
     id_test: Vec<GroupedExample>,
 }
 
+struct TrainingPartition<'a> {
+    examples: &'a [GroupedExample],
+    dataset_sha256: &'a str,
+    split_plan_sha256: String,
+}
+
+#[derive(Clone, Copy)]
+struct DevelopmentPartition<'a>(&'a [GroupedExample]);
+
+#[derive(Clone, Copy)]
+struct CalibrationPartition<'a>(&'a [GroupedExample]);
+
+#[derive(Clone, Copy)]
+struct OodDevelopmentPartition<'a>(&'a OpenSetOodDataset);
+
+#[derive(Clone, Copy)]
+struct ContrastTestPartition<'a>(&'a OpenSetContrastDataset);
+
+impl<'a> TrainingPartition<'a> {
+    fn examples(&self) -> &'a [GroupedExample] {
+        self.examples
+    }
+}
+
+impl<'a> DevelopmentPartition<'a> {
+    fn examples(self) -> &'a [GroupedExample] {
+        self.0
+    }
+}
+
+impl<'a> CalibrationPartition<'a> {
+    fn examples(self) -> &'a [GroupedExample] {
+        self.0
+    }
+}
+
+impl<'a> OodDevelopmentPartition<'a> {
+    fn dataset(self) -> &'a OpenSetOodDataset {
+        self.0
+    }
+}
+
+impl<'a> ContrastTestPartition<'a> {
+    fn dataset(self) -> &'a OpenSetContrastDataset {
+        self.0
+    }
+}
+
+fn plan_ood_rows(dataset: &OpenSetOodDataset) -> Vec<OodPlanRow> {
+    let mut rows = dataset
+        .examples()
+        .iter()
+        .map(|example| OodPlanRow {
+            id: example.id.clone(),
+            family_id: example.family_id.clone(),
+            domain_group: example.domain_group.clone(),
+            stratum: example.stratum,
+            text: example.text.clone(),
+        })
+        .collect::<Vec<_>>();
+    rows.sort_by(|left, right| left.id.cmp(&right.id));
+    rows
+}
+
+fn plan_contrast_rows(dataset: &OpenSetContrastDataset) -> Vec<ContrastPlanRow> {
+    let mut rows = dataset
+        .examples()
+        .iter()
+        .map(|example| ContrastPlanRow {
+            id: example.id.clone(),
+            pair_id: example.pair_id.clone(),
+            variant: example.variant,
+            label: example.label.clone(),
+            text: example.text.clone(),
+        })
+        .collect::<Vec<_>>();
+    rows.sort_by(|left, right| left.id.cmp(&right.id));
+    rows
+}
+
 impl SplitPlan {
-    pub fn build(dataset: &GroupedDataset, seed: u64) -> Result<Self, MlError> {
+    pub fn build(
+        dataset: &GroupedDataset,
+        ood_development: &OpenSetOodDataset,
+        ood_test: &OpenSetOodDataset,
+        contrast_test: &OpenSetContrastDataset,
+        seed: u64,
+    ) -> Result<Self, MlError> {
         dataset.validate_partition_support()?;
+        reject_cross_dataset_overlap(dataset, ood_development, ood_test, contrast_test)?;
         let mut grouped: BTreeMap<String, BTreeMap<String, Vec<GroupedExample>>> = BTreeMap::new();
         for example in dataset.examples() {
             grouped
@@ -503,6 +1304,7 @@ impl SplitPlan {
                         id: example.id.clone(),
                         group_id: example.group_id.clone(),
                         label: example.label.clone(),
+                        text: example.text.clone(),
                         partition,
                     });
                     match partition {
@@ -521,10 +1323,13 @@ impl SplitPlan {
         let plan = Self {
             manifest: SplitPlanManifest {
                 schema_version: OPEN_SET_SCHEMA_VERSION,
-                strategy: "group-stratified-scaled-four-way-v2".into(),
+                strategy: "group-stratified-scaled-four-way-v3".into(),
                 seed,
                 dataset_sha256: dataset.fingerprint_sha256(),
                 assignments,
+                ood_development: plan_ood_rows(ood_development),
+                ood_test: plan_ood_rows(ood_test),
+                contrast_test: plan_contrast_rows(contrast_test),
             },
             train,
             development,
@@ -557,6 +1362,22 @@ impl SplitPlan {
 
     pub fn manifest_sha256(&self) -> Result<String, MlError> {
         Ok(sha256_hex(&canonical_json(&self.manifest)?))
+    }
+
+    fn training_partition(&self) -> Result<TrainingPartition<'_>, MlError> {
+        Ok(TrainingPartition {
+            examples: &self.train,
+            dataset_sha256: &self.manifest.dataset_sha256,
+            split_plan_sha256: self.manifest_sha256()?,
+        })
+    }
+
+    fn development_partition(&self) -> DevelopmentPartition<'_> {
+        DevelopmentPartition(&self.development)
+    }
+
+    fn calibration_partition(&self) -> CalibrationPartition<'_> {
+        CalibrationPartition(&self.calibration)
     }
 
     fn validate(&self) -> Result<(), MlError> {
@@ -600,6 +1421,7 @@ impl SplitPlan {
                     id: example.id.clone(),
                     group_id: example.group_id.clone(),
                     label: example.label.clone(),
+                    text: example.text.clone(),
                     partition: kind,
                 });
             }
@@ -632,22 +1454,75 @@ fn evaluation_group_quota(group_count: usize) -> usize {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
+pub struct DevelopmentSelectionConfig {
+    pub max_features_candidates: Vec<usize>,
+    pub l2_penalty_candidates: Vec<f64>,
+    pub macro_f1_tolerance: f64,
+}
+
+impl Default for DevelopmentSelectionConfig {
+    fn default() -> Self {
+        Self {
+            max_features_candidates: vec![512, 1_024, 2_048],
+            l2_penalty_candidates: vec![0.0001, 0.0005, 0.002],
+            macro_f1_tolerance: 0.005,
+        }
+    }
+}
+
+impl DevelopmentSelectionConfig {
+    fn validate(&self) -> Result<(), MlError> {
+        if self.max_features_candidates.is_empty()
+            || self.max_features_candidates.len() > 8
+            || self.l2_penalty_candidates.is_empty()
+            || self.l2_penalty_candidates.len() > 8
+            || self
+                .max_features_candidates
+                .windows(2)
+                .any(|pair| pair[0] >= pair[1])
+            || self
+                .l2_penalty_candidates
+                .windows(2)
+                .any(|pair| pair[0] >= pair[1])
+            || self
+                .max_features_candidates
+                .iter()
+                .any(|candidate| !(32..=100_000).contains(candidate))
+            || self
+                .l2_penalty_candidates
+                .iter()
+                .any(|candidate| !candidate.is_finite() || !(0.0..=1.0).contains(candidate))
+            || !self.macro_f1_tolerance.is_finite()
+            || !(0.0..=0.05).contains(&self.macro_f1_tolerance)
+        {
+            return Err(MlError::InvalidConfiguration(
+                "the development-only model-selection grid is invalid".into(),
+            ));
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct OpenSetTrainingConfig {
     pub seed: u64,
     pub epochs: usize,
     pub learning_rate: f64,
     pub l2_penalty: f64,
     pub vectorizer: VectorizerConfig,
+    pub development_selection: DevelopmentSelectionConfig,
 }
 
 impl Default for OpenSetTrainingConfig {
     fn default() -> Self {
         Self {
-            seed: 20_260_722,
+            seed: 4_043_100_207_104_787,
             epochs: 600,
             learning_rate: 0.8,
             l2_penalty: 0.0005,
             vectorizer: VectorizerConfig::default(),
+            development_selection: DevelopmentSelectionConfig::default(),
         }
     }
 }
@@ -674,7 +1549,23 @@ impl OpenSetTrainingConfig {
                 "open-set l2_penalty must be finite and between 0 and 1".into(),
             ));
         }
-        validate_vectorizer_config(&self.vectorizer)
+        validate_vectorizer_config(&self.vectorizer)?;
+        self.development_selection.validate()?;
+        if !self
+            .development_selection
+            .max_features_candidates
+            .contains(&self.vectorizer.max_features)
+            || !self
+                .development_selection
+                .l2_penalty_candidates
+                .contains(&self.l2_penalty)
+        {
+            return Err(MlError::InvalidConfiguration(
+                "the serialized training configuration must identify one candidate from its development grid"
+                    .into(),
+            ));
+        }
+        Ok(())
     }
 }
 
@@ -688,7 +1579,7 @@ pub struct OpenSetVectorizer {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
-pub struct OpenSetModelV2 {
+pub struct OpenSetModelV3 {
     pub schema_version: u32,
     pub model_kind: String,
     pub model_version: String,
@@ -701,7 +1592,7 @@ pub struct OpenSetModelV2 {
     pub biases: Vec<f64>,
 }
 
-impl OpenSetModelV2 {
+impl OpenSetModelV3 {
     pub fn validate(&self) -> Result<(), MlError> {
         if self.schema_version != OPEN_SET_SCHEMA_VERSION
             || self.model_kind != OPEN_SET_MODEL_KIND
@@ -823,10 +1714,13 @@ impl OpenSetVectorizer {
     }
 }
 
-fn fit_model(plan: &SplitPlan, config: OpenSetTrainingConfig) -> Result<OpenSetModelV2, MlError> {
+fn fit_model(
+    training: &TrainingPartition<'_>,
+    config: OpenSetTrainingConfig,
+) -> Result<OpenSetModelV3, MlError> {
     config.validate()?;
-    let labels = plan
-        .train()
+    let labels = training
+        .examples()
         .iter()
         .map(|example| example.label.clone())
         .collect::<BTreeSet<_>>()
@@ -842,21 +1736,21 @@ fn fit_model(plan: &SplitPlan, config: OpenSetTrainingConfig) -> Result<OpenSetM
         .enumerate()
         .map(|(index, label)| (label.as_str(), index))
         .collect::<HashMap<_, _>>();
-    let vectorizer = OpenSetVectorizer::fit(plan.train(), config.vectorizer.clone())?;
+    let vectorizer = OpenSetVectorizer::fit(training.examples(), config.vectorizer.clone())?;
     let feature_index = build_feature_index(&vectorizer.vocabulary);
-    let features = plan
-        .train()
+    let features = training
+        .examples()
         .iter()
         .map(|example| transform(&vectorizer, &feature_index, &example.text))
         .collect::<Vec<_>>();
-    let targets = plan
-        .train()
+    let targets = training
+        .examples()
         .iter()
         .map(|example| label_index[example.label.as_str()])
         .collect::<Vec<_>>();
     let mut weights = vec![vec![0.0; vectorizer.vocabulary.len()]; labels.len()];
     let mut biases = vec![0.0; labels.len()];
-    let sample_count = plan.train().len() as f64;
+    let sample_count = training.examples().len() as f64;
     for epoch in 0..config.epochs {
         let mut weight_gradient = vec![vec![0.0; vectorizer.vocabulary.len()]; labels.len()];
         let mut bias_gradient = vec![0.0; labels.len()];
@@ -882,12 +1776,12 @@ fn fit_model(plan: &SplitPlan, config: OpenSetTrainingConfig) -> Result<OpenSetM
             }
         }
     }
-    let model = OpenSetModelV2 {
+    let model = OpenSetModelV3 {
         schema_version: OPEN_SET_SCHEMA_VERSION,
         model_kind: OPEN_SET_MODEL_KIND.into(),
         model_version: OPEN_SET_MODEL_VERSION.into(),
-        dataset_sha256: plan.manifest.dataset_sha256.clone(),
-        split_plan_sha256: plan.manifest_sha256()?,
+        dataset_sha256: training.dataset_sha256.to_owned(),
+        split_plan_sha256: training.split_plan_sha256.clone(),
         training_config: config,
         labels,
         vectorizer,
@@ -898,9 +1792,124 @@ fn fit_model(plan: &SplitPlan, config: OpenSetTrainingConfig) -> Result<OpenSetM
     Ok(model)
 }
 
+fn development_candidate_is_better(
+    candidate: &DevelopmentCandidateMetrics,
+    current: &DevelopmentCandidateMetrics,
+    macro_f1_tolerance: f64,
+) -> bool {
+    let macro_f1_difference = candidate.macro_f1 - current.macro_f1;
+    if macro_f1_difference > macro_f1_tolerance {
+        return true;
+    }
+    if macro_f1_difference < -macro_f1_tolerance {
+        return false;
+    }
+    current
+        .max_features
+        .cmp(&candidate.max_features)
+        .then_with(|| candidate.l2_penalty.total_cmp(&current.l2_penalty))
+        .then_with(|| candidate.accuracy.total_cmp(&current.accuracy))
+        .then_with(|| {
+            current
+                .negative_log_likelihood
+                .total_cmp(&candidate.negative_log_likelihood)
+        })
+        .then_with(|| {
+            current
+                .multiclass_brier
+                .total_cmp(&candidate.multiclass_brier)
+        })
+        .is_gt()
+}
+
+fn evaluate_development_candidate(
+    model: &OpenSetModelV3,
+    development: DevelopmentPartition<'_>,
+) -> Result<IdEvaluationV3, MlError> {
+    let examples = development.examples();
+    let policy = OpenSetPolicyV3 {
+        schema_version: OPEN_SET_SCHEMA_VERSION,
+        model_version: model.model_version.clone(),
+        dataset_sha256: model.dataset_sha256.clone(),
+        split_plan_sha256: model.split_plan_sha256.clone(),
+        temperature: 1.0,
+        minimum_confidence: 0.0,
+        minimum_probability_margin: 0.0,
+        temperature_source: "calibration-partition-temperature-scaling-v3".into(),
+        threshold_source: "fixed-development-plus-ood-development-grid-v3".into(),
+        calibration_example_count: 1,
+        development_example_count: examples.len(),
+        ood_development_example_count: 1,
+    };
+    evaluate_id(&CompiledModel::new(model.clone(), policy)?, examples)
+}
+
+fn select_model_on_development(
+    training: &TrainingPartition<'_>,
+    development: DevelopmentPartition<'_>,
+    base_config: OpenSetTrainingConfig,
+) -> Result<(OpenSetModelV3, DevelopmentSelectionReport), MlError> {
+    base_config.validate()?;
+    let mut candidates = Vec::new();
+    let mut selected: Option<(usize, OpenSetModelV3)> = None;
+    for max_features in &base_config.development_selection.max_features_candidates {
+        for l2_penalty in &base_config.development_selection.l2_penalty_candidates {
+            let mut candidate_config = base_config.clone();
+            candidate_config.vectorizer.max_features = *max_features;
+            candidate_config.l2_penalty = *l2_penalty;
+            let model = fit_model(training, candidate_config)?;
+            let evaluation = evaluate_development_candidate(&model, development)?;
+            let metrics = DevelopmentCandidateMetrics {
+                max_features: *max_features,
+                l2_penalty: *l2_penalty,
+                accuracy: evaluation.accuracy,
+                macro_f1: evaluation.macro_f1,
+                negative_log_likelihood: evaluation.calibration.negative_log_likelihood,
+                multiclass_brier: evaluation.calibration.multiclass_brier,
+            };
+            let candidate_index = candidates.len();
+            let replace = match selected.as_ref() {
+                Some((selected_index, _)) => development_candidate_is_better(
+                    &metrics,
+                    &candidates[*selected_index],
+                    base_config.development_selection.macro_f1_tolerance,
+                ),
+                None => true,
+            };
+            candidates.push(metrics);
+            if replace {
+                selected = Some((candidate_index, model));
+            }
+        }
+    }
+    let (selected_index, model) = selected.ok_or_else(|| {
+        MlError::InvalidConfiguration("the development-only model-selection grid is empty".into())
+    })?;
+    let family_count = |examples: &[GroupedExample]| {
+        examples
+            .iter()
+            .map(|example| example.group_id.as_str())
+            .collect::<HashSet<_>>()
+            .len()
+    };
+    let report = DevelopmentSelectionReport {
+        strategy: "train-fit-development-f1-epsilon-parsimony-accuracy-nll-brier-v3".into(),
+        seed: base_config.seed,
+        macro_f1_tolerance: base_config.development_selection.macro_f1_tolerance,
+        training_example_count: training.examples().len(),
+        training_family_count: family_count(training.examples()),
+        development_example_count: development.examples().len(),
+        development_family_count: family_count(development.examples()),
+        candidates,
+        selected_index,
+        inputs: vec![SelectionDataRole::Train, SelectionDataRole::Development],
+    };
+    Ok((model, report))
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
-pub struct OpenSetPolicyV2 {
+pub struct OpenSetPolicyV3 {
     pub schema_version: u32,
     pub model_version: String,
     pub dataset_sha256: String,
@@ -915,14 +1924,14 @@ pub struct OpenSetPolicyV2 {
     pub ood_development_example_count: usize,
 }
 
-impl OpenSetPolicyV2 {
-    fn validate_against(&self, model: &OpenSetModelV2) -> Result<(), MlError> {
+impl OpenSetPolicyV3 {
+    fn validate_against(&self, model: &OpenSetModelV3) -> Result<(), MlError> {
         if self.schema_version != OPEN_SET_SCHEMA_VERSION
             || self.model_version != model.model_version
             || self.dataset_sha256 != model.dataset_sha256
             || self.split_plan_sha256 != model.split_plan_sha256
-            || self.temperature_source != "calibration-partition-temperature-scaling-v2"
-            || self.threshold_source != "development-plus-ood-development-grid-v2"
+            || self.temperature_source != "calibration-partition-temperature-scaling-v3"
+            || self.threshold_source != "fixed-development-plus-ood-development-grid-v3"
         {
             return Err(MlError::InvalidModel(
                 "the open-set policy does not match its model and provenance".into(),
@@ -986,13 +1995,13 @@ pub struct OpenSetPrediction {
 
 #[derive(Debug, Clone)]
 pub struct CompiledModel {
-    model: OpenSetModelV2,
-    policy: OpenSetPolicyV2,
+    model: OpenSetModelV3,
+    policy: OpenSetPolicyV3,
     feature_index: HashMap<String, usize>,
 }
 
 impl CompiledModel {
-    pub fn new(model: OpenSetModelV2, policy: OpenSetPolicyV2) -> Result<Self, MlError> {
+    pub fn new(model: OpenSetModelV3, policy: OpenSetPolicyV3) -> Result<Self, MlError> {
         model.validate()?;
         policy.validate_against(&model)?;
         let feature_index = build_feature_index(&model.vectorizer.vocabulary);
@@ -1003,16 +2012,21 @@ impl CompiledModel {
         })
     }
 
-    pub fn model(&self) -> &OpenSetModelV2 {
+    pub fn model(&self) -> &OpenSetModelV3 {
         &self.model
     }
 
-    pub fn policy(&self) -> &OpenSetPolicyV2 {
+    pub fn policy(&self) -> &OpenSetPolicyV3 {
         &self.policy
     }
 
     pub fn predict(&self, text: &str) -> OpenSetPrediction {
-        let features = transform(&self.model.vectorizer, &self.feature_index, text);
+        let bounded_text = if text.chars().nth(crate::MAX_INPUT_CHARS).is_some() {
+            ""
+        } else {
+            text
+        };
+        let features = transform(&self.model.vectorizer, &self.feature_index, bounded_text);
         let logits = logits_for(&features, &self.model.weights, &self.model.biases);
         prediction_from_scores(&self.model, &self.policy, &features, &logits)
     }
@@ -1026,8 +2040,8 @@ impl CompiledModel {
 }
 
 fn prediction_from_scores(
-    model: &OpenSetModelV2,
-    policy: &OpenSetPolicyV2,
+    model: &OpenSetModelV3,
+    policy: &OpenSetPolicyV3,
     features: &[(usize, f64)],
     logits: &[f64],
 ) -> OpenSetPrediction {
@@ -1096,9 +2110,10 @@ fn prediction_from_scores(
 }
 
 fn calibrate_temperature(
-    model: &OpenSetModelV2,
-    examples: &[GroupedExample],
+    model: &OpenSetModelV3,
+    calibration: CalibrationPartition<'_>,
 ) -> Result<f64, MlError> {
+    let examples = calibration.examples();
     if examples.is_empty() {
         return Err(MlError::InvalidDataset(
             "temperature scaling requires a non-empty calibration partition".into(),
@@ -1165,6 +2180,8 @@ fn calibrate_temperature(
 #[serde(deny_unknown_fields)]
 pub struct ThresholdSelection {
     pub strategy: String,
+    pub evaluated_candidate_count: usize,
+    pub feasible_candidate_count: usize,
     pub development_example_count: usize,
     pub ood_development_example_count: usize,
     pub minimum_development_selective_accuracy: f64,
@@ -1174,22 +2191,23 @@ pub struct ThresholdSelection {
     pub observed_development_coverage: f64,
     pub observed_development_selective_accuracy: f64,
     pub observed_ood_development_coverage: f64,
-    pub id_test_used: bool,
-    pub ood_test_used: bool,
+    pub inputs: Vec<SelectionDataRole>,
 }
 
 fn select_thresholds(
-    model: &OpenSetModelV2,
+    model: &OpenSetModelV3,
     temperature: f64,
-    development: &[GroupedExample],
-    ood_development: &OpenSetOodDataset,
+    development: DevelopmentPartition<'_>,
+    ood_development: OodDevelopmentPartition<'_>,
 ) -> Result<ThresholdSelection, MlError> {
+    let development = development.examples();
+    let ood_development = ood_development.dataset();
     if development.is_empty() || ood_development.examples().is_empty() {
         return Err(MlError::InvalidDataset(
             "threshold selection requires development and OOD-development examples".into(),
         ));
     }
-    let temporary_policy = OpenSetPolicyV2 {
+    let temporary_policy = OpenSetPolicyV3 {
         schema_version: OPEN_SET_SCHEMA_VERSION,
         model_version: model.model_version.clone(),
         dataset_sha256: model.dataset_sha256.clone(),
@@ -1197,8 +2215,8 @@ fn select_thresholds(
         temperature,
         minimum_confidence: 0.0,
         minimum_probability_margin: 0.0,
-        temperature_source: "calibration-partition-temperature-scaling-v2".into(),
-        threshold_source: "development-plus-ood-development-grid-v2".into(),
+        temperature_source: "calibration-partition-temperature-scaling-v3".into(),
+        threshold_source: "fixed-development-plus-ood-development-grid-v3".into(),
         calibration_example_count: 1,
         development_example_count: development.len(),
         ood_development_example_count: ood_development.examples().len(),
@@ -1239,11 +2257,12 @@ fn select_thresholds(
         development_selective_accuracy: f64,
         ood_coverage: f64,
     }
+    const CONFIDENCE_CANDIDATES: [f64; 7] = [0.50, 0.60, 0.70, 0.80, 0.85, 0.90, 0.95];
+    const MARGIN_CANDIDATES: [f64; 7] = [0.0, 0.20, 0.40, 0.60, 0.70, 0.80, 0.90];
     let mut best = None;
-    for confidence_step in 15..=95 {
-        let confidence = confidence_step as f64 / 100.0;
-        for margin_step in 0..=90 {
-            let margin = margin_step as f64 / 100.0;
+    let mut feasible_candidate_count = 0usize;
+    for confidence in CONFIDENCE_CANDIDATES {
+        for margin in MARGIN_CANDIDATES {
             let accepted = development_scores
                 .iter()
                 .filter(|(has_features, _, observed_confidence, observed_margin)| {
@@ -1275,6 +2294,7 @@ fn select_thresholds(
             if ood_coverage > MAX_OOD_COVERAGE {
                 continue;
             }
+            feasible_candidate_count += 1;
             let candidate = Candidate {
                 confidence,
                 margin,
@@ -1310,11 +2330,13 @@ fn select_thresholds(
     }
     let best = best.ok_or_else(|| {
         MlError::InvalidConfiguration(
-            "no development/OOD-development threshold satisfies the locked v2 policy".into(),
+            "no development/OOD-development threshold satisfies the locked v3 policy".into(),
         )
     })?;
     Ok(ThresholdSelection {
-        strategy: "development-plus-ood-development-grid-v2".into(),
+        strategy: "fixed-development-plus-ood-development-grid-v3".into(),
+        evaluated_candidate_count: CONFIDENCE_CANDIDATES.len() * MARGIN_CANDIDATES.len(),
+        feasible_candidate_count,
         development_example_count: development.len(),
         ood_development_example_count: ood_development.examples().len(),
         minimum_development_selective_accuracy: MIN_SELECTIVE_ACCURACY,
@@ -1324,8 +2346,10 @@ fn select_thresholds(
         observed_development_coverage: best.development_coverage,
         observed_development_selective_accuracy: best.development_selective_accuracy,
         observed_ood_development_coverage: best.ood_coverage,
-        id_test_used: false,
-        ood_test_used: false,
+        inputs: vec![
+            SelectionDataRole::Development,
+            SelectionDataRole::OodDevelopment,
+        ],
     })
 }
 
@@ -1344,6 +2368,32 @@ pub struct CalibrationMetrics {
     pub multiclass_brier: f64,
     pub expected_calibration_error: f64,
     pub ece_bins: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct DevelopmentCandidateMetrics {
+    pub max_features: usize,
+    pub l2_penalty: f64,
+    pub accuracy: f64,
+    pub macro_f1: f64,
+    pub negative_log_likelihood: f64,
+    pub multiclass_brier: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct DevelopmentSelectionReport {
+    pub strategy: String,
+    pub seed: u64,
+    pub macro_f1_tolerance: f64,
+    pub training_example_count: usize,
+    pub training_family_count: usize,
+    pub development_example_count: usize,
+    pub development_family_count: usize,
+    pub candidates: Vec<DevelopmentCandidateMetrics>,
+    pub selected_index: usize,
+    pub inputs: Vec<SelectionDataRole>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -1369,10 +2419,49 @@ pub struct EvaluatedOpenSetPrediction {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
-pub struct IdEvaluationV2 {
+pub struct PerClassMetrics {
+    pub label: String,
+    pub support: usize,
+    pub predicted: usize,
+    pub true_positive: usize,
+    pub precision: f64,
+    pub recall: f64,
+    pub f1: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct BaselineEvaluation {
+    pub accuracy: f64,
+    pub macro_f1: f64,
+    pub confusion_matrix: Vec<Vec<usize>>,
+    pub per_class: Vec<PerClassMetrics>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct BaselineReport {
+    pub strategy: String,
+    pub inputs: Vec<SelectionDataRole>,
+    pub evaluation_partition: String,
+    pub training_example_count: usize,
+    pub training_family_count: usize,
+    pub majority_label: String,
+    pub majority: BaselineEvaluation,
+    pub unigram_naive_bayes: BaselineEvaluation,
+    pub learned_minus_unigram_accuracy: f64,
+    pub learned_minus_unigram_macro_f1: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct IdEvaluationV3 {
     pub example_count: usize,
     pub accuracy: f64,
     pub macro_f1: f64,
+    pub labels: Vec<String>,
+    pub confusion_matrix: Vec<Vec<usize>>,
+    pub per_class: Vec<PerClassMetrics>,
     pub coverage: f64,
     pub selective_accuracy: Option<f64>,
     pub calibration: CalibrationMetrics,
@@ -1385,6 +2474,9 @@ pub struct IdEvaluationV2 {
 #[serde(deny_unknown_fields)]
 pub struct OodEvaluatedPrediction {
     pub id: String,
+    pub family_id: String,
+    pub domain_group: String,
+    pub stratum: OodStratum,
     pub predicted_label: String,
     pub accepted: bool,
     pub confidence: f64,
@@ -1401,12 +2493,50 @@ pub struct OodDiscriminationMetrics {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
-pub struct OodEvaluationV2 {
+pub struct OodEvaluationV3 {
     pub example_count: usize,
     pub accepted_examples: usize,
     pub coverage: f64,
     pub discrimination: OodDiscriminationMetrics,
+    pub by_stratum: BTreeMap<String, OodStratumEvaluation>,
     pub predictions: Vec<OodEvaluatedPrediction>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct OodStratumEvaluation {
+    pub example_count: usize,
+    pub accepted_examples: usize,
+    pub coverage: f64,
+    pub discrimination: OodDiscriminationMetrics,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ContrastEvaluatedPrediction {
+    pub id: String,
+    pub pair_id: String,
+    pub variant: ContrastVariant,
+    pub actual_label: String,
+    pub predicted_label: String,
+    pub correct: bool,
+    pub accepted: bool,
+    pub confidence: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ContrastEvaluationV3 {
+    pub example_count: usize,
+    pub pair_count: usize,
+    pub accuracy: f64,
+    pub macro_f1: f64,
+    pub pair_accuracy: f64,
+    pub prediction_flip_rate: f64,
+    pub coverage: f64,
+    pub confusion_matrix: Vec<Vec<usize>>,
+    pub per_class: Vec<PerClassMetrics>,
+    pub predictions: Vec<ContrastEvaluatedPrediction>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -1429,19 +2559,27 @@ pub struct BootstrapReport {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
-pub struct OpenSetMetricsV2 {
+pub struct OpenSetMetricsV3 {
     pub schema_version: u32,
     pub model_version: String,
     pub dataset_sha256: String,
     pub split_plan_sha256: String,
     pub ood_development_sha256: String,
     pub ood_test_sha256: String,
+    pub contrast_test_sha256: String,
     pub partition_counts: BTreeMap<String, usize>,
+    pub partition_family_counts: BTreeMap<String, usize>,
+    pub paraphrases_per_family: usize,
+    pub ood_domain_counts: BTreeMap<String, usize>,
+    pub ood_stratum_counts: BTreeMap<String, BTreeMap<String, usize>>,
+    pub development_selection: DevelopmentSelectionReport,
     pub threshold_selection: ThresholdSelection,
     pub uncalibrated_calibration_partition: CalibrationMetrics,
     pub calibrated_calibration_partition: CalibrationMetrics,
-    pub id_test: IdEvaluationV2,
-    pub ood_test: OodEvaluationV2,
+    pub id_test: IdEvaluationV3,
+    pub baselines: BaselineReport,
+    pub contrast_test: ContrastEvaluationV3,
+    pub ood_test: OodEvaluationV3,
     pub bootstrap_95: BootstrapReport,
     pub limitations: Vec<String>,
 }
@@ -1449,7 +2587,7 @@ pub struct OpenSetMetricsV2 {
 fn evaluate_id(
     runtime: &CompiledModel,
     examples: &[GroupedExample],
-) -> Result<IdEvaluationV2, MlError> {
+) -> Result<IdEvaluationV3, MlError> {
     if examples.is_empty() {
         return Err(MlError::InvalidDataset(
             "ID evaluation requires at least one example".into(),
@@ -1477,7 +2615,7 @@ fn evaluate_id(
 fn summarize_id_predictions(
     labels: &[String],
     predictions: Vec<EvaluatedOpenSetPrediction>,
-) -> IdEvaluationV2 {
+) -> IdEvaluationV3 {
     let example_count = predictions.len();
     let correct = predictions
         .iter()
@@ -1491,12 +2629,49 @@ fn summarize_id_predictions(
         .iter()
         .filter(|prediction| prediction.correct)
         .count();
+    let label_index = labels
+        .iter()
+        .enumerate()
+        .map(|(index, label)| (label.as_str(), index))
+        .collect::<HashMap<_, _>>();
+    let mut confusion_matrix = vec![vec![0usize; labels.len()]; labels.len()];
+    for prediction in &predictions {
+        if let (Some(actual), Some(predicted)) = (
+            label_index.get(prediction.actual_label.as_str()),
+            label_index.get(prediction.predicted_label.as_str()),
+        ) {
+            confusion_matrix[*actual][*predicted] += 1;
+        }
+    }
+    let per_class = labels
+        .iter()
+        .enumerate()
+        .map(|(index, label)| {
+            let support = confusion_matrix[index].iter().sum::<usize>();
+            let predicted = confusion_matrix.iter().map(|row| row[index]).sum::<usize>();
+            let true_positive = confusion_matrix[index][index];
+            let precision = safe_ratio(true_positive as f64, predicted as f64);
+            let recall = safe_ratio(true_positive as f64, support as f64);
+            PerClassMetrics {
+                label: label.clone(),
+                support,
+                predicted,
+                true_positive,
+                precision,
+                recall,
+                f1: safe_ratio(2.0 * precision * recall, precision + recall),
+            }
+        })
+        .collect::<Vec<_>>();
     let calibration = calibration_metrics(&predictions, 10);
     let (risk_coverage_curve, aurc) = risk_coverage(&predictions);
-    IdEvaluationV2 {
+    IdEvaluationV3 {
         example_count,
         accuracy: correct as f64 / example_count as f64,
-        macro_f1: macro_f1(labels, &predictions),
+        macro_f1: per_class.iter().map(|metrics| metrics.f1).sum::<f64>() / per_class.len() as f64,
+        labels: labels.to_vec(),
+        confusion_matrix,
+        per_class,
         coverage: accepted.len() as f64 / example_count as f64,
         selective_accuracy: (!accepted.is_empty())
             .then_some(accepted_correct as f64 / accepted.len() as f64),
@@ -1505,6 +2680,209 @@ fn summarize_id_predictions(
         risk_coverage_curve,
         predictions,
     }
+}
+
+fn summarize_baseline_predictions(
+    labels: &[String],
+    actual_and_predicted: &[(String, String)],
+) -> BaselineEvaluation {
+    let label_index = labels
+        .iter()
+        .enumerate()
+        .map(|(index, label)| (label.as_str(), index))
+        .collect::<HashMap<_, _>>();
+    let mut confusion_matrix = vec![vec![0usize; labels.len()]; labels.len()];
+    for (actual, predicted) in actual_and_predicted {
+        confusion_matrix[label_index[actual.as_str()]][label_index[predicted.as_str()]] += 1;
+    }
+    let per_class = labels
+        .iter()
+        .enumerate()
+        .map(|(index, label)| {
+            let support = confusion_matrix[index].iter().sum::<usize>();
+            let predicted = confusion_matrix.iter().map(|row| row[index]).sum::<usize>();
+            let true_positive = confusion_matrix[index][index];
+            let precision = safe_ratio(true_positive as f64, predicted as f64);
+            let recall = safe_ratio(true_positive as f64, support as f64);
+            PerClassMetrics {
+                label: label.clone(),
+                support,
+                predicted,
+                true_positive,
+                precision,
+                recall,
+                f1: safe_ratio(2.0 * precision * recall, precision + recall),
+            }
+        })
+        .collect::<Vec<_>>();
+    let correct = actual_and_predicted
+        .iter()
+        .filter(|(actual, predicted)| actual == predicted)
+        .count();
+    BaselineEvaluation {
+        accuracy: correct as f64 / actual_and_predicted.len() as f64,
+        macro_f1: per_class.iter().map(|metrics| metrics.f1).sum::<f64>() / per_class.len() as f64,
+        confusion_matrix,
+        per_class,
+    }
+}
+
+fn evaluate_baselines(
+    training: &TrainingPartition<'_>,
+    id_test: &[GroupedExample],
+    labels: &[String],
+    learned_accuracy: f64,
+    learned_macro_f1: f64,
+) -> BaselineReport {
+    let mut document_counts: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut token_counts: BTreeMap<&str, HashMap<String, usize>> = BTreeMap::new();
+    let mut token_totals: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut vocabulary = BTreeSet::new();
+    for example in training.examples() {
+        *document_counts.entry(&example.label).or_insert(0) += 1;
+        for token in tokenize(&example.text) {
+            vocabulary.insert(token.clone());
+            *token_counts
+                .entry(&example.label)
+                .or_default()
+                .entry(token)
+                .or_insert(0) += 1;
+            *token_totals.entry(&example.label).or_insert(0) += 1;
+        }
+    }
+    let majority_label = labels
+        .iter()
+        .min_by(|left, right| {
+            document_counts[right.as_str()]
+                .cmp(&document_counts[left.as_str()])
+                .then_with(|| left.cmp(right))
+        })
+        .expect("the fitted model always has labels")
+        .clone();
+    let majority_predictions = id_test
+        .iter()
+        .map(|example| (example.label.clone(), majority_label.clone()))
+        .collect::<Vec<_>>();
+    let training_count = training.examples().len() as f64;
+    let vocabulary_size = vocabulary.len() as f64;
+    let unigram_predictions = id_test
+        .iter()
+        .map(|example| {
+            let tokens = tokenize(&example.text);
+            let mut best_label = labels[0].as_str();
+            let mut best_score = f64::NEG_INFINITY;
+            for label in labels {
+                let label_documents = document_counts[label.as_str()] as f64;
+                let mut score =
+                    ((label_documents + 1.0) / (training_count + labels.len() as f64)).ln();
+                let denominator = token_totals[label.as_str()] as f64 + vocabulary_size;
+                for token in &tokens {
+                    if vocabulary.contains(token) {
+                        let count = token_counts[label.as_str()]
+                            .get(token)
+                            .copied()
+                            .unwrap_or(0) as f64;
+                        score += ((count + 1.0) / denominator).ln();
+                    }
+                }
+                if score > best_score {
+                    best_score = score;
+                    best_label = label;
+                }
+            }
+            (example.label.clone(), best_label.to_owned())
+        })
+        .collect::<Vec<_>>();
+    let majority = summarize_baseline_predictions(labels, &majority_predictions);
+    let unigram_naive_bayes = summarize_baseline_predictions(labels, &unigram_predictions);
+    BaselineReport {
+        strategy: "training-only-majority-and-laplace-unigram-naive-bayes-v3".into(),
+        inputs: vec![SelectionDataRole::Train],
+        evaluation_partition: "id-test".into(),
+        training_example_count: training.examples().len(),
+        training_family_count: training
+            .examples()
+            .iter()
+            .map(|example| example.group_id.as_str())
+            .collect::<HashSet<_>>()
+            .len(),
+        majority_label,
+        majority,
+        learned_minus_unigram_accuracy: learned_accuracy - unigram_naive_bayes.accuracy,
+        learned_minus_unigram_macro_f1: learned_macro_f1 - unigram_naive_bayes.macro_f1,
+        unigram_naive_bayes,
+    }
+}
+
+fn evaluate_contrast(
+    runtime: &CompiledModel,
+    contrast: ContrastTestPartition<'_>,
+) -> Result<ContrastEvaluationV3, MlError> {
+    let dataset = contrast.dataset();
+    dataset.validate_contract()?;
+    let predictions = dataset
+        .examples()
+        .iter()
+        .map(|example| {
+            let prediction = runtime.predict(&example.text);
+            ContrastEvaluatedPrediction {
+                id: example.id.clone(),
+                pair_id: example.pair_id.clone(),
+                variant: example.variant,
+                actual_label: example.label.clone(),
+                correct: prediction.label == example.label,
+                predicted_label: prediction.label,
+                accepted: prediction.accepted,
+                confidence: prediction.confidence,
+            }
+        })
+        .collect::<Vec<_>>();
+    let actual_and_predicted = predictions
+        .iter()
+        .map(|prediction| {
+            (
+                prediction.actual_label.clone(),
+                prediction.predicted_label.clone(),
+            )
+        })
+        .collect::<Vec<_>>();
+    let summary = summarize_baseline_predictions(&runtime.model.labels, &actual_and_predicted);
+    let mut by_pair: BTreeMap<&str, Vec<&ContrastEvaluatedPrediction>> = BTreeMap::new();
+    for prediction in &predictions {
+        by_pair
+            .entry(&prediction.pair_id)
+            .or_default()
+            .push(prediction);
+    }
+    if by_pair.values().any(|members| members.len() != 2) {
+        return Err(MlError::InvalidDataset(
+            "contrast evaluation requires exactly two predictions per pair".into(),
+        ));
+    }
+    let correct_pairs = by_pair
+        .values()
+        .filter(|members| members.iter().all(|prediction| prediction.correct))
+        .count();
+    let flipped_pairs = by_pair
+        .values()
+        .filter(|members| members[0].predicted_label != members[1].predicted_label)
+        .count();
+    let accepted = predictions
+        .iter()
+        .filter(|prediction| prediction.accepted)
+        .count();
+    Ok(ContrastEvaluationV3 {
+        example_count: predictions.len(),
+        pair_count: by_pair.len(),
+        accuracy: summary.accuracy,
+        macro_f1: summary.macro_f1,
+        pair_accuracy: correct_pairs as f64 / by_pair.len() as f64,
+        prediction_flip_rate: flipped_pairs as f64 / by_pair.len() as f64,
+        coverage: accepted as f64 / predictions.len() as f64,
+        confusion_matrix: summary.confusion_matrix,
+        per_class: summary.per_class,
+        predictions,
+    })
 }
 
 fn calibration_metrics(
@@ -1570,36 +2948,6 @@ fn calibration_metrics(
     }
 }
 
-fn macro_f1(labels: &[String], predictions: &[EvaluatedOpenSetPrediction]) -> f64 {
-    labels
-        .iter()
-        .map(|label| {
-            let true_positive = predictions
-                .iter()
-                .filter(|prediction| {
-                    prediction.actual_label == *label && prediction.predicted_label == *label
-                })
-                .count() as f64;
-            let false_positive = predictions
-                .iter()
-                .filter(|prediction| {
-                    prediction.actual_label != *label && prediction.predicted_label == *label
-                })
-                .count() as f64;
-            let false_negative = predictions
-                .iter()
-                .filter(|prediction| {
-                    prediction.actual_label == *label && prediction.predicted_label != *label
-                })
-                .count() as f64;
-            let precision = safe_ratio(true_positive, true_positive + false_positive);
-            let recall = safe_ratio(true_positive, true_positive + false_negative);
-            safe_ratio(2.0 * precision * recall, precision + recall)
-        })
-        .sum::<f64>()
-        / labels.len() as f64
-}
-
 fn risk_coverage(predictions: &[EvaluatedOpenSetPrediction]) -> (Vec<RiskCoveragePoint>, f64) {
     let mut ranked = predictions.iter().collect::<Vec<_>>();
     ranked.sort_by(|left, right| {
@@ -1633,9 +2981,9 @@ fn risk_coverage(predictions: &[EvaluatedOpenSetPrediction]) -> (Vec<RiskCoverag
 
 fn evaluate_ood(
     runtime: &CompiledModel,
-    id_evaluation: &IdEvaluationV2,
+    id_evaluation: &IdEvaluationV3,
     ood: &OpenSetOodDataset,
-) -> Result<OodEvaluationV2, MlError> {
+) -> Result<OodEvaluationV3, MlError> {
     if ood.examples().is_empty() {
         return Err(MlError::InvalidDataset(
             "OOD evaluation requires at least one example".into(),
@@ -1648,6 +2996,9 @@ fn evaluate_ood(
             let prediction = runtime.predict(&example.text);
             OodEvaluatedPrediction {
                 id: example.id.clone(),
+                family_id: example.family_id.clone(),
+                domain_group: example.domain_group.clone(),
+                stratum: example.stratum,
                 predicted_label: prediction.label,
                 accepted: prediction.accepted,
                 confidence: prediction.confidence,
@@ -1668,11 +3019,46 @@ fn evaluate_ood(
         .iter()
         .map(|prediction| prediction.confidence)
         .collect::<Vec<_>>();
-    Ok(OodEvaluationV2 {
+    let mut by_stratum = BTreeMap::new();
+    for stratum in [
+        OodStratum::Semantic,
+        OodStratum::Capability,
+        OodStratum::Noise,
+    ] {
+        let members = predictions
+            .iter()
+            .filter(|prediction| prediction.stratum == stratum)
+            .collect::<Vec<_>>();
+        if members.is_empty() {
+            return Err(MlError::InvalidDataset(format!(
+                "OOD evaluation is missing the {} stratum",
+                stratum.as_str()
+            )));
+        }
+        let accepted = members
+            .iter()
+            .filter(|prediction| prediction.accepted)
+            .count();
+        let scores = members
+            .iter()
+            .map(|prediction| prediction.confidence)
+            .collect::<Vec<_>>();
+        by_stratum.insert(
+            stratum.as_str().to_owned(),
+            OodStratumEvaluation {
+                example_count: members.len(),
+                accepted_examples: accepted,
+                coverage: accepted as f64 / members.len() as f64,
+                discrimination: discrimination_metrics(&id_scores, &scores),
+            },
+        );
+    }
+    Ok(OodEvaluationV3 {
         example_count: predictions.len(),
         accepted_examples,
         coverage: accepted_examples as f64 / predictions.len() as f64,
         discrimination: discrimination_metrics(&id_scores, &ood_scores),
+        by_stratum,
         predictions,
     })
 }
@@ -1735,8 +3121,10 @@ fn discrimination_metrics(id_scores: &[f64], ood_scores: &[f64]) -> OodDiscrimin
 
 fn bootstrap_report(
     labels: &[String],
-    id: &IdEvaluationV2,
-    ood: &OodEvaluationV2,
+    id: &IdEvaluationV3,
+    id_examples: &[GroupedExample],
+    ood: &OodEvaluationV3,
+    ood_examples: &OpenSetOodDataset,
     seed: u64,
     resamples: usize,
 ) -> Result<BootstrapReport, MlError> {
@@ -1745,10 +3133,56 @@ fn bootstrap_report(
             "bootstrap resamples must be between 100 and 20000".into(),
         ));
     }
-    let sampled_rows = id
-        .predictions
-        .len()
-        .checked_add(ood.predictions.len())
+    let id_families = id_examples
+        .iter()
+        .map(|example| (example.id.as_str(), example.group_id.as_str()))
+        .collect::<HashMap<_, _>>();
+    let ood_domains = ood_examples
+        .examples()
+        .iter()
+        .map(|example| (example.id.as_str(), example.domain_group.as_str()))
+        .collect::<HashMap<_, _>>();
+    let mut by_label_family: BTreeMap<&str, BTreeMap<&str, Vec<&EvaluatedOpenSetPrediction>>> =
+        BTreeMap::new();
+    for prediction in &id.predictions {
+        let family = id_families.get(prediction.id.as_str()).ok_or_else(|| {
+            MlError::InvalidDataset(
+                "an ID-test prediction is missing its family for cluster bootstrap".into(),
+            )
+        })?;
+        by_label_family
+            .entry(&prediction.actual_label)
+            .or_default()
+            .entry(*family)
+            .or_default()
+            .push(prediction);
+    }
+    let mut by_ood_domain: BTreeMap<&str, Vec<&OodEvaluatedPrediction>> = BTreeMap::new();
+    for prediction in &ood.predictions {
+        let domain = ood_domains.get(prediction.id.as_str()).ok_or_else(|| {
+            MlError::InvalidDataset(
+                "an OOD-test prediction is missing its domain for cluster bootstrap".into(),
+            )
+        })?;
+        by_ood_domain.entry(*domain).or_default().push(prediction);
+    }
+    if by_label_family.len() != labels.len() || by_ood_domain.is_empty() {
+        return Err(MlError::InvalidDataset(
+            "cluster bootstrap requires every ID label and at least one OOD domain".into(),
+        ));
+    }
+    let maximum_id_rows = by_label_family
+        .values()
+        .map(|families| families.len() * families.values().map(Vec::len).max().unwrap_or_default())
+        .sum::<usize>();
+    let maximum_ood_rows = by_ood_domain.len()
+        * by_ood_domain
+            .values()
+            .map(Vec::len)
+            .max()
+            .unwrap_or_default();
+    let sampled_rows = maximum_id_rows
+        .checked_add(maximum_ood_rows)
         .and_then(|population| population.checked_mul(resamples))
         .ok_or_else(|| {
             MlError::InvalidConfiguration("bootstrap workload overflows its size boundary".into())
@@ -1757,13 +3191,6 @@ fn bootstrap_report(
         return Err(MlError::InvalidConfiguration(format!(
             "bootstrap workload exceeds {MAX_BOOTSTRAP_SAMPLED_ROWS} sampled rows"
         )));
-    }
-    let mut by_label: BTreeMap<&str, Vec<&EvaluatedOpenSetPrediction>> = BTreeMap::new();
-    for prediction in &id.predictions {
-        by_label
-            .entry(&prediction.actual_label)
-            .or_default()
-            .push(prediction);
     }
     let mut rng = DeterministicRng::new(seed ^ 0x6a09_e667_f3bc_c909);
     let mut id_accuracy = Vec::with_capacity(resamples);
@@ -1776,16 +3203,21 @@ fn bootstrap_report(
     let mut ood_aupr = Vec::with_capacity(resamples);
     let mut ood_fpr95 = Vec::with_capacity(resamples);
     for _ in 0..resamples {
-        let mut sampled_id = Vec::with_capacity(id.predictions.len());
-        for members in by_label.values() {
-            for _ in 0..members.len() {
-                sampled_id.push((*members[rng.index(members.len())]).clone());
+        let mut sampled_id = Vec::with_capacity(maximum_id_rows);
+        for families in by_label_family.values() {
+            let families = families.values().collect::<Vec<_>>();
+            for _ in 0..families.len() {
+                let selected = families[rng.index(families.len())];
+                sampled_id.extend(selected.iter().map(|prediction| (*prediction).clone()));
             }
         }
         let summary = summarize_id_predictions(labels, sampled_id);
-        let sampled_ood = (0..ood.predictions.len())
-            .map(|_| ood.predictions[rng.index(ood.predictions.len())].clone())
-            .collect::<Vec<_>>();
+        let ood_domains = by_ood_domain.values().collect::<Vec<_>>();
+        let mut sampled_ood = Vec::with_capacity(maximum_ood_rows);
+        for _ in 0..ood_domains.len() {
+            let selected = ood_domains[rng.index(ood_domains.len())];
+            sampled_ood.extend(selected.iter().map(|prediction| (*prediction).clone()));
+        }
         let id_scores = summary
             .predictions
             .iter()
@@ -1807,7 +3239,7 @@ fn bootstrap_report(
         ood_fpr95.push(discrimination.fpr_at_95_tpr);
     }
     Ok(BootstrapReport {
-        strategy: "label-stratified-id-row-and-population-stratified-ood-percentile-v2".into(),
+        strategy: "label-stratified-id-family-and-ood-domain-cluster-percentile-v3".into(),
         seed,
         resamples,
         confidence_level: 0.95,
@@ -1835,11 +3267,12 @@ fn estimate(value: f64, mut samples: Vec<f64>) -> MetricEstimate {
 }
 
 fn calibration_partition_metrics(
-    model: &OpenSetModelV2,
-    examples: &[GroupedExample],
+    model: &OpenSetModelV3,
+    calibration: CalibrationPartition<'_>,
     temperature: f64,
 ) -> Result<CalibrationMetrics, MlError> {
-    let policy = OpenSetPolicyV2 {
+    let examples = calibration.examples();
+    let policy = OpenSetPolicyV3 {
         schema_version: OPEN_SET_SCHEMA_VERSION,
         model_version: model.model_version.clone(),
         dataset_sha256: model.dataset_sha256.clone(),
@@ -1847,8 +3280,8 @@ fn calibration_partition_metrics(
         temperature,
         minimum_confidence: 0.0,
         minimum_probability_margin: 0.0,
-        temperature_source: "calibration-partition-temperature-scaling-v2".into(),
-        threshold_source: "development-plus-ood-development-grid-v2".into(),
+        temperature_source: "calibration-partition-temperature-scaling-v3".into(),
+        threshold_source: "fixed-development-plus-ood-development-grid-v3".into(),
         calibration_example_count: examples.len(),
         development_example_count: 1,
         ood_development_example_count: 1,
@@ -1859,9 +3292,9 @@ fn calibration_partition_metrics(
 
 #[derive(Debug, Clone)]
 pub struct OpenSetExperimentResult {
-    pub model: OpenSetModelV2,
-    pub policy: OpenSetPolicyV2,
-    pub metrics: OpenSetMetricsV2,
+    pub model: OpenSetModelV3,
+    pub policy: OpenSetPolicyV3,
+    pub metrics: OpenSetMetricsV3,
     pub split_plan: SplitPlanManifest,
 }
 
@@ -1869,25 +3302,41 @@ pub fn run_open_set_experiment(
     dataset: &GroupedDataset,
     ood_development: &OpenSetOodDataset,
     ood_test: &OpenSetOodDataset,
+    contrast_test: &OpenSetContrastDataset,
     config: OpenSetTrainingConfig,
     bootstrap_resamples: usize,
 ) -> Result<OpenSetExperimentResult, MlError> {
-    reject_cross_dataset_overlap(dataset, ood_development, ood_test)?;
-    let plan = SplitPlan::build(dataset, config.seed)?;
-    let model = fit_model(&plan, config.clone())?;
+    reject_cross_dataset_overlap(dataset, ood_development, ood_test, contrast_test)?;
+    let plan = SplitPlan::build(
+        dataset,
+        ood_development,
+        ood_test,
+        contrast_test,
+        config.seed,
+    )?;
+    let training = plan.training_partition()?;
+    let development = plan.development_partition();
+    let calibration = plan.calibration_partition();
+    // These role-specific views are compile-time capabilities: the selector cannot access
+    // calibration, ID-test, or either OOD population through its parameters.
+    let (model, development_selection) =
+        select_model_on_development(&training, development, config.clone())?;
 
-    // The temperature has access only to the calibration partition.
-    let temperature = calibrate_temperature(&model, plan.calibration())?;
+    // The calibrator accepts only the typed calibration capability.
+    let temperature = calibrate_temperature(&model, calibration)?;
     let uncalibrated_calibration_partition =
-        calibration_partition_metrics(&model, plan.calibration(), 1.0)?;
+        calibration_partition_metrics(&model, calibration, 1.0)?;
     let calibrated_calibration_partition =
-        calibration_partition_metrics(&model, plan.calibration(), temperature)?;
+        calibration_partition_metrics(&model, calibration, temperature)?;
 
-    // Thresholds have access only to ID development and OOD development. The test partitions are
-    // intentionally not parameters of `select_thresholds`.
-    let threshold_selection =
-        select_thresholds(&model, temperature, plan.development(), ood_development)?;
-    let policy = OpenSetPolicyV2 {
+    // Threshold selection accepts only typed ID-development and OOD-development capabilities.
+    let threshold_selection = select_thresholds(
+        &model,
+        temperature,
+        development,
+        OodDevelopmentPartition(ood_development),
+    )?;
+    let policy = OpenSetPolicyV3 {
         schema_version: OPEN_SET_SCHEMA_VERSION,
         model_version: model.model_version.clone(),
         dataset_sha256: model.dataset_sha256.clone(),
@@ -1895,21 +3344,32 @@ pub fn run_open_set_experiment(
         temperature,
         minimum_confidence: threshold_selection.selected_confidence,
         minimum_probability_margin: threshold_selection.selected_probability_margin,
-        temperature_source: "calibration-partition-temperature-scaling-v2".into(),
-        threshold_source: "development-plus-ood-development-grid-v2".into(),
+        temperature_source: "calibration-partition-temperature-scaling-v3".into(),
+        threshold_source: "fixed-development-plus-ood-development-grid-v3".into(),
         calibration_example_count: plan.calibration().len(),
         development_example_count: plan.development().len(),
         ood_development_example_count: ood_development.examples().len(),
     };
     let runtime = CompiledModel::new(model.clone(), policy.clone())?;
 
-    // Only after the fitted model and operating policy are frozen do we evaluate the two tests.
+    // Only after the fitted model and operating policy are frozen do we evaluate the three tests.
     let id_test = evaluate_id(&runtime, plan.id_test())?;
+    let baselines = evaluate_baselines(
+        &training,
+        plan.id_test(),
+        &model.labels,
+        id_test.accuracy,
+        id_test.macro_f1,
+    );
+    let contrast_test_evaluation =
+        evaluate_contrast(&runtime, ContrastTestPartition(contrast_test))?;
     let ood_test_evaluation = evaluate_ood(&runtime, &id_test, ood_test)?;
     let bootstrap_95 = bootstrap_report(
         &model.labels,
         &id_test,
+        plan.id_test(),
         &ood_test_evaluation,
+        ood_test,
         config.seed,
         bootstrap_resamples,
     )?;
@@ -1920,28 +3380,137 @@ pub fn run_open_set_experiment(
         ("id-test".into(), plan.id_test().len()),
         ("ood-development".into(), ood_development.examples().len()),
         ("ood-test".into(), ood_test.examples().len()),
+        ("contrast-test".into(), contrast_test.examples().len()),
     ]);
-    let metrics = OpenSetMetricsV2 {
+    let family_count = |partition: PartitionKind| {
+        plan.manifest
+            .assignments
+            .iter()
+            .filter(|assignment| assignment.partition == partition)
+            .map(|assignment| assignment.group_id.as_str())
+            .collect::<HashSet<_>>()
+            .len()
+    };
+    let partition_family_counts = BTreeMap::from([
+        ("train".into(), family_count(PartitionKind::Train)),
+        (
+            "development".into(),
+            family_count(PartitionKind::Development),
+        ),
+        (
+            "calibration".into(),
+            family_count(PartitionKind::Calibration),
+        ),
+        ("id-test".into(), family_count(PartitionKind::IdTest)),
+        (
+            "ood-development".into(),
+            ood_development
+                .examples()
+                .iter()
+                .map(|example| example.family_id.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
+        ),
+        (
+            "ood-test".into(),
+            ood_test
+                .examples()
+                .iter()
+                .map(|example| example.family_id.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
+        ),
+        (
+            "contrast-test".into(),
+            contrast_test
+                .examples()
+                .iter()
+                .map(|example| example.pair_id.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
+        ),
+    ]);
+    let supervised_family_count = dataset
+        .examples()
+        .iter()
+        .map(|example| example.group_id.as_str())
+        .collect::<HashSet<_>>()
+        .len();
+    let paraphrases_per_family = dataset.examples().len() / supervised_family_count;
+    let ood_domain_counts = BTreeMap::from([
+        (
+            "ood-development".into(),
+            ood_development
+                .examples()
+                .iter()
+                .map(|example| example.domain_group.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
+        ),
+        (
+            "ood-test".into(),
+            ood_test
+                .examples()
+                .iter()
+                .map(|example| example.domain_group.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
+        ),
+    ]);
+    let stratum_counts = |dataset: &OpenSetOodDataset| {
+        let mut counts = BTreeMap::new();
+        for example in dataset.examples() {
+            *counts
+                .entry(example.stratum.as_str().to_owned())
+                .or_insert(0) += 1;
+        }
+        counts
+    };
+    let ood_stratum_counts = BTreeMap::from([
+        ("ood-development".into(), stratum_counts(ood_development)),
+        ("ood-test".into(), stratum_counts(ood_test)),
+    ]);
+    let mut limitations = vec![
+        "All current examples are synthetic and English-only.".into(),
+        "The four-way ID split is family-disjoint but synthetic and still modest; confidence intervals remain wide.".into(),
+        "The same development partition selects the model candidate and the abstention policy, so development-selection optimism remains possible.".into(),
+        "OOD discrimination is measured only on balanced synthetic semantic, capability, and noise strata; broader domains can behave differently.".into(),
+        "ID intervals cluster-resample held-out families and OOD intervals cluster-resample broader domains, but both have few independent clusters.".into(),
+        "A training-only unigram baseline is reported because surface-label shortcuts remain a material benchmark risk.".into(),
+        "The anti-shortcut contrast test is small, synthetic, and source-declared before the final run; it is not an external benchmark.".into(),
+        "This classifier is not suitable for clinical, safety, employment, or other decisions about people.".into(),
+    ];
+    if baselines.learned_minus_unigram_accuracy <= 0.0
+        || baselines.learned_minus_unigram_macro_f1 <= 0.0
+    {
+        limitations.push(
+            "On the frozen ID test, the learned model does not beat the training-only unigram baseline on both accuracy and macro F1."
+                .into(),
+        );
+    }
+    let metrics = OpenSetMetricsV3 {
         schema_version: OPEN_SET_SCHEMA_VERSION,
         model_version: OPEN_SET_MODEL_VERSION.into(),
         dataset_sha256: dataset.fingerprint_sha256(),
         split_plan_sha256: model.split_plan_sha256.clone(),
         ood_development_sha256: ood_development.fingerprint_sha256(),
         ood_test_sha256: ood_test.fingerprint_sha256(),
+        contrast_test_sha256: contrast_test.fingerprint_sha256(),
         partition_counts,
+        partition_family_counts,
+        paraphrases_per_family,
+        ood_domain_counts,
+        ood_stratum_counts,
+        development_selection,
         threshold_selection,
         uncalibrated_calibration_partition,
         calibrated_calibration_partition,
         id_test,
+        baselines,
+        contrast_test: contrast_test_evaluation,
         ood_test: ood_test_evaluation,
         bootstrap_95,
-        limitations: vec![
-            "All current examples are synthetic and English-only.".into(),
-            "The four-way ID split is group-disjoint but still small; confidence intervals are therefore wide.".into(),
-            "OOD discrimination is measured only on the checked-in synthetic OOD-test fixture.".into(),
-            "ID confidence intervals resample rows within labels, not groups; with one ID-test group per label, they do not estimate between-group variation.".into(),
-            "This classifier is not suitable for clinical, safety, employment, or other decisions about people.".into(),
-        ],
+        limitations,
     };
     Ok(OpenSetExperimentResult {
         model,
@@ -1953,7 +3522,7 @@ pub fn run_open_set_experiment(
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
-pub struct BundleManifestV2 {
+pub struct BundleManifestV3 {
     pub schema_version: u32,
     pub bundle_kind: String,
     pub bundle_version: String,
@@ -1965,10 +3534,10 @@ pub struct BundleManifestV2 {
 
 #[derive(Debug, Clone)]
 pub struct VerifiedBundle {
-    pub manifest: BundleManifestV2,
-    pub model: OpenSetModelV2,
-    pub policy: OpenSetPolicyV2,
-    pub metrics: OpenSetMetricsV2,
+    pub manifest: BundleManifestV3,
+    pub model: OpenSetModelV3,
+    pub policy: OpenSetPolicyV3,
+    pub metrics: OpenSetMetricsV3,
     pub split_plan: SplitPlanManifest,
 }
 
@@ -1981,7 +3550,7 @@ impl VerifiedBundle {
 pub fn write_bundle(
     directory: impl AsRef<Path>,
     result: &OpenSetExperimentResult,
-) -> Result<BundleManifestV2, MlError> {
+) -> Result<BundleManifestV3, MlError> {
     let directory = directory.as_ref();
     validate_bundle_destination(directory)?;
     let payloads = BTreeMap::from([
@@ -2012,10 +3581,10 @@ pub fn write_bundle(
         .iter()
         .map(|(name, bytes)| (name.clone(), sha256_hex(bytes)))
         .collect::<BTreeMap<_, _>>();
-    let manifest = BundleManifestV2 {
+    let manifest = BundleManifestV3 {
         schema_version: OPEN_SET_SCHEMA_VERSION,
         bundle_kind: "eliza-open-set-bundle".into(),
-        bundle_version: "2.0.0".into(),
+        bundle_version: OPEN_SET_BUNDLE_VERSION.into(),
         model_version: result.model.model_version.clone(),
         dataset_sha256: result.model.dataset_sha256.clone(),
         split_plan_sha256: result.model.split_plan_sha256.clone(),
@@ -2033,7 +3602,7 @@ pub fn write_bundle(
         let _ = fs::remove_dir_all(&staging);
         return Err(error);
     }
-    if let Err(error) = verify_bundle(&staging) {
+    if let Err(error) = verify_bundle_contract(&staging) {
         let _ = fs::remove_dir_all(&staging);
         return Err(error);
     }
@@ -2062,7 +3631,7 @@ pub fn write_bundle(
         );
         return Err(MlError::Io(std::io::Error::other(message)));
     }
-    if let Err(error) = verify_bundle(directory) {
+    if let Err(error) = verify_bundle_contract(directory) {
         let displacement_error = fs::rename(directory, &staging).err();
         let restore_error = if had_original && displacement_error.is_none() {
             fs::rename(&backup, directory).err()
@@ -2093,10 +3662,17 @@ pub fn write_bundle(
 }
 
 pub fn verify_bundle(directory: impl AsRef<Path>) -> Result<VerifiedBundle, MlError> {
-    let directory = directory.as_ref();
+    load_bundle(directory.as_ref(), true)
+}
+
+fn verify_bundle_contract(directory: &Path) -> Result<VerifiedBundle, MlError> {
+    load_bundle(directory, false)
+}
+
+fn load_bundle(directory: &Path, reproduce_semantics: bool) -> Result<VerifiedBundle, MlError> {
     validate_bundle_inventory(directory)?;
     let manifest_path = directory.join("manifest.json");
-    let manifest: BundleManifestV2 = read_bounded_json(&manifest_path, "bundle manifest")?;
+    let manifest: BundleManifestV3 = read_bounded_json(&manifest_path, "bundle manifest")?;
     validate_manifest(&manifest)?;
     for (name, expected_sha256) in &manifest.files {
         if !valid_sha256(expected_sha256) {
@@ -2114,12 +3690,16 @@ pub fn verify_bundle(directory: impl AsRef<Path>) -> Result<VerifiedBundle, MlEr
             )));
         }
     }
-    let model: OpenSetModelV2 = read_bounded_json(&directory.join("model.json"), "model")?;
-    let policy: OpenSetPolicyV2 = read_bounded_json(&directory.join("policy.json"), "policy")?;
-    let metrics: OpenSetMetricsV2 = read_bounded_json(&directory.join("metrics.json"), "metrics")?;
+    let model: OpenSetModelV3 = read_bounded_json(&directory.join("model.json"), "model")?;
+    let policy: OpenSetPolicyV3 = read_bounded_json(&directory.join("policy.json"), "policy")?;
+    let metrics: OpenSetMetricsV3 = read_bounded_json(&directory.join("metrics.json"), "metrics")?;
     let split_plan: SplitPlanManifest =
         read_bounded_json(&directory.join("split-plan.json"), "split plan")?;
-    validate_bundle_artifacts(&manifest, &model, &policy, &metrics, &split_plan)?;
+    if reproduce_semantics {
+        validate_bundle_artifacts(&manifest, &model, &policy, &metrics, &split_plan)?;
+    } else {
+        validate_bundle_artifact_contract(&manifest, &model, &policy, &metrics, &split_plan)?;
+    }
     Ok(VerifiedBundle {
         manifest,
         model,
@@ -2149,7 +3729,7 @@ fn validate_bundle_destination(directory: &Path) -> Result<(), MlError> {
             MlError::Io(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!(
-                    "refusing to replace non-empty directory {} because it is not a verified v2 bundle: {error}",
+                    "refusing to replace non-empty directory {} because it is not a verified v3 bundle: {error}",
                     directory.display()
                 ),
             ))
@@ -2179,7 +3759,7 @@ fn validate_bundle_inventory(directory: &Path) -> Result<(), MlError> {
         .collect::<BTreeSet<_>>();
     if observed != expected {
         return Err(MlError::InvalidModel(
-            "the bundle inventory must contain exactly the five v2 files".into(),
+            "the bundle inventory must contain exactly the five v3 files".into(),
         ));
     }
     Ok(())
@@ -2189,23 +3769,23 @@ pub fn embedded_bundle() -> Result<VerifiedBundle, MlError> {
     let bytes = BTreeMap::from([
         (
             "metrics.json",
-            include_bytes!("../artifacts/eliza-open-set-v2/metrics.json").as_slice(),
+            include_bytes!("../artifacts/eliza-open-set-v3/metrics.json").as_slice(),
         ),
         (
             "model.json",
-            include_bytes!("../artifacts/eliza-open-set-v2/model.json").as_slice(),
+            include_bytes!("../artifacts/eliza-open-set-v3/model.json").as_slice(),
         ),
         (
             "policy.json",
-            include_bytes!("../artifacts/eliza-open-set-v2/policy.json").as_slice(),
+            include_bytes!("../artifacts/eliza-open-set-v3/policy.json").as_slice(),
         ),
         (
             "split-plan.json",
-            include_bytes!("../artifacts/eliza-open-set-v2/split-plan.json").as_slice(),
+            include_bytes!("../artifacts/eliza-open-set-v3/split-plan.json").as_slice(),
         ),
     ]);
-    let manifest: BundleManifestV2 = serde_json::from_slice(include_bytes!(
-        "../artifacts/eliza-open-set-v2/manifest.json"
+    let manifest: BundleManifestV3 = serde_json::from_slice(include_bytes!(
+        "../artifacts/eliza-open-set-v3/manifest.json"
     ))?;
     validate_manifest(&manifest)?;
     for (name, content) in &bytes {
@@ -2215,11 +3795,11 @@ pub fn embedded_bundle() -> Result<VerifiedBundle, MlError> {
             )));
         }
     }
-    let model: OpenSetModelV2 = serde_json::from_slice(bytes["model.json"])?;
-    let policy: OpenSetPolicyV2 = serde_json::from_slice(bytes["policy.json"])?;
-    let metrics: OpenSetMetricsV2 = serde_json::from_slice(bytes["metrics.json"])?;
+    let model: OpenSetModelV3 = serde_json::from_slice(bytes["model.json"])?;
+    let policy: OpenSetPolicyV3 = serde_json::from_slice(bytes["policy.json"])?;
+    let metrics: OpenSetMetricsV3 = serde_json::from_slice(bytes["metrics.json"])?;
     let split_plan: SplitPlanManifest = serde_json::from_slice(bytes["split-plan.json"])?;
-    validate_bundle_artifacts(&manifest, &model, &policy, &metrics, &split_plan)?;
+    validate_bundle_artifact_contract(&manifest, &model, &policy, &metrics, &split_plan)?;
     Ok(VerifiedBundle {
         manifest,
         model,
@@ -2229,10 +3809,10 @@ pub fn embedded_bundle() -> Result<VerifiedBundle, MlError> {
     })
 }
 
-fn validate_manifest(manifest: &BundleManifestV2) -> Result<(), MlError> {
+fn validate_manifest(manifest: &BundleManifestV3) -> Result<(), MlError> {
     if manifest.schema_version != OPEN_SET_SCHEMA_VERSION
         || manifest.bundle_kind != "eliza-open-set-bundle"
-        || manifest.bundle_version != "2.0.0"
+        || manifest.bundle_version != OPEN_SET_BUNDLE_VERSION
         || manifest.model_version != OPEN_SET_MODEL_VERSION
         || !valid_sha256(&manifest.dataset_sha256)
         || !valid_sha256(&manifest.split_plan_sha256)
@@ -2245,17 +3825,53 @@ fn validate_manifest(manifest: &BundleManifestV2) -> Result<(), MlError> {
             ])
     {
         return Err(MlError::InvalidModel(
-            "the bundle manifest violates the v2 contract".into(),
+            "the bundle manifest violates the v3 contract".into(),
         ));
     }
     Ok(())
 }
 
 fn validate_bundle_artifacts(
-    manifest: &BundleManifestV2,
-    model: &OpenSetModelV2,
-    policy: &OpenSetPolicyV2,
-    metrics: &OpenSetMetricsV2,
+    manifest: &BundleManifestV3,
+    model: &OpenSetModelV3,
+    policy: &OpenSetPolicyV3,
+    metrics: &OpenSetMetricsV3,
+    split_plan: &SplitPlanManifest,
+) -> Result<(), MlError> {
+    validate_bundle_artifact_contract(manifest, model, policy, metrics, split_plan)?;
+    let (dataset, ood_development, ood_test, contrast_test) = datasets_from_plan(split_plan)?;
+    let reproduced = run_open_set_experiment(
+        &dataset,
+        &ood_development,
+        &ood_test,
+        &contrast_test,
+        model.training_config.clone(),
+        metrics.bootstrap_95.resamples,
+    )?;
+    for (matches, artifact) in [
+        (reproduced.model == *model, "model"),
+        (reproduced.policy == *policy, "policy"),
+        (reproduced.split_plan == *split_plan, "experiment plan"),
+    ] {
+        if !matches {
+            return Err(MlError::InvalidModel(format!(
+                "bundle semantic verification did not reproduce its {artifact}"
+            )));
+        }
+    }
+    if !semantic_json_equal(&reproduced.metrics, metrics)? {
+        return Err(MlError::InvalidModel(
+            "bundle semantic verification did not reproduce its metrics".into(),
+        ));
+    }
+    Ok(())
+}
+
+fn validate_bundle_artifact_contract(
+    manifest: &BundleManifestV3,
+    model: &OpenSetModelV3,
+    policy: &OpenSetPolicyV3,
+    metrics: &OpenSetMetricsV3,
     split_plan: &SplitPlanManifest,
 ) -> Result<(), MlError> {
     model.validate()?;
@@ -2280,10 +3896,103 @@ fn validate_bundle_artifacts(
     Ok(())
 }
 
+fn semantic_json_equal<T: Serialize>(left: &T, right: &T) -> Result<bool, MlError> {
+    fn values_match(left: &serde_json::Value, right: &serde_json::Value) -> bool {
+        match (left, right) {
+            (serde_json::Value::Number(left), serde_json::Value::Number(right)) => {
+                match (left.as_f64(), right.as_f64()) {
+                    (Some(left), Some(right)) => approximately_equal(left, right),
+                    _ => left == right,
+                }
+            }
+            (serde_json::Value::Array(left), serde_json::Value::Array(right)) => {
+                left.len() == right.len()
+                    && left
+                        .iter()
+                        .zip(right)
+                        .all(|(left, right)| values_match(left, right))
+            }
+            (serde_json::Value::Object(left), serde_json::Value::Object(right)) => {
+                left.len() == right.len()
+                    && left.iter().all(|(key, left)| {
+                        right
+                            .get(key)
+                            .is_some_and(|right| values_match(left, right))
+                    })
+            }
+            _ => left == right,
+        }
+    }
+    Ok(values_match(
+        &serde_json::to_value(left)?,
+        &serde_json::to_value(right)?,
+    ))
+}
+
+fn datasets_from_plan(
+    plan: &SplitPlanManifest,
+) -> Result<
+    (
+        GroupedDataset,
+        OpenSetOodDataset,
+        OpenSetOodDataset,
+        OpenSetContrastDataset,
+    ),
+    MlError,
+> {
+    let dataset = GroupedDataset {
+        examples: plan
+            .assignments
+            .iter()
+            .map(|assignment| GroupedExample {
+                id: assignment.id.clone(),
+                group_id: assignment.group_id.clone(),
+                label: assignment.label.clone(),
+                text: assignment.text.clone(),
+            })
+            .collect(),
+    };
+    dataset.validate_partition_support()?;
+    if dataset.fingerprint_sha256() != plan.dataset_sha256 {
+        return Err(MlError::InvalidModel(
+            "the experiment plan dataset rows do not match its fingerprint".into(),
+        ));
+    }
+    let to_dataset = |rows: &[OodPlanRow]| OpenSetOodDataset {
+        examples: rows
+            .iter()
+            .map(|row| OpenSetOodExample {
+                id: row.id.clone(),
+                family_id: row.family_id.clone(),
+                domain_group: row.domain_group.clone(),
+                stratum: row.stratum,
+                text: row.text.clone(),
+            })
+            .collect(),
+    };
+    let ood_development = to_dataset(&plan.ood_development);
+    let ood_test = to_dataset(&plan.ood_test);
+    let contrast_test = OpenSetContrastDataset {
+        examples: plan
+            .contrast_test
+            .iter()
+            .map(|row| OpenSetContrastExample {
+                id: row.id.clone(),
+                pair_id: row.pair_id.clone(),
+                variant: row.variant,
+                label: row.label.clone(),
+                text: row.text.clone(),
+            })
+            .collect(),
+    };
+    reject_cross_dataset_overlap(&dataset, &ood_development, &ood_test, &contrast_test)?;
+    Ok((dataset, ood_development, ood_test, contrast_test))
+}
+
 fn validate_metrics_contract(
-    metrics: &OpenSetMetricsV2,
-    model: &OpenSetModelV2,
-    policy: &OpenSetPolicyV2,
+    metrics: &OpenSetMetricsV3,
+    model: &OpenSetModelV3,
+    policy: &OpenSetPolicyV3,
     split_plan: &SplitPlanManifest,
 ) -> Result<(), MlError> {
     let mut split_counts = BTreeMap::from([
@@ -2297,6 +4006,15 @@ fn validate_metrics_contract(
             .get_mut(&assignment.partition)
             .expect("all typed partitions are initialized") += 1;
     }
+    let supervised_family_count = |partition: PartitionKind| {
+        split_plan
+            .assignments
+            .iter()
+            .filter(|assignment| assignment.partition == partition)
+            .map(|assignment| assignment.group_id.as_str())
+            .collect::<HashSet<_>>()
+            .len()
+    };
     let expected_counts = BTreeMap::from([
         (
             "calibration".into(),
@@ -2307,24 +4025,127 @@ fn validate_metrics_contract(
             split_counts[&PartitionKind::Development],
         ),
         ("id-test".into(), split_counts[&PartitionKind::IdTest]),
+        ("ood-development".into(), split_plan.ood_development.len()),
+        ("ood-test".into(), split_plan.ood_test.len()),
+        ("contrast-test".into(), split_plan.contrast_test.len()),
+        ("train".into(), split_counts[&PartitionKind::Train]),
+    ]);
+    let expected_family_counts = BTreeMap::from([
+        (
+            "calibration".into(),
+            supervised_family_count(PartitionKind::Calibration),
+        ),
+        (
+            "development".into(),
+            supervised_family_count(PartitionKind::Development),
+        ),
+        (
+            "id-test".into(),
+            supervised_family_count(PartitionKind::IdTest),
+        ),
         (
             "ood-development".into(),
-            policy.ood_development_example_count,
+            split_plan
+                .ood_development
+                .iter()
+                .map(|row| row.family_id.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
         ),
-        ("ood-test".into(), metrics.ood_test.example_count),
-        ("train".into(), split_counts[&PartitionKind::Train]),
+        (
+            "ood-test".into(),
+            split_plan
+                .ood_test
+                .iter()
+                .map(|row| row.family_id.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
+        ),
+        (
+            "contrast-test".into(),
+            split_plan
+                .contrast_test
+                .iter()
+                .map(|row| row.pair_id.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
+        ),
+        (
+            "train".into(),
+            supervised_family_count(PartitionKind::Train),
+        ),
+    ]);
+    let supervised_family_sizes = split_plan.assignments.iter().fold(
+        BTreeMap::<&str, usize>::new(),
+        |mut counts, assignment| {
+            *counts.entry(assignment.group_id.as_str()).or_insert(0) += 1;
+            counts
+        },
+    );
+    let expected_paraphrases_per_family = supervised_family_sizes
+        .values()
+        .next()
+        .copied()
+        .unwrap_or(0);
+    let expected_domain_counts = BTreeMap::from([
+        (
+            "ood-development".into(),
+            split_plan
+                .ood_development
+                .iter()
+                .map(|row| row.domain_group.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
+        ),
+        (
+            "ood-test".into(),
+            split_plan
+                .ood_test
+                .iter()
+                .map(|row| row.domain_group.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
+        ),
+    ]);
+    let stratum_counts = |rows: &[OodPlanRow]| {
+        let mut counts = BTreeMap::new();
+        for row in rows {
+            *counts.entry(row.stratum.as_str().to_owned()).or_insert(0) += 1;
+        }
+        counts
+    };
+    let expected_stratum_counts = BTreeMap::from([
+        (
+            "ood-development".into(),
+            stratum_counts(&split_plan.ood_development),
+        ),
+        ("ood-test".into(), stratum_counts(&split_plan.ood_test)),
     ]);
     let thresholds = &metrics.threshold_selection;
     if metrics.partition_counts != expected_counts
+        || metrics.partition_family_counts != expected_family_counts
+        || expected_paraphrases_per_family < MIN_PARAPHRASES_PER_FAMILY
+        || supervised_family_sizes
+            .values()
+            .any(|size| *size != expected_paraphrases_per_family)
+        || metrics.paraphrases_per_family != expected_paraphrases_per_family
+        || metrics.ood_domain_counts != expected_domain_counts
+        || metrics.ood_stratum_counts != expected_stratum_counts
         || policy.calibration_example_count != split_counts[&PartitionKind::Calibration]
         || policy.development_example_count != split_counts[&PartitionKind::Development]
-        || thresholds.strategy != "development-plus-ood-development-grid-v2"
+        || thresholds.strategy != "fixed-development-plus-ood-development-grid-v3"
+        || thresholds.evaluated_candidate_count != 49
+        || thresholds.feasible_candidate_count == 0
+        || thresholds.feasible_candidate_count > thresholds.evaluated_candidate_count
         || thresholds.development_example_count != policy.development_example_count
         || thresholds.ood_development_example_count != policy.ood_development_example_count
         || thresholds.selected_confidence != policy.minimum_confidence
         || thresholds.selected_probability_margin != policy.minimum_probability_margin
-        || thresholds.id_test_used
-        || thresholds.ood_test_used
+        || thresholds.inputs
+            != [
+                SelectionDataRole::Development,
+                SelectionDataRole::OodDevelopment,
+            ]
         || thresholds.minimum_development_selective_accuracy != 0.75
         || thresholds.maximum_ood_development_coverage != 0.10
         || !valid_unit_interval(thresholds.observed_development_coverage)
@@ -2332,12 +4153,89 @@ fn validate_metrics_contract(
         || !valid_unit_interval(thresholds.observed_ood_development_coverage)
         || !valid_sha256(&metrics.ood_development_sha256)
         || !valid_sha256(&metrics.ood_test_sha256)
+        || !valid_sha256(&metrics.contrast_test_sha256)
         || metrics.ood_development_sha256 == metrics.ood_test_sha256
+        || metrics.contrast_test_sha256 == metrics.ood_development_sha256
+        || metrics.contrast_test_sha256 == metrics.ood_test_sha256
         || metrics.ood_development_sha256 == metrics.dataset_sha256
         || metrics.ood_test_sha256 == metrics.dataset_sha256
+        || metrics.contrast_test_sha256 == metrics.dataset_sha256
     {
         return Err(MlError::InvalidModel(
-            "the v2 metrics disagree with the split or frozen policy".into(),
+            "the v3 metrics disagree with the split or frozen policy".into(),
+        ));
+    }
+    let selection = &metrics.development_selection;
+    let expected_candidates = model
+        .training_config
+        .development_selection
+        .max_features_candidates
+        .iter()
+        .flat_map(|max_features| {
+            model
+                .training_config
+                .development_selection
+                .l2_penalty_candidates
+                .iter()
+                .map(move |l2_penalty| (*max_features, *l2_penalty))
+        })
+        .collect::<Vec<_>>();
+    if selection.strategy != "train-fit-development-f1-epsilon-parsimony-accuracy-nll-brier-v3"
+        || selection.seed != model.training_config.seed
+        || selection.macro_f1_tolerance
+            != model
+                .training_config
+                .development_selection
+                .macro_f1_tolerance
+        || selection.training_example_count != split_counts[&PartitionKind::Train]
+        || selection.training_family_count != supervised_family_count(PartitionKind::Train)
+        || selection.development_example_count != split_counts[&PartitionKind::Development]
+        || selection.development_family_count != supervised_family_count(PartitionKind::Development)
+        || selection.inputs != [SelectionDataRole::Train, SelectionDataRole::Development]
+        || selection.candidates.len() != expected_candidates.len()
+        || selection.selected_index >= selection.candidates.len()
+        || selection
+            .candidates
+            .iter()
+            .zip(&expected_candidates)
+            .any(|(candidate, expected)| {
+                (candidate.max_features, candidate.l2_penalty) != *expected
+                    || !valid_unit_interval(candidate.accuracy)
+                    || !valid_unit_interval(candidate.macro_f1)
+                    || !candidate.negative_log_likelihood.is_finite()
+                    || candidate.negative_log_likelihood < 0.0
+                    || !candidate.multiclass_brier.is_finite()
+                    || !(0.0..=2.0).contains(&candidate.multiclass_brier)
+            })
+    {
+        return Err(MlError::InvalidModel(
+            "the development-only model-selection audit is invalid".into(),
+        ));
+    }
+    let selected_candidate = &selection.candidates[selection.selected_index];
+    let reproduced_selected_index =
+        selection
+            .candidates
+            .iter()
+            .enumerate()
+            .skip(1)
+            .fold(0usize, |best, (index, candidate)| {
+                if development_candidate_is_better(
+                    candidate,
+                    &selection.candidates[best],
+                    selection.macro_f1_tolerance,
+                ) {
+                    index
+                } else {
+                    best
+                }
+            });
+    if selection.selected_index != reproduced_selected_index
+        || selected_candidate.max_features != model.training_config.vectorizer.max_features
+        || selected_candidate.l2_penalty != model.training_config.l2_penalty
+    {
+        return Err(MlError::InvalidModel(
+            "the fitted model does not match the recorded development-only selection".into(),
         ));
     }
     validate_calibration_metrics(&metrics.uncalibrated_calibration_partition)?;
@@ -2369,20 +4267,27 @@ fn validate_metrics_contract(
         .assignments
         .iter()
         .filter(|assignment| assignment.partition == PartitionKind::IdTest)
-        .map(|assignment| (assignment.id.as_str(), assignment.label.as_str()))
+        .map(|assignment| (assignment.id.as_str(), assignment))
         .collect::<BTreeMap<_, _>>();
     if split_label_set != label_set || id_assignments.len() != metrics.id_test.example_count {
         return Err(MlError::InvalidModel(
             "the model labels or ID-test ledger disagree with the split plan".into(),
         ));
     }
+    let runtime = CompiledModel::new(model.clone(), policy.clone())?;
     let mut id_ids = HashSet::new();
     for prediction in &metrics.id_test.predictions {
-        if id_assignments.get(prediction.id.as_str()) != Some(&prediction.actual_label.as_str()) {
+        let assignment = id_assignments.get(prediction.id.as_str()).ok_or_else(|| {
+            MlError::InvalidModel(
+                "the ID-test prediction ledger disagrees with the split plan".into(),
+            )
+        })?;
+        if assignment.label != prediction.actual_label {
             return Err(MlError::InvalidModel(
                 "the ID-test prediction ledger disagrees with the split plan".into(),
             ));
         }
+        let reproduced_prediction = runtime.predict(&assignment.text);
         let probability_labels = prediction
             .probabilities
             .keys()
@@ -2405,7 +4310,9 @@ fn validate_metrics_contract(
             || !label_set.contains(prediction.actual_label.as_str())
             || !label_set.contains(prediction.predicted_label.as_str())
             || prediction.predicted_label.as_str() != ranking[0].1.as_str()
+            || prediction.predicted_label != reproduced_prediction.label
             || prediction.correct != (prediction.actual_label == prediction.predicted_label)
+            || prediction.accepted != reproduced_prediction.accepted
             || probability_labels != label_set
             || prediction
                 .probabilities
@@ -2417,9 +4324,18 @@ fn validate_metrics_contract(
                 prediction.probabilities[&prediction.predicted_label],
             )
             || !approximately_equal(prediction.probability_margin, expected_margin)
-            || (prediction.accepted
-                && (prediction.confidence < policy.minimum_confidence
-                    || prediction.probability_margin < policy.minimum_probability_margin))
+            || !approximately_equal(prediction.confidence, reproduced_prediction.confidence)
+            || !approximately_equal(
+                prediction.probability_margin,
+                reproduced_prediction.probability_margin,
+            )
+            || prediction.probabilities.len() != reproduced_prediction.probabilities.len()
+            || prediction.probabilities.iter().any(|(label, probability)| {
+                match reproduced_prediction.probabilities.get(label) {
+                    Some(expected) => !approximately_equal(*probability, *expected),
+                    None => true,
+                }
+            })
         {
             return Err(MlError::InvalidModel(
                 "the ID-test prediction ledger is internally inconsistent".into(),
@@ -2443,6 +4359,9 @@ fn validate_metrics_contract(
     if metrics.id_test.example_count != reproduced_id.example_count
         || !approximately_equal(metrics.id_test.accuracy, reproduced_id.accuracy)
         || !approximately_equal(metrics.id_test.macro_f1, reproduced_id.macro_f1)
+        || metrics.id_test.labels != reproduced_id.labels
+        || metrics.id_test.confusion_matrix != reproduced_id.confusion_matrix
+        || metrics.id_test.per_class != reproduced_id.per_class
         || !approximately_equal(metrics.id_test.coverage, reproduced_id.coverage)
         || !optional_metric_matches(
             metrics.id_test.selective_accuracy,
@@ -2459,16 +4378,146 @@ fn validate_metrics_contract(
         ));
     }
 
+    let reconstructed_training = split_plan
+        .assignments
+        .iter()
+        .filter(|assignment| assignment.partition == PartitionKind::Train)
+        .map(|assignment| GroupedExample {
+            id: assignment.id.clone(),
+            group_id: assignment.group_id.clone(),
+            label: assignment.label.clone(),
+            text: assignment.text.clone(),
+        })
+        .collect::<Vec<_>>();
+    let reconstructed_id_test = split_plan
+        .assignments
+        .iter()
+        .filter(|assignment| assignment.partition == PartitionKind::IdTest)
+        .map(|assignment| GroupedExample {
+            id: assignment.id.clone(),
+            group_id: assignment.group_id.clone(),
+            label: assignment.label.clone(),
+            text: assignment.text.clone(),
+        })
+        .collect::<Vec<_>>();
+    let baseline_training = TrainingPartition {
+        examples: &reconstructed_training,
+        dataset_sha256: &split_plan.dataset_sha256,
+        split_plan_sha256: model.split_plan_sha256.clone(),
+    };
+    let reproduced_baselines = evaluate_baselines(
+        &baseline_training,
+        &reconstructed_id_test,
+        &model.labels,
+        reproduced_id.accuracy,
+        reproduced_id.macro_f1,
+    );
+    if !semantic_json_equal(&metrics.baselines, &reproduced_baselines)? {
+        return Err(MlError::InvalidModel(
+            "the training-only baseline report cannot be reproduced from the experiment plan"
+                .into(),
+        ));
+    }
+
+    let reconstructed_ood_development = OpenSetOodDataset {
+        examples: split_plan
+            .ood_development
+            .iter()
+            .map(|row| OpenSetOodExample {
+                id: row.id.clone(),
+                family_id: row.family_id.clone(),
+                domain_group: row.domain_group.clone(),
+                stratum: row.stratum,
+                text: row.text.clone(),
+            })
+            .collect(),
+    };
+    let reconstructed_ood_test = OpenSetOodDataset {
+        examples: split_plan
+            .ood_test
+            .iter()
+            .map(|row| OpenSetOodExample {
+                id: row.id.clone(),
+                family_id: row.family_id.clone(),
+                domain_group: row.domain_group.clone(),
+                stratum: row.stratum,
+                text: row.text.clone(),
+            })
+            .collect(),
+    };
+    reconstructed_ood_development.validate_contract()?;
+    reconstructed_ood_test.validate_contract()?;
+    if reconstructed_ood_development.fingerprint_sha256() != metrics.ood_development_sha256
+        || reconstructed_ood_test.fingerprint_sha256() != metrics.ood_test_sha256
+    {
+        return Err(MlError::InvalidModel(
+            "the OOD populations disagree with their recorded provenance".into(),
+        ));
+    }
+
+    let reconstructed_contrast = OpenSetContrastDataset {
+        examples: split_plan
+            .contrast_test
+            .iter()
+            .map(|row| OpenSetContrastExample {
+                id: row.id.clone(),
+                pair_id: row.pair_id.clone(),
+                variant: row.variant,
+                label: row.label.clone(),
+                text: row.text.clone(),
+            })
+            .collect(),
+    };
+    reconstructed_contrast.validate_contract()?;
+    let contrast_labels = reconstructed_contrast
+        .examples()
+        .iter()
+        .map(|example| example.label.as_str())
+        .collect::<BTreeSet<_>>();
+    if contrast_labels != label_set
+        || reconstructed_contrast.fingerprint_sha256() != metrics.contrast_test_sha256
+    {
+        return Err(MlError::InvalidModel(
+            "the contrast-test population disagrees with the model labels or recorded provenance"
+                .into(),
+        ));
+    }
+    let reproduced_contrast =
+        evaluate_contrast(&runtime, ContrastTestPartition(&reconstructed_contrast))?;
+    if !semantic_json_equal(&metrics.contrast_test, &reproduced_contrast)? {
+        return Err(MlError::InvalidModel(
+            "the contrast-test report cannot be reproduced from the experiment plan".into(),
+        ));
+    }
+
     let mut ood_ids = HashSet::new();
+    let ood_rows = split_plan
+        .ood_test
+        .iter()
+        .map(|row| (row.id.as_str(), row))
+        .collect::<BTreeMap<_, _>>();
     for prediction in &metrics.ood_test.predictions {
+        let row = ood_rows.get(prediction.id.as_str()).ok_or_else(|| {
+            MlError::InvalidModel(
+                "the OOD-test prediction ledger disagrees with the experiment plan".into(),
+            )
+        })?;
+        let reproduced_prediction = runtime.predict(&row.text);
         if id_ids.contains(prediction.id.as_str())
             || !ood_ids.insert(prediction.id.as_str())
+            || prediction.family_id != row.family_id
+            || prediction.domain_group != row.domain_group
+            || prediction.stratum != row.stratum
             || !label_set.contains(prediction.predicted_label.as_str())
+            || prediction.predicted_label != reproduced_prediction.label
+            || prediction.accepted != reproduced_prediction.accepted
             || !valid_unit_interval(prediction.confidence)
             || !valid_unit_interval(prediction.probability_margin)
-            || (prediction.accepted
-                && (prediction.confidence < policy.minimum_confidence
-                    || prediction.probability_margin < policy.minimum_probability_margin))
+            || !approximately_equal(prediction.confidence, reproduced_prediction.confidence)
+            || !approximately_equal(
+                prediction.probability_margin,
+                reproduced_prediction.probability_margin,
+            )
         {
             return Err(MlError::InvalidModel(
                 "the OOD-test prediction ledger is internally inconsistent".into(),
@@ -2493,14 +4542,66 @@ fn validate_metrics_contract(
         .iter()
         .map(|prediction| prediction.confidence)
         .collect::<Vec<_>>();
+    let mut reproduced_by_stratum = BTreeMap::new();
+    for stratum in [
+        OodStratum::Semantic,
+        OodStratum::Capability,
+        OodStratum::Noise,
+    ] {
+        let members = metrics
+            .ood_test
+            .predictions
+            .iter()
+            .filter(|prediction| prediction.stratum == stratum)
+            .collect::<Vec<_>>();
+        let accepted = members
+            .iter()
+            .filter(|prediction| prediction.accepted)
+            .count();
+        let scores = members
+            .iter()
+            .map(|prediction| prediction.confidence)
+            .collect::<Vec<_>>();
+        reproduced_by_stratum.insert(
+            stratum.as_str().to_owned(),
+            OodStratumEvaluation {
+                example_count: members.len(),
+                accepted_examples: accepted,
+                coverage: safe_ratio(accepted as f64, members.len() as f64),
+                discrimination: discrimination_metrics(&id_scores, &scores),
+            },
+        );
+    }
     if metrics.ood_test.example_count == 0
         || metrics.ood_test.example_count != metrics.ood_test.predictions.len()
+        || metrics.ood_test.example_count != split_plan.ood_test.len()
         || metrics.ood_test.accepted_examples != accepted_ood
-        || metrics.ood_test.coverage != accepted_ood as f64 / metrics.ood_test.example_count as f64
+        || !approximately_equal(
+            metrics.ood_test.coverage,
+            accepted_ood as f64 / metrics.ood_test.example_count as f64,
+        )
         || !discrimination_metrics_match(
             &metrics.ood_test.discrimination,
             &discrimination_metrics(&id_scores, &ood_scores),
         )
+        || metrics.ood_test.by_stratum.len() != reproduced_by_stratum.len()
+        || metrics
+            .ood_test
+            .by_stratum
+            .iter()
+            .any(|(stratum, recorded)| {
+                reproduced_by_stratum
+                    .get(stratum)
+                    .map_or(true, |reproduced| {
+                        recorded.example_count != reproduced.example_count
+                            || recorded.accepted_examples != reproduced.accepted_examples
+                            || !approximately_equal(recorded.coverage, reproduced.coverage)
+                            || !discrimination_metrics_match(
+                                &recorded.discrimination,
+                                &reproduced.discrimination,
+                            )
+                    })
+            })
     {
         return Err(MlError::InvalidModel(
             "the OOD-test summary does not match its prediction ledger".into(),
@@ -2508,7 +4609,7 @@ fn validate_metrics_contract(
     }
 
     let bootstrap = &metrics.bootstrap_95;
-    if bootstrap.strategy != "label-stratified-id-row-and-population-stratified-ood-percentile-v2"
+    if bootstrap.strategy != "label-stratified-id-family-and-ood-domain-cluster-percentile-v3"
         || bootstrap.seed != model.training_config.seed
         || !(100..=20_000).contains(&bootstrap.resamples)
         || bootstrap.confidence_level != 0.95
@@ -2630,6 +4731,7 @@ pub fn reproduce_bundle(
     dataset: &GroupedDataset,
     ood_development: &OpenSetOodDataset,
     ood_test: &OpenSetOodDataset,
+    contrast_test: &OpenSetContrastDataset,
 ) -> Result<(), MlError> {
     let verified = verify_bundle(directory)?;
     let resamples = verified.metrics.bootstrap_95.resamples;
@@ -2637,6 +4739,7 @@ pub fn reproduce_bundle(
         dataset,
         ood_development,
         ood_test,
+        contrast_test,
         verified.model.training_config.clone(),
         resamples,
     )?;
@@ -2746,7 +4849,12 @@ fn reject_cross_dataset_overlap(
     dataset: &GroupedDataset,
     ood_development: &OpenSetOodDataset,
     ood_test: &OpenSetOodDataset,
+    contrast_test: &OpenSetContrastDataset,
 ) -> Result<(), MlError> {
+    dataset.validate_family_contract()?;
+    ood_development.validate_contract()?;
+    ood_test.validate_contract()?;
+    contrast_test.validate_contract()?;
     let supervised_ids = dataset
         .examples()
         .iter()
@@ -2760,19 +4868,54 @@ fn reject_cross_dataset_overlap(
     let supervised_texts = dataset
         .examples()
         .iter()
-        .map(|example| normalize_text(&example.text))
+        .map(|example| feature_identity(&example.text))
         .collect::<HashSet<_>>();
     let mut ood_ids = HashSet::new();
-    let mut ood_groups = HashSet::new();
     let mut ood_texts = HashSet::new();
+    let development_families = ood_development
+        .examples()
+        .iter()
+        .map(|example| example.family_id.as_str())
+        .collect::<HashSet<_>>();
+    let test_families = ood_test
+        .examples()
+        .iter()
+        .map(|example| example.family_id.as_str())
+        .collect::<HashSet<_>>();
+    let development_domains = ood_development
+        .examples()
+        .iter()
+        .map(|example| example.domain_group.as_str())
+        .collect::<HashSet<_>>();
+    let test_domains = ood_test
+        .examples()
+        .iter()
+        .map(|example| example.domain_group.as_str())
+        .collect::<HashSet<_>>();
+    if development_families
+        .iter()
+        .any(|family| test_families.contains(family))
+    {
+        return Err(MlError::InvalidDataset(
+            "OOD development and OOD test overlap by domain family".into(),
+        ));
+    }
+    if development_domains
+        .iter()
+        .any(|domain| test_domains.contains(domain))
+    {
+        return Err(MlError::InvalidDataset(
+            "OOD development and OOD test overlap by broader domain group".into(),
+        ));
+    }
     for (name, ood) in [("OOD development", ood_development), ("OOD test", ood_test)] {
         for example in ood.examples() {
-            let normalized = normalize_text(&example.text);
+            let normalized = feature_identity(&example.text);
             if supervised_ids.contains(example.id.as_str())
-                || supervised_groups.contains(example.group_id.as_str())
+                || supervised_groups.contains(example.family_id.as_str())
+                || supervised_groups.contains(example.domain_group.as_str())
                 || supervised_texts.contains(&normalized)
                 || !ood_ids.insert(example.id.as_str())
-                || !ood_groups.insert(example.group_id.as_str())
                 || !ood_texts.insert(normalized)
             {
                 return Err(MlError::InvalidDataset(format!(
@@ -2780,6 +4923,27 @@ fn reject_cross_dataset_overlap(
                     example.id
                 )));
             }
+        }
+    }
+    let ood_families_and_domains = ood_development
+        .examples()
+        .iter()
+        .chain(ood_test.examples())
+        .flat_map(|example| [example.family_id.as_str(), example.domain_group.as_str()])
+        .collect::<HashSet<_>>();
+    for example in contrast_test.examples() {
+        let normalized = feature_identity(&example.text);
+        if supervised_ids.contains(example.id.as_str())
+            || supervised_groups.contains(example.pair_id.as_str())
+            || ood_ids.contains(example.id.as_str())
+            || ood_families_and_domains.contains(example.pair_id.as_str())
+            || supervised_texts.contains(&normalized)
+            || ood_texts.contains(&normalized)
+        {
+            return Err(MlError::InvalidDataset(format!(
+                "contrast-test example `{}` overlaps another experimental population",
+                example.id
+            )));
         }
     }
     Ok(())
@@ -2842,7 +5006,7 @@ fn validate_vectorizer_config(config: &VectorizerConfig) -> Result<(), MlError> 
 
 fn normalize_text(value: &str) -> String {
     let lowercase = value
-        .chars()
+        .nfkc()
         .flat_map(char::to_lowercase)
         .map(|character| match character {
             '’' | '‘' => '\'',
@@ -2850,6 +5014,10 @@ fn normalize_text(value: &str) -> String {
         })
         .collect::<String>();
     lowercase.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+fn feature_identity(value: &str) -> String {
+    tokenize(value).join(" ")
 }
 
 fn tokenize(value: &str) -> Vec<String> {
@@ -3104,6 +5272,7 @@ fn write_atomic(path: &Path, bytes: &[u8]) -> Result<(), MlError> {
 mod tests {
     use super::*;
     use std::path::PathBuf;
+    use std::sync::OnceLock;
 
     struct TestDirectory(PathBuf);
 
@@ -3126,21 +5295,37 @@ mod tests {
     }
 
     fn bundled_experiment(resamples: usize) -> OpenSetExperimentResult {
-        run_open_set_experiment(
-            &GroupedDataset::bundled().unwrap(),
-            &OpenSetOodDataset::bundled_development().unwrap(),
-            &OpenSetOodDataset::bundled_test().unwrap(),
-            OpenSetTrainingConfig::default(),
-            resamples,
-        )
-        .unwrap()
+        static RESULT: OnceLock<OpenSetExperimentResult> = OnceLock::new();
+        assert_eq!(resamples, 100);
+        RESULT
+            .get_or_init(|| {
+                let mut config = OpenSetTrainingConfig::default();
+                config.development_selection.max_features_candidates =
+                    vec![config.vectorizer.max_features];
+                config.development_selection.l2_penalty_candidates = vec![config.l2_penalty];
+                run_open_set_experiment(
+                    &GroupedDataset::bundled().unwrap(),
+                    &OpenSetOodDataset::bundled_development().unwrap(),
+                    &OpenSetOodDataset::bundled_test().unwrap(),
+                    &OpenSetContrastDataset::bundled_test().unwrap(),
+                    config,
+                    resamples,
+                )
+                .unwrap()
+            })
+            .clone()
     }
 
     #[test]
     fn split_plan_is_group_disjoint_complete_and_deterministic() {
         let dataset = GroupedDataset::bundled().unwrap();
-        let left = SplitPlan::build(&dataset, 20_260_722).unwrap();
-        let right = SplitPlan::build(&dataset, 20_260_722).unwrap();
+        let ood_development = OpenSetOodDataset::bundled_development().unwrap();
+        let ood_test = OpenSetOodDataset::bundled_test().unwrap();
+        let contrast = OpenSetContrastDataset::bundled_test().unwrap();
+        let left =
+            SplitPlan::build(&dataset, &ood_development, &ood_test, &contrast, 20_260_722).unwrap();
+        let right =
+            SplitPlan::build(&dataset, &ood_development, &ood_test, &contrast, 20_260_722).unwrap();
         assert_eq!(left.manifest, right.manifest);
         assert_eq!(left.manifest.assignments.len(), dataset.examples().len());
 
@@ -3152,10 +5337,20 @@ mod tests {
                 assert_eq!(previous, assignment.partition);
             }
         }
-        assert_eq!(left.train().len(), 70);
-        assert_eq!(left.development().len(), 14);
-        assert_eq!(left.calibration().len(), 14);
-        assert_eq!(left.id_test().len(), 14);
+        assert_eq!(left.train().len(), 315);
+        assert_eq!(left.development().len(), 70);
+        assert_eq!(left.calibration().len(), 70);
+        assert_eq!(left.id_test().len(), 70);
+        assert_eq!(left.manifest.contrast_test.len(), 28);
+        assert_eq!(
+            left.manifest
+                .contrast_test
+                .iter()
+                .map(|row| row.pair_id.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
+            14
+        );
     }
 
     #[test]
@@ -3170,7 +5365,14 @@ mod tests {
     #[test]
     fn split_manifest_recomputes_the_declared_hash_and_quota_strategy() {
         let dataset = GroupedDataset::bundled().unwrap();
-        let plan = SplitPlan::build(&dataset, 20_260_722).unwrap();
+        let plan = SplitPlan::build(
+            &dataset,
+            &OpenSetOodDataset::bundled_development().unwrap(),
+            &OpenSetOodDataset::bundled_test().unwrap(),
+            &OpenSetContrastDataset::bundled_test().unwrap(),
+            20_260_722,
+        )
+        .unwrap();
         let mut manifest = plan.manifest.clone();
         let moved_group = manifest
             .assignments
@@ -3194,7 +5396,208 @@ mod tests {
         let development = OpenSetOodDataset::bundled_development().unwrap();
         let mut test = OpenSetOodDataset::bundled_test().unwrap();
         test.examples[0].text = development.examples()[0].text.clone();
-        assert!(reject_cross_dataset_overlap(&dataset, &development, &test).is_err());
+        let contrast = OpenSetContrastDataset::bundled_test().unwrap();
+        assert!(reject_cross_dataset_overlap(&dataset, &development, &test, &contrast).is_err());
+
+        let mut same_family = OpenSetOodDataset::bundled_test().unwrap();
+        let original_family = same_family.examples[0].family_id.clone();
+        let overlapping_family = development.examples()[0].family_id.clone();
+        for example in &mut same_family.examples {
+            if example.family_id == original_family {
+                example.family_id.clone_from(&overlapping_family);
+            }
+        }
+        same_family.validate_contract().unwrap();
+        let error = reject_cross_dataset_overlap(&dataset, &development, &same_family, &contrast)
+            .unwrap_err();
+        assert!(error.to_string().contains("domain family"));
+    }
+
+    #[test]
+    fn feature_equivalent_texts_are_rejected_before_splitting() {
+        let input = "id\tgroup_id\tlabel\ttext\n\
+                     a1\ta-1\talpha\tHello there\n\
+                     a2\ta-2\talpha\tHello, there\n\
+                     a3\ta-3\talpha\tAlpha three\n\
+                     a4\ta-4\talpha\tAlpha four\n\
+                     b1\tb-1\tbeta\tBeta one\n\
+                     b2\tb-2\tbeta\tBeta two\n\
+                     b3\tb-3\tbeta\tBeta three\n\
+                     b4\tb-4\tbeta\tBeta four\n";
+        let error = GroupedDataset::from_tsv(input).unwrap_err();
+        assert!(error.to_string().contains("feature-equivalent"));
+    }
+
+    #[test]
+    fn supervised_family_contract_rejects_uneven_support() {
+        let examples = [
+            ("a1", "family-a", "first alpha prompt"),
+            ("a2", "family-a", "second alpha prompt"),
+            ("a3", "family-a", "third alpha prompt"),
+            ("b1", "family-b", "first beta prompt"),
+            ("b2", "family-b", "second beta prompt"),
+            ("b3", "family-b", "third beta prompt"),
+            ("b4", "family-b", "fourth beta prompt"),
+        ]
+        .into_iter()
+        .map(|(id, group_id, text)| GroupedExample {
+            id: id.into(),
+            group_id: group_id.into(),
+            label: "label".into(),
+            text: text.into(),
+        })
+        .collect::<Vec<_>>();
+        let error = GroupedDataset { examples }
+            .validate_family_contract()
+            .unwrap_err();
+        assert!(error.to_string().contains("same number of examples"));
+    }
+
+    #[test]
+    fn supervised_family_contract_rejects_raw_near_duplicates() {
+        let examples = [
+            ("a1", "family-a", "alpha beta gamma delta"),
+            ("a2", "family-a", "a remote sentence about copper"),
+            ("a3", "family-a", "another unrelated sentence about glass"),
+            ("b1", "family-b", "alpha beta gamma delta epsilon"),
+            ("b2", "family-b", "a separate phrase concerning forests"),
+            ("b3", "family-b", "an independent phrase concerning rivers"),
+        ]
+        .into_iter()
+        .map(|(id, group_id, text)| GroupedExample {
+            id: id.into(),
+            group_id: group_id.into(),
+            label: "label".into(),
+            text: text.into(),
+        })
+        .collect::<Vec<_>>();
+        let error = GroupedDataset { examples }
+            .validate_family_contract()
+            .unwrap_err();
+        assert!(error.to_string().contains("raw feature Jaccard"));
+    }
+
+    #[test]
+    fn similarity_candidate_index_fails_closed_at_its_budget() {
+        let examples = (0..4)
+            .map(|index| GroupedExample {
+                id: format!("id-{index}"),
+                group_id: format!("family-{index}"),
+                label: "label".into(),
+                text: "unused".into(),
+            })
+            .collect::<Vec<_>>();
+        let feature_sets = (0..4)
+            .map(|_| HashSet::from(["shared".to_owned()]))
+            .collect::<Vec<_>>();
+        let mut candidates = HashSet::new();
+        let mut attempts = 0;
+        let error = collect_similarity_candidates(
+            &examples,
+            &feature_sets,
+            0.30,
+            false,
+            &mut candidates,
+            &mut attempts,
+            SimilarityCandidateBudget {
+                maximum_candidate_pairs: 2,
+                maximum_pair_insert_attempts: 10,
+            },
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("bounded candidate budget"));
+    }
+
+    #[test]
+    fn epsilon_selection_prefers_the_simpler_candidate() {
+        let current = DevelopmentCandidateMetrics {
+            max_features: 2_048,
+            l2_penalty: 0.0001,
+            accuracy: 0.90,
+            macro_f1: 0.900,
+            negative_log_likelihood: 0.30,
+            multiclass_brier: 0.20,
+        };
+        let simpler = DevelopmentCandidateMetrics {
+            max_features: 512,
+            l2_penalty: 0.002,
+            accuracy: 0.89,
+            macro_f1: 0.896,
+            negative_log_likelihood: 0.32,
+            multiclass_brier: 0.22,
+        };
+        assert!(development_candidate_is_better(&simpler, &current, 0.005));
+
+        let materially_worse = DevelopmentCandidateMetrics {
+            macro_f1: 0.894,
+            ..simpler
+        };
+        assert!(!development_candidate_is_better(
+            &materially_worse,
+            &current,
+            0.005
+        ));
+    }
+
+    #[test]
+    fn baselines_are_deterministic_and_train_only() {
+        let training_examples = [
+            ("a1", "family-a1", "alpha", "red apple"),
+            ("a2", "family-a2", "alpha", "scarlet apple"),
+            ("b1", "family-b1", "beta", "blue ocean"),
+            ("b2", "family-b2", "beta", "navy ocean"),
+        ]
+        .into_iter()
+        .map(|(id, group_id, label, text)| GroupedExample {
+            id: id.into(),
+            group_id: group_id.into(),
+            label: label.into(),
+            text: text.into(),
+        })
+        .collect::<Vec<_>>();
+        let id_test = [
+            ("ta", "test-a", "alpha", "red fruit"),
+            ("tb", "test-b", "beta", "blue water"),
+        ]
+        .into_iter()
+        .map(|(id, group_id, label, text)| GroupedExample {
+            id: id.into(),
+            group_id: group_id.into(),
+            label: label.into(),
+            text: text.into(),
+        })
+        .collect::<Vec<_>>();
+        let dataset_hash = "0".repeat(64);
+        let training = TrainingPartition {
+            examples: &training_examples,
+            dataset_sha256: &dataset_hash,
+            split_plan_sha256: "1".repeat(64),
+        };
+        let labels = vec!["alpha".into(), "beta".into()];
+        let first = evaluate_baselines(&training, &id_test, &labels, 1.0, 1.0);
+        let second = evaluate_baselines(&training, &id_test, &labels, 1.0, 1.0);
+        assert_eq!(first, second);
+        assert_eq!(first.inputs, [SelectionDataRole::Train]);
+        assert_eq!(first.majority_label, "alpha");
+        assert_eq!(first.majority.accuracy, 0.5);
+        assert_eq!(first.unigram_naive_bayes.accuracy, 1.0);
+        assert_eq!(first.learned_minus_unigram_accuracy, 0.0);
+    }
+
+    #[test]
+    fn ood_contract_requires_balanced_multi_prompt_strata() {
+        let mut development = OpenSetOodDataset::bundled_development().unwrap();
+        development.examples[0].family_id = "singleton-family".into();
+        let error = development.validate_contract().unwrap_err();
+        assert!(error.to_string().contains("equal multi-prompt support"));
+    }
+
+    #[test]
+    fn contrast_contract_requires_label_changing_balanced_pairs() {
+        let mut contrast = OpenSetContrastDataset::bundled_test().unwrap();
+        contrast.examples[1].label = contrast.examples[0].label.clone();
+        let error = contrast.validate_contract().unwrap_err();
+        assert!(error.to_string().contains("different labels"));
     }
 
     #[test]
@@ -3211,8 +5614,13 @@ mod tests {
                     .negative_log_likelihood
                     + 1e-12
         );
-        assert!(!result.metrics.threshold_selection.id_test_used);
-        assert!(!result.metrics.threshold_selection.ood_test_used);
+        assert_eq!(
+            result.metrics.threshold_selection.inputs,
+            [
+                SelectionDataRole::Development,
+                SelectionDataRole::OodDevelopment
+            ]
+        );
     }
 
     #[test]
@@ -3230,8 +5638,8 @@ mod tests {
         assert!(select_thresholds(
             &result.model,
             result.policy.temperature,
-            &development,
-            &OpenSetOodDataset::bundled_development().unwrap(),
+            DevelopmentPartition(&development),
+            OodDevelopmentPartition(&OpenSetOodDataset::bundled_development().unwrap()),
         )
         .is_err());
     }
@@ -3370,6 +5778,15 @@ mod tests {
     }
 
     #[test]
+    fn compiled_prediction_bounds_direct_library_inputs() {
+        let result = bundled_experiment(100);
+        let runtime = CompiledModel::new(result.model, result.policy).unwrap();
+        let prediction = runtime.predict(&"x".repeat(crate::MAX_INPUT_CHARS + 1));
+        assert!(!prediction.accepted);
+        assert!(prediction.explanation.top_contributions.is_empty());
+    }
+
+    #[test]
     fn metrics_reject_ids_shared_by_id_and_ood_tests() {
         let result = bundled_experiment(100);
         let mut metrics = result.metrics;
@@ -3393,6 +5810,7 @@ mod tests {
             &GroupedDataset::bundled().unwrap(),
             &OpenSetOodDataset::bundled_development().unwrap(),
             &OpenSetOodDataset::bundled_test().unwrap(),
+            &OpenSetContrastDataset::bundled_test().unwrap(),
         )
         .unwrap();
 
@@ -3402,6 +5820,19 @@ mod tests {
         bytes[middle] ^= 1;
         fs::write(model_path, bytes).unwrap();
         assert!(verify_bundle(&directory.0).is_err());
+    }
+
+    #[test]
+    fn checked_in_v3_bundle_passes_full_semantic_verification() {
+        let bundle = Path::new(env!("CARGO_MANIFEST_DIR")).join("artifacts/eliza-open-set-v3");
+        let verified = verify_bundle(bundle).unwrap();
+        assert_eq!(verified.model.training_config.seed, 4_043_100_207_104_787);
+        assert_eq!(
+            verified.metrics.bootstrap_95.resamples,
+            DEFAULT_BOOTSTRAP_RESAMPLES
+        );
+        assert_eq!(verified.metrics.contrast_test.example_count, 28);
+        assert_eq!(verified.metrics.contrast_test.pair_count, 14);
     }
 
     #[test]
@@ -3434,14 +5865,14 @@ mod tests {
         write_bundle(&policy_bundle, &result).unwrap();
 
         let policy_path = policy_bundle.join("policy.json");
-        let mut policy: OpenSetPolicyV2 =
+        let mut policy: OpenSetPolicyV3 =
             serde_json::from_slice(&fs::read(&policy_path).unwrap()).unwrap();
         policy.minimum_confidence -= 0.01;
         let policy_bytes = canonical_json(&policy).unwrap();
         fs::write(&policy_path, &policy_bytes).unwrap();
 
         let manifest_path = policy_bundle.join("manifest.json");
-        let mut manifest: BundleManifestV2 =
+        let mut manifest: BundleManifestV3 =
             serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
         manifest
             .files
@@ -3454,7 +5885,7 @@ mod tests {
         let ledger_bundle = root.0.join("ledger-bundle");
         write_bundle(&ledger_bundle, &result).unwrap();
         let metrics_path = ledger_bundle.join("metrics.json");
-        let mut metrics: OpenSetMetricsV2 =
+        let mut metrics: OpenSetMetricsV3 =
             serde_json::from_slice(&fs::read(&metrics_path).unwrap()).unwrap();
         let replacement_label = result
             .model
@@ -3469,7 +5900,7 @@ mod tests {
         let metrics_bytes = canonical_json(&metrics).unwrap();
         fs::write(&metrics_path, &metrics_bytes).unwrap();
         let ledger_manifest_path = ledger_bundle.join("manifest.json");
-        let mut ledger_manifest: BundleManifestV2 =
+        let mut ledger_manifest: BundleManifestV3 =
             serde_json::from_slice(&fs::read(&ledger_manifest_path).unwrap()).unwrap();
         ledger_manifest
             .files
@@ -3481,6 +5912,46 @@ mod tests {
         .unwrap();
         let error = verify_bundle(&ledger_bundle).unwrap_err();
         assert!(error.to_string().contains("split plan"));
+
+        let acceptance_bundle = root.0.join("acceptance-bundle");
+        write_bundle(&acceptance_bundle, &result).unwrap();
+        let metrics_path = acceptance_bundle.join("metrics.json");
+        let mut metrics: OpenSetMetricsV3 =
+            serde_json::from_slice(&fs::read(&metrics_path).unwrap()).unwrap();
+        let accepted = metrics
+            .id_test
+            .predictions
+            .iter_mut()
+            .find(|prediction| prediction.accepted)
+            .expect("the fixture must cover at least one ID-test row");
+        accepted.accepted = false;
+        let accepted_count = metrics
+            .id_test
+            .predictions
+            .iter()
+            .filter(|prediction| prediction.accepted)
+            .count();
+        metrics.id_test.coverage = accepted_count as f64 / metrics.id_test.example_count as f64;
+        metrics.id_test.selective_accuracy = Some(
+            metrics
+                .id_test
+                .predictions
+                .iter()
+                .filter(|prediction| prediction.accepted && prediction.correct)
+                .count() as f64
+                / accepted_count as f64,
+        );
+        let metrics_bytes = canonical_json(&metrics).unwrap();
+        fs::write(&metrics_path, &metrics_bytes).unwrap();
+        let manifest_path = acceptance_bundle.join("manifest.json");
+        let mut manifest: BundleManifestV3 =
+            serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
+        manifest
+            .files
+            .insert("metrics.json".into(), sha256_hex(&metrics_bytes));
+        fs::write(&manifest_path, canonical_json(&manifest).unwrap()).unwrap();
+        let error = verify_bundle(&acceptance_bundle).unwrap_err();
+        assert!(error.to_string().contains("internally inconsistent"));
     }
 
     #[test]

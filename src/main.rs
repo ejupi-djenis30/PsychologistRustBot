@@ -4,8 +4,8 @@ use eliza_lab::ml::{
 };
 use eliza_lab::open_set::{
     embedded_bundle, predict_jsonl, reproduce_bundle, run_open_set_experiment, verify_bundle,
-    write_bundle, GroupedDataset, OpenSetOodDataset, OpenSetTrainingConfig,
-    DEFAULT_BOOTSTRAP_RESAMPLES,
+    write_bundle, CompiledModel, GroupedDataset, OpenSetContrastDataset, OpenSetOodDataset,
+    OpenSetTrainingConfig, DEFAULT_BOOTSTRAP_RESAMPLES,
 };
 use eliza_lab::{ElizaEngine, Reply, MAX_INPUT_CHARS};
 use serde::Serialize;
@@ -19,16 +19,22 @@ const DEFAULT_DATASET: &str = "fixtures/intents-v1.tsv";
 const DEFAULT_OOD_DATASET: &str = "fixtures/ood-v1.tsv";
 const DEFAULT_MODEL: &str = "models/eliza-intent-v1.json";
 const DEFAULT_REPORT: &str = "reports/eliza-intent-v1.json";
-const DEFAULT_V2_DATASET: &str = "fixtures/intents-v2.tsv";
-const DEFAULT_V2_OOD_DEVELOPMENT: &str = "fixtures/ood-dev-v2.tsv";
-const DEFAULT_V2_OOD_TEST: &str = "fixtures/ood-test-v2.tsv";
-const DEFAULT_V2_BUNDLE: &str = "artifacts/eliza-open-set-v2";
+const DEFAULT_V3_DATASET: &str = "fixtures/intents-v3.tsv";
+const DEFAULT_V3_OOD_DEVELOPMENT: &str = "fixtures/ood-dev-v3.tsv";
+const DEFAULT_V3_OOD_TEST: &str = "fixtures/ood-test-v3.tsv";
+const DEFAULT_V3_CONTRAST_TEST: &str = "fixtures/contrast-test-v3.tsv";
+const DEFAULT_V3_BUNDLE: &str = "artifacts/eliza-open-set-v3";
 const MAX_INPUT_BYTES: usize = MAX_INPUT_CHARS * 4;
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 enum InputLine {
     Text(String),
     TooLong,
+}
+
+enum DialogueModel {
+    OpenSet(Box<CompiledModel>),
+    Legacy(Box<IntentModel>),
 }
 
 #[derive(Debug)]
@@ -79,7 +85,7 @@ fn run() -> Result<(), Box<dyn Error>> {
     let arguments = env::args().skip(1).collect::<Vec<_>>();
     match arguments.first().map(String::as_str) {
         Some("train") => train_command(&arguments[1..]),
-        Some("train-v2") => train_v2_command(&arguments[1..]),
+        Some("train-v3") => train_v3_command(&arguments[1..]),
         Some("evaluate") => evaluate_command(&arguments[1..]),
         Some("infer") => infer_command(&arguments[1..]),
         Some("infer-batch") => infer_batch_command(&arguments[1..]),
@@ -99,11 +105,12 @@ fn run() -> Result<(), Box<dyn Error>> {
     }
 }
 
-fn train_v2_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
+fn train_v3_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
     let mut dataset_path = None;
     let mut ood_development_path = None;
     let mut ood_test_path = None;
-    let mut output_path = PathBuf::from(DEFAULT_V2_BUNDLE);
+    let mut contrast_test_path = None;
+    let mut output_path = PathBuf::from(DEFAULT_V3_BUNDLE);
     let mut bootstrap_resamples = DEFAULT_BOOTSTRAP_RESAMPLES;
     let mut config = OpenSetTrainingConfig::default();
     let mut index = 0;
@@ -116,25 +123,33 @@ fn train_v2_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
             "--ood-test" => {
                 ood_test_path = Some(PathBuf::from(option_value(arguments, &mut index)?))
             }
+            "--contrast-test" => {
+                contrast_test_path = Some(PathBuf::from(option_value(arguments, &mut index)?))
+            }
             "--output" => output_path = PathBuf::from(option_value(arguments, &mut index)?),
             "--seed" => config.seed = parse_option(arguments, &mut index, "seed")?,
             "--epochs" => config.epochs = parse_option(arguments, &mut index, "epochs")?,
             "--learning-rate" => {
                 config.learning_rate = parse_option(arguments, &mut index, "learning rate")?
             }
-            "--l2" => config.l2_penalty = parse_option(arguments, &mut index, "L2 penalty")?,
+            "--l2" => {
+                config.l2_penalty = parse_option(arguments, &mut index, "L2 penalty")?;
+                config.development_selection.l2_penalty_candidates = vec![config.l2_penalty];
+            }
             "--max-features" => {
                 config.vectorizer.max_features =
-                    parse_option(arguments, &mut index, "max features")?
+                    parse_option(arguments, &mut index, "max features")?;
+                config.development_selection.max_features_candidates =
+                    vec![config.vectorizer.max_features];
             }
             "--bootstrap-resamples" => {
                 bootstrap_resamples = parse_option(arguments, &mut index, "bootstrap resamples")?
             }
             "--help" | "-h" => {
-                print_train_v2_help();
+                print_train_v3_help();
                 return Ok(());
             }
-            option => return Err(CliError(format!("unknown train-v2 option `{option}`")).into()),
+            option => return Err(CliError(format!("unknown train-v3 option `{option}`")).into()),
         }
         index += 1;
     }
@@ -151,10 +166,15 @@ fn train_v2_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
         Some(path) => OpenSetOodDataset::read(path)?,
         None => OpenSetOodDataset::bundled_test()?,
     };
+    let contrast_test = match contrast_test_path.as_deref() {
+        Some(path) => OpenSetContrastDataset::read(path)?,
+        None => OpenSetContrastDataset::bundled_test()?,
+    };
     let result = run_open_set_experiment(
         &dataset,
         &ood_development,
         &ood_test,
+        &contrast_test,
         config,
         bootstrap_resamples,
     )?;
@@ -171,6 +191,13 @@ fn train_v2_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
         result.metrics.partition_counts["id-test"]
     );
     println!("temperature  {:.6}", result.policy.temperature);
+    println!(
+        "selection    {}/{} candidates on development only; max-features={} l2={:.6}",
+        result.metrics.development_selection.selected_index + 1,
+        result.metrics.development_selection.candidates.len(),
+        result.model.training_config.vectorizer.max_features,
+        result.model.training_config.l2_penalty,
+    );
     println!(
         "thresholds   confidence={:.2} probability-margin={:.2} (development + OOD-development only)",
         result.policy.minimum_confidence, result.policy.minimum_probability_margin
@@ -199,20 +226,36 @@ fn bundle_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
         .first()
         .map(String::as_str)
         .ok_or_else(|| CliError("bundle requires `verify` or `reproduce`".into()))?;
-    let mut bundle_path = PathBuf::from(DEFAULT_V2_BUNDLE);
+    if matches!(operation, "--help" | "-h" | "help") {
+        print_bundle_help();
+        return Ok(());
+    }
+    if !matches!(operation, "verify" | "reproduce") {
+        return Err(CliError(format!(
+            "unknown bundle operation `{operation}`; expected `verify` or `reproduce`"
+        ))
+        .into());
+    }
+    let mut bundle_path = PathBuf::from(DEFAULT_V3_BUNDLE);
     let mut dataset_path = None;
     let mut ood_development_path = None;
     let mut ood_test_path = None;
+    let mut contrast_test_path = None;
     let mut index = 1;
     while index < arguments.len() {
         match arguments[index].as_str() {
             "--bundle" => bundle_path = PathBuf::from(option_value(arguments, &mut index)?),
-            "--dataset" => dataset_path = Some(PathBuf::from(option_value(arguments, &mut index)?)),
-            "--ood-development" => {
+            "--dataset" if operation == "reproduce" => {
+                dataset_path = Some(PathBuf::from(option_value(arguments, &mut index)?))
+            }
+            "--ood-development" if operation == "reproduce" => {
                 ood_development_path = Some(PathBuf::from(option_value(arguments, &mut index)?))
             }
-            "--ood-test" => {
+            "--ood-test" if operation == "reproduce" => {
                 ood_test_path = Some(PathBuf::from(option_value(arguments, &mut index)?))
+            }
+            "--contrast-test" if operation == "reproduce" => {
+                contrast_test_path = Some(PathBuf::from(option_value(arguments, &mut index)?))
             }
             "--help" | "-h" => {
                 print_bundle_help();
@@ -225,7 +268,7 @@ fn bundle_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
     match operation {
         "verify" => {
             let verified = verify_bundle(&bundle_path)?;
-            println!("verified     {}", bundle_path.display());
+            println!("semantically verified {}", bundle_path.display());
             println!("model        {}", verified.model.model_version);
             println!("dataset      {}", verified.manifest.dataset_sha256);
             println!(
@@ -246,15 +289,20 @@ fn bundle_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
                 Some(path) => OpenSetOodDataset::read(path)?,
                 None => OpenSetOodDataset::bundled_test()?,
             };
-            reproduce_bundle(&bundle_path, &dataset, &ood_development, &ood_test)?;
-            println!("reproduced   {}", bundle_path.display());
+            let contrast_test = match contrast_test_path.as_deref() {
+                Some(path) => OpenSetContrastDataset::read(path)?,
+                None => OpenSetContrastDataset::bundled_test()?,
+            };
+            reproduce_bundle(
+                &bundle_path,
+                &dataset,
+                &ood_development,
+                &ood_test,
+                &contrast_test,
+            )?;
+            println!("byte-identical reproduction {}", bundle_path.display());
         }
-        other => {
-            return Err(CliError(format!(
-                "unknown bundle operation `{other}`; expected `verify` or `reproduce`"
-            ))
-            .into())
-        }
+        _ => unreachable!("the operation was validated before option parsing"),
     }
     Ok(())
 }
@@ -269,7 +317,7 @@ fn infer_batch_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
                 println!(
                     "Usage: eliza-lab infer-batch [--bundle PATH]\n\
                      Reads bounded JSONL objects with `id` and `text` from stdin and writes one prediction per line.\n\
-                     Without --bundle, the verified v2 bundle embedded in the release binary is used."
+                     Without --bundle, the verified v3 bundle embedded in the release binary is used."
                 );
                 return Ok(());
             }
@@ -440,17 +488,23 @@ fn evaluate_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
 }
 
 fn infer_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
+    let mut bundle_path = None;
     let mut model_path = None;
+    let mut legacy_v1 = false;
     let mut json = false;
     let mut prompt = Vec::new();
     let mut index = 0;
     while index < arguments.len() {
         match arguments[index].as_str() {
+            "--bundle" => bundle_path = Some(PathBuf::from(option_value(arguments, &mut index)?)),
             "--model" => model_path = Some(PathBuf::from(option_value(arguments, &mut index)?)),
+            "--legacy-v1" => legacy_v1 = true,
             "--json" => json = true,
             "--help" | "-h" => {
                 println!(
-                    "Usage: eliza-lab infer [--model PATH] [--json] <fictional prompt>\n\
+                    "Usage: eliza-lab infer [--bundle PATH] [--json] <fictional prompt>\n\
+                     eliza-lab infer --legacy-v1 [--model PATH] [--json] <fictional prompt>\n\
+                     The semantically verified open-set bundle is the default. --model is available only with --legacy-v1.\n\
                      Safety and input boundaries run before learned inference."
                 );
                 return Ok(());
@@ -465,9 +519,24 @@ fn infer_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
     if prompt.is_empty() {
         return Err(CliError("infer requires a fictional prompt".into()).into());
     }
-    let model = load_model(model_path.as_deref())?;
+    if legacy_v1 && bundle_path.is_some() {
+        return Err(CliError("--bundle cannot be combined with --legacy-v1".into()).into());
+    }
+    if !legacy_v1 && model_path.is_some() {
+        return Err(CliError("--model requires the explicit --legacy-v1 mode".into()).into());
+    }
     let mut engine = ElizaEngine::new();
-    let reply = engine.respond_with_model(&prompt.join(" "), &model);
+    let prompt = prompt.join(" ");
+    let reply = if legacy_v1 {
+        let model = load_model(model_path.as_deref())?;
+        engine.respond_with_model(&prompt, &model)
+    } else {
+        let model = match bundle_path.as_deref() {
+            Some(path) => verify_bundle(path)?.compile()?,
+            None => embedded_bundle()?.compile()?,
+        };
+        engine.respond_with_open_set(&prompt, &model)
+    };
     if json {
         println!(
             "{}",
@@ -480,20 +549,42 @@ fn infer_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
 }
 
 fn chat_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
+    let mut bundle_path = None;
     let mut model_path = None;
+    let mut legacy_v1 = false;
     let mut index = 0;
     while index < arguments.len() {
         match arguments[index].as_str() {
+            "--bundle" => bundle_path = Some(PathBuf::from(option_value(arguments, &mut index)?)),
             "--model" => model_path = Some(PathBuf::from(option_value(arguments, &mut index)?)),
+            "--legacy-v1" => legacy_v1 = true,
             "--help" | "-h" => {
-                println!("Usage: eliza-lab chat [--model PATH]");
+                println!(
+                    "Usage: eliza-lab chat [--bundle PATH]\n\
+                     eliza-lab chat --legacy-v1 [--model PATH]\n\
+                     The semantically verified open-set bundle is the default. --model is available only with --legacy-v1."
+                );
                 return Ok(());
             }
             option => return Err(CliError(format!("unknown chat option `{option}`")).into()),
         }
         index += 1;
     }
-    interactive(Some(load_model(model_path.as_deref())?))
+    if legacy_v1 && bundle_path.is_some() {
+        return Err(CliError("--bundle cannot be combined with --legacy-v1".into()).into());
+    }
+    if !legacy_v1 && model_path.is_some() {
+        return Err(CliError("--model requires the explicit --legacy-v1 mode".into()).into());
+    }
+    let model = if legacy_v1 {
+        DialogueModel::Legacy(Box::new(load_model(model_path.as_deref())?))
+    } else {
+        DialogueModel::OpenSet(Box::new(match bundle_path.as_deref() {
+            Some(path) => verify_bundle(path)?.compile()?,
+            None => embedded_bundle()?.compile()?,
+        }))
+    };
+    interactive(Some(model))
 }
 
 fn dataset_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
@@ -535,7 +626,7 @@ fn legacy_once(arguments: &[String]) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn interactive(model: Option<IntentModel>) -> Result<(), Box<dyn Error>> {
+fn interactive(model: Option<DialogueModel>) -> Result<(), Box<dyn Error>> {
     println!("ELIZA Lab — local dialogue classification you can inspect");
     println!("Educational software, not therapy or medical advice. No transcript is stored.");
     println!(
@@ -565,7 +656,8 @@ fn interactive(model: Option<IntentModel>) -> Result<(), Box<dyn Error>> {
         }
 
         let response = match &model {
-            Some(model) => engine.respond_with_model(&input, model),
+            Some(DialogueModel::OpenSet(model)) => engine.respond_with_open_set(&input, model),
+            Some(DialogueModel::Legacy(model)) => engine.respond_with_model(&input, model),
             None => engine.respond(&input),
         };
         writeln!(stdout, "eliza > {}", response.text)?;
@@ -824,41 +916,46 @@ fn print_help() {
          Local, explainable intent classification with a non-clinical dialogue shell.\n\n\
          USAGE\n\
            eliza-lab train [options]\n\
-           eliza-lab train-v2 [options]\n\
+           eliza-lab train-v3 [options]\n\
            eliza-lab evaluate [options]\n\
            eliza-lab infer [options] <fictional prompt>\n\
            eliza-lab infer-batch [--bundle PATH] < input.jsonl\n\
            eliza-lab bundle <verify|reproduce> [options]\n\
-           eliza-lab chat [--model PATH]\n\
+           eliza-lab chat [--bundle PATH]\n\
            eliza-lab dataset check [--dataset PATH]\n\
            eliza-lab --once <prompt>       Legacy rule-only response\n\n\
          Run a command with --help for details. With no command, the rule-only shell starts."
     );
 }
 
-fn print_train_v2_help() {
+fn print_train_v3_help() {
     println!(
-        "Usage: eliza-lab train-v2 [options]\n\
-         --dataset PATH              Grouped TSV input (default embedded {DEFAULT_V2_DATASET})\n\
-         --ood-development PATH      OOD data used only for threshold selection (default embedded {DEFAULT_V2_OOD_DEVELOPMENT})\n\
-         --ood-test PATH             Independent OOD evaluation data (default embedded {DEFAULT_V2_OOD_TEST})\n\
-         --output DIRECTORY          Verified artifact bundle (default {DEFAULT_V2_BUNDLE})\n\
+        "Usage: eliza-lab train-v3 [options]\n\
+         --dataset PATH              Grouped TSV input (default embedded {DEFAULT_V3_DATASET})\n\
+         --ood-development PATH      OOD data used only for threshold selection (default embedded {DEFAULT_V3_OOD_DEVELOPMENT})\n\
+         --ood-test PATH             Independent OOD evaluation data (default embedded {DEFAULT_V3_OOD_TEST})\n\
+         --contrast-test PATH        Frozen paired anti-shortcut test (default embedded {DEFAULT_V3_CONTRAST_TEST})\n\
+         --output DIRECTORY          Verified artifact bundle (default {DEFAULT_V3_BUNDLE})\n\
          --seed INTEGER              Deterministic split and bootstrap seed\n\
          --epochs INTEGER            Full-batch gradient steps\n\
          --learning-rate FLOAT       Initial learning rate\n\
-         --l2 FLOAT                  L2 penalty\n\
-         --max-features INTEGER      Vocabulary cap\n\
+         --l2 FLOAT                  Fix the L2 penalty instead of the recorded default grid\n\
+         --max-features INTEGER      Fix the vocabulary cap instead of the recorded default grid\n\
          --bootstrap-resamples N     Label-stratified 95% interval resamples"
     );
 }
 
 fn print_bundle_help() {
     println!(
-        "Usage: eliza-lab bundle <verify|reproduce> [options]\n\
-         --bundle PATH               Bundle directory (default {DEFAULT_V2_BUNDLE})\n\
-         --dataset PATH              Grouped dataset used by reproduce\n\
-         --ood-development PATH      OOD-development data used by reproduce\n\
-         --ood-test PATH             OOD-test data used by reproduce"
+        "Usage: eliza-lab bundle verify [--bundle PATH]\n\
+         eliza-lab bundle reproduce [--bundle PATH] [data options]\n\
+         --bundle PATH               Bundle directory (default {DEFAULT_V3_BUNDLE})\n\
+         --dataset PATH              Grouped dataset used only by reproduce\n\
+         --ood-development PATH      OOD-development data used only by reproduce\n\
+         --ood-test PATH             OOD-test data used only by reproduce\n\
+         --contrast-test PATH        Contrast-test data used only by reproduce\n\
+         verify recomputes the experiment from the plan embedded in the bundle.\n\
+         reproduce requires the source fixtures and proves byte-identical output."
     );
 }
 

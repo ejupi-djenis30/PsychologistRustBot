@@ -1,0 +1,37 @@
+id	family_id	domain_group	stratum	text
+ood-test-001	botany-identification	botany	semantic	Identify this tree from its leaf arrangement
+ood-test-002	botany-identification	botany	semantic	Distinguish these two fern species by their fronds
+ood-test-003	botany-identification	botany	semantic	Classify the wildflower shown in this field guide
+ood-test-004	botany-nutrition	botany	semantic	Interpret the nitrogen deficiency in these tomato leaves
+ood-test-005	botany-nutrition	botany	semantic	Choose a soil amendment for an iron-starved citrus plant
+ood-test-006	botany-nutrition	botany	semantic	Calculate a fertilizer ratio for young apple trees
+ood-test-007	music-harmony	music-theory	semantic	Analyze the harmonic function of this chord progression
+ood-test-008	music-harmony	music-theory	semantic	Resolve this altered dominant into the next measure
+ood-test-009	music-harmony	music-theory	semantic	Transpose these jazz voicings into E-flat major
+ood-test-010	music-rhythm	music-theory	semantic	Count the polyrhythm between these two percussion lines
+ood-test-011	music-rhythm	music-theory	semantic	Rewrite this phrase from seven-eight into common time
+ood-test-012	music-rhythm	music-theory	semantic	Mark the syncopated accents in this drum pattern
+ood-test-013	calendar-event-mutation	calendar-operations	capability	Create a calendar event for next Thursday afternoon
+ood-test-014	calendar-event-mutation	calendar-operations	capability	Cancel tomorrow's planning meeting on my calendar
+ood-test-015	calendar-event-mutation	calendar-operations	capability	Move my weekly review to Friday morning
+ood-test-016	calendar-timezone-booking	calendar-operations	capability	Book a meeting across Zurich, Tokyo and Vancouver
+ood-test-017	calendar-timezone-booking	calendar-operations	capability	Find a shared hour for colleagues in three time zones
+ood-test-018	calendar-timezone-booking	calendar-operations	capability	Reserve the first slot that works in London and Sydney
+ood-test-019	image-generation	image-operations	capability	Render a photorealistic mountain landscape at sunset
+ood-test-020	image-generation	image-operations	capability	Generate a watercolor poster of a coastal village
+ood-test-021	image-generation	image-operations	capability	Create a transparent icon of a mechanical bird
+ood-test-022	image-editing	image-operations	capability	Remove the background from the attached photograph
+ood-test-023	image-editing	image-operations	capability	Replace the red jacket in this image with a blue one
+ood-test-024	image-editing	image-operations	capability	Increase the resolution of this scanned illustration
+ood-test-025	alphanumeric-scramble	identifier-scramble	noise	Q7MV-22LX-9PRA-004K
+ood-test-026	alphanumeric-scramble	identifier-scramble	noise	ZX81N4Q0V7C2B6
+ood-test-027	alphanumeric-scramble	identifier-scramble	noise	AA9F KQ2Z LM77 PX0D
+ood-test-028	delimiter-scramble	identifier-scramble	noise	delimiter-alpha ::://\\|||<<<>>>***
+ood-test-029	delimiter-scramble	identifier-scramble	noise	delimiter-beta [[{{((==??==))}}]]
+ood-test-030	delimiter-scramble	identifier-scramble	noise	delimiter-gamma __--__//::;;,,!!
+ood-test-031	incomplete-json	code-fragments	noise	{"event":"open","payload":[1,2,
+ood-test-032	incomplete-json	code-fragments	noise	{"ok":false,"error":{"code":
+ood-test-033	incomplete-json	code-fragments	noise	[{"id":7},{"id":8},{"id":
+ood-test-034	stacktrace-fragment	code-fragments	noise	at module.run source.rs:44:9 caused by
+ood-test-035	stacktrace-fragment	code-fragments	noise	thread worker panicked at unwrap on none
+ood-test-036	stacktrace-fragment	code-fragments	noise	frame 07 dispatcher invoke offset 0x00af

@@ -24,50 +24,57 @@ accounts, prompt submission, transcript storage, diagnosis, or therapeutic claim
   uncertainty calibration, serialization, and inference live in the repository.
 - **Inspectable predictions:** JSON and browser traces expose all class probabilities, confidence,
   top-two margin, and the strongest positive feature contributions.
-- **Reproducible artifacts:** two identical training runs produce byte-identical model and report
-  files. The report records every split ID and every holdout prediction.
-- **Real abstention:** thresholds are selected from training plus a separate OOD fixture without
-  looking at the holdout. Inputs with weak evidence use a deterministic fallback.
+- **Reproducible artifacts:** two identical v3 runs produce byte-identical model, policy, metrics
+  and split-plan files. The report records every final prediction.
+- **Real abstention:** calibration, policy selection, ID-test and OOD-test have different roles.
+  Inputs with weak evidence use a deterministic fallback.
 - **Private by construction:** CLI and browser inference are local. Prompts are not stored or sent
   to a model service.
 - **Hard non-clinical boundary:** input limits and explicit safety-stop phrases run before ML
   inference. The stop is not presented as crisis detection.
 
-## Open-set protocol v2
+## Open-set protocol v3
 
-The checked-in [`artifacts/eliza-open-set-v2`](artifacts/eliza-open-set-v2) bundle is the next
-experimental path. It keeps the released v1 model and commands compatible while fixing three
-important evaluation weaknesses:
+The checked-in [`artifacts/eliza-open-set-v3`](artifacts/eliza-open-set-v3) bundle is the primary
+model path. The older v1 artifact remains available only through the explicit `--legacy-v1` flag.
+V3 makes the evaluation boundary concrete:
 
 - semantically related rows stay together through explicit `group_id` values;
 - train, development, probability calibration and ID-test are four separate partitions;
 - OOD-development selects the abstention thresholds, while a different OOD-test fixture measures
-  the frozen policy afterward.
+  the frozen policy afterward;
+- a separate paired contrast test probes meaning-changing edits only after every choice is frozen.
 
-Temperature scaling sees only the calibration partition. Confidence and probability-margin
-thresholds see only development plus OOD-development. Neither ID-test nor OOD-test is accepted by
-the calibration functions, and both provenance decisions are recorded in the bundle.
+Temperature scaling sees only calibration. A fixed, coarse confidence/margin grid sees only
+development plus OOD-development. Role-specific Rust types keep both final tests out of every
+selection API, and the bundle records those inputs directly.
+
+The supervised fixture has 525 rows in 105 equal five-prompt families. Each OOD population has 36
+rows in twelve multi-prompt families, six broader domains and balanced semantic, capability and
+noise strata. The contrast fixture adds 28 rows in fourteen label-changing pairs. A training-only
+majority baseline and Laplace unigram Naive Bayes baseline are reconstructed from the split plan
+during verification.
 
 The bundle separates `model.json`, `policy.json`, `metrics.json` and `split-plan.json`. A final
 manifest links their exact bytes with SHA-256. Build, verify and reproduce it with:
 
 ```bash
-cargo run --locked -- train-v2 --output target/open-set-v2
-cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v2
-cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v2
+cargo run --locked -- train-v3 --output target/open-set-v3
+cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v3
+cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v3
 ```
 
-`train-v2` replaces only an empty destination or a bundle that already passes the complete v2
+`train-v3` replaces only an empty destination or a bundle that already passes the complete v3
 verification contract. It will not repurpose an unrelated non-empty directory.
 
 Run bounded batch inference without validating or indexing the vocabulary again for every row:
 
 ```bash
 printf '%s\n' '{"id":"sample-1","text":"Today I feel calm"}' \
-  | cargo run --locked -- infer-batch --bundle artifacts/eliza-open-set-v2
+  | cargo run --locked -- infer-batch --bundle artifacts/eliza-open-set-v3
 ```
 
-Every v2 prediction includes calibrated probabilities and a contrastive explanation for the top
+Every v3 prediction includes calibrated probabilities and a contrastive explanation for the top
 class against the runner-up. The explanation records its bias delta and feature sum, and tests
 verify that they reconstruct the exact top-two logit margin.
 
@@ -89,9 +96,9 @@ Compare it with the matching `.sha256` file or `SHA256SUMS`, then verify its Git
 gh attestation verify <downloaded-archive> --repo ejupi-djenis30/PsychologistRustBot
 ```
 
-Extract the archive and run the included `eliza-lab` executable. Released model `1.0.0`, open-set
-bundle model `2.0.0`, and the synthetic fixtures are embedded, so inference, evaluation, and
-retraining need no separate model download.
+Extract the archive and run the included `eliza-lab` executable. Open-set bundle model `3.0.0`, the
+legacy `1.0.0` compatibility artifact and synthetic fixtures are embedded, so inference,
+verification and retraining need no separate model download.
 The application version (`1.3.0`) and bundled model versions are intentionally independent.
 
 ## Run it
@@ -108,38 +115,32 @@ Start an uncertainty-aware local session:
 cargo run --locked -- chat
 ```
 
-Rebuild the checked-in model and evaluation report from the embedded synthetic fixtures:
+Rebuild a v3 bundle from the embedded synthetic fixtures:
 
 ```bash
-cargo run --locked -- train
-cargo run --locked -- evaluate
+cargo run --locked -- train-v3 --output target/open-set-v3
+cargo run --locked -- bundle verify --bundle target/open-set-v3
 ```
 
-Use `--dataset`, `--ood`, `--model`, `--output`, or `--report` to supply explicit paths. The CLI
-refuses collisions between inputs and outputs. The original deterministic rule mode remains
-available for comparison:
+The CLI refuses collisions between inputs and outputs. Legacy model inference is deliberately
+separate from the default path:
 
 ```bash
-cargo run --locked -- --once "I feel uncertain about my next step"
+cargo run --locked -- infer --legacy-v1 --model models/eliza-intent-v1.json --json "Today I feel calm"
 ```
 
 ## Honest evaluation boundary
 
-The checked-in corpus has 112 synthetic English examples. Seed `20260722` produces 91 training
-rows and a 21-row holdout. On that small holdout the model records 14/21 raw accuracy, macro-F1
-`0.661`, and 7/21 decision coverage; 6 of the 7 accepted predictions are correct. The same
-20-row synthetic OOD calibration fixture used to choose thresholds has 0 accepted rows; that is
-calibration-set behavior, not an independent OOD result.
+The corpus, OOD fixtures and split are synthetic by design. The exact released values live in the
+cryptographically linked [`metrics.json`](artifacts/eliza-open-set-v3/metrics.json), and the browser
+recomputes their ledgers before showing them. Read the [model card](docs/MODEL_CARD.md) before
+interpreting accuracy, calibration or OOD discrimination.
 
-Those figures verify this pipeline. They do not demonstrate production NLP generalization. Read
-the [model card](docs/MODEL_CARD.md) before interpreting them.
-
-The v2 protocol is more defensible but remains small: 70 train, 14 development, 14 calibration and
-14 ID-test rows, with 20 independent OOD-test rows. ID-test accuracy is `11/14` (`0.786`, bootstrap
-95% interval `0.643–0.929`) and macro-F1 is `0.781` (`0.581–0.924`). The frozen policy accepts
-`5/14` ID-test rows and `0/20` OOD-test rows. OOD AUROC is `0.750`, while FPR at 95% TPR is a weak
-`0.850`. These wide intervals and the poor FPR are visible because v2 is an evaluation upgrade,
-not evidence of a production language model.
+An earlier prerelease run was discarded after review found partition-correlated family sizes and
+singleton OOD families. The current protocol equalizes family support before splitting, keeps
+broader OOD domains disjoint, reports per-stratum metrics and compares the learned model with a
+training-only unigram baseline. These controls make the experiment more credible; they do not make
+it a production language model.
 
 ## Verify it
 
@@ -147,8 +148,8 @@ not evidence of a production language model.
 cargo fmt --check
 cargo clippy --all-targets --locked -- -D warnings
 cargo test --all --locked
-cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v2
-cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v2
+cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v3
+cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v3
 node --test site/tests/*.test.mjs
 node site/scripts/validate-site.mjs
 node --test scripts/tests/*.test.mjs
@@ -225,15 +226,15 @@ node scripts/release-contract.mjs verify --tag v1.3.0
 ## Architecture
 
 ```text
-src/ml.rs                   data, vectorizer, training, metrics, model IO
-src/open_set.rs             group-aware v2 splits, calibration, metrics, bundles, compiled inference
+src/open_set.rs             v3 data contracts, typed splits, training, evaluation, bundles, inference
+src/ml.rs                   explicit legacy-v1 compatibility implementation
 src/lib.rs                  hard boundaries and dialogue routing
 src/main.rs                 train / evaluate / infer / chat CLI
-fixtures/                   supervised, OOD, and parity corpora
+fixtures/                   supervised, OOD, contrast, and parity corpora
 models/                     versioned learned artifact
 reports/                    generated split, calibration, and metrics
-artifacts/eliza-open-set-v2 SHA-256-linked model, policy, metrics, and split plan
-site/ml-engine.mjs          browser implementation of model inference
+artifacts/eliza-open-set-v3 SHA-256-linked model, policy, metrics, and split plan
+site/open-set-engine.mjs    trust-root verification and browser v3 inference
 docs/                       model card, dataset contract, architecture
 ```
 

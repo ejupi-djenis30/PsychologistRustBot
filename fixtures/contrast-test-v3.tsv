@@ -1,0 +1,29 @@
+id	pair_id	variant	label	text
+contrast-001	contrast-pair-01	a	greeting	Hello, I am here after a difficult morning
+contrast-002	contrast-pair-01	b	feeling	I feel low after a difficult morning
+contrast-003	contrast-pair-02	a	feeling	I feel tense because the deadline moved
+contrast-004	contrast-pair-02	b	reason	The deadline moved because the client changed scope
+contrast-005	contrast-pair-03	a	reason	This draft changed because the requirements shifted
+contrast-006	contrast-pair-03	b	ownership	This draft is mine and the requirements are noted
+contrast-007	contrast-pair-04	a	ownership	My deployment checklist covers the release
+contrast-008	contrast-pair-04	b	question	Does my deployment checklist cover the release?
+contrast-009	contrast-pair-05	a	question	Can I map the migration steps this afternoon?
+contrast-010	contrast-pair-05	b	goal	I will map the migration steps this afternoon
+contrast-011	contrast-pair-06	a	goal	I plan to review the quiet service logs tonight
+contrast-012	contrast-pair-06	b	observation	The quiet service logs show retries tonight
+contrast-013	contrast-pair-07	a	observation	The workshop room looks ready for everyone
+contrast-014	contrast-pair-07	b	greeting	Welcome everyone, the workshop room looks ready
+contrast-015	contrast-pair-08	a	greeting	Good morning, the build failed after the update
+contrast-016	contrast-pair-08	b	reason	The build failed because of the morning update
+contrast-017	contrast-pair-09	a	feeling	I am proud of this small prototype
+contrast-018	contrast-pair-09	b	ownership	This small prototype is my own work
+contrast-019	contrast-pair-10	a	reason	The cache missed because its key changed
+contrast-020	contrast-pair-10	b	question	Why did the cache miss when its key changed?
+contrast-021	contrast-pair-11	a	ownership	My release notes belong with this version
+contrast-022	contrast-pair-11	b	goal	I intend to finish the release notes for this version
+contrast-023	contrast-pair-12	a	question	Is the north sensor reporting a stable value?
+contrast-024	contrast-pair-12	b	observation	The north sensor is reporting a stable value
+contrast-025	contrast-pair-13	a	goal	I will welcome the new maintainer at noon
+contrast-026	contrast-pair-13	b	greeting	Welcome, new maintainer; good to meet you at noon
+contrast-027	contrast-pair-14	a	observation	The empty office feels unusually quiet today
+contrast-028	contrast-pair-14	b	feeling	I feel unusually lonely in the empty office today

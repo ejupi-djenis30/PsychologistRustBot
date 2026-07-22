@@ -83,10 +83,10 @@ jobs:
             --report target/release-report-v1.json
           cmp models/eliza-intent-v1.json target/release-model-v1.json
           cmp reports/eliza-intent-v1.json target/release-report-v1.json
-          cargo run --locked -- train-v2 --output target/release-open-set-v2
-          diff --recursive --brief artifacts/eliza-open-set-v2 target/release-open-set-v2
-          cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v2
-          cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v2
+          cargo run --locked -- train-v3 --output target/release-open-set-v3
+          diff --recursive --brief artifacts/eliza-open-set-v3 target/release-open-set-v3
+          cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v3
+          cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v3
 
       - name: Audit locked Rust dependencies against pinned RustSec data
         shell: bash
@@ -210,7 +210,11 @@ jobs:
         env:
           BINARY_PATH: ${{ matrix.binary }}
         shell: pwsh
-        run: node scripts/release-contract.mjs smoke --binary "$env:BINARY_PATH"
+        run: >-
+          node scripts/release-contract.mjs smoke
+          --binary "$env:BINARY_PATH"
+          --bundle artifacts/eliza-open-set-v3
+          --legacy-model models/eliza-intent-v1.json
 
       - name: Package binary with checksum and provenance metadata
         id: package
@@ -235,6 +239,8 @@ jobs:
           node scripts/release-contract.mjs smoke-archive
           --archive "$env:ARCHIVE_PATH"
           --target "$env:RELEASE_TARGET"
+          --bundle artifacts/eliza-open-set-v3
+          --legacy-model models/eliza-intent-v1.json
 
       - name: Upload packaged binary
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

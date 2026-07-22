@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">ELIZA Lab open-set machine-learning report</title>
+  <desc id="desc">A code-built preview showing the frozen training, selection, calibration and evaluation pipeline.</desc>
+  <defs>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#231f20" stroke-opacity="0.055" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="10" dy="12" stdDeviation="0" flood-color="#231f20" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="675" fill="#f2ecdf"/>
+  <rect width="1200" height="675" fill="url(#grid)"/>
+  <rect x="38" y="34" width="1124" height="607" rx="30" fill="#f7f3ea" stroke="#231f20" stroke-opacity="0.14"/>
+
+  <g transform="translate(72 66)">
+    <rect width="46" height="46" rx="12" fill="#231f20"/>
+    <path d="M12 12h9v5h-4v12h4v5h-9V12Zm22 0h-9v5h4v12h-4v5h9V12Z" fill="#f2ecdf"/>
+    <circle cx="23" cy="23" r="3.6" fill="#b94b3b"/>
+    <text x="62" y="31" fill="#231f20" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="800" letter-spacing="-0.8">ELIZA LAB</text>
+  </g>
+  <text x="1128" y="93" text-anchor="end" fill="#675f5b" font-family="Consolas, 'Courier New', monospace" font-size="13" font-weight="700" letter-spacing="1.5">OPEN-SET ML / RUST / LOCAL</text>
+  <line x1="72" y1="132" x2="1128" y2="132" stroke="#231f20" stroke-opacity="0.17"/>
+
+  <g transform="translate(72 178)">
+    <text fill="#b94b3b" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="700" letter-spacing="1.7">FROZEN EVALUATION / V3.0.0</text>
+    <text y="72" fill="#231f20" font-family="Arial, Helvetica, sans-serif" font-size="66" font-weight="800" letter-spacing="-3.2">Measure what</text>
+    <text y="140" fill="#231f20" font-family="Arial, Helvetica, sans-serif" font-size="66" font-weight="800" letter-spacing="-3.2">the model misses.</text>
+    <text y="190" fill="#675f5b" font-family="Arial, Helvetica, sans-serif" font-size="21">Separate fitting, calibration and testing.</text>
+    <text y="220" fill="#675f5b" font-family="Arial, Helvetica, sans-serif" font-size="21">Every prediction can be reproduced.</text>
+  </g>
+
+  <g transform="translate(690 164)" filter="url(#shadow)">
+    <rect width="438" height="326" rx="24" fill="#15211d"/>
+    <circle cx="32" cy="32" r="5" fill="#c8ff39"/>
+    <text x="50" y="37" fill="#f2ecdf" font-family="Consolas, 'Courier New', monospace" font-size="13" font-weight="700" letter-spacing="1.4">VERIFIED BUNDLE</text>
+    <text x="406" y="37" text-anchor="end" fill="#f2ecdf" fill-opacity="0.58" font-family="Consolas, 'Courier New', monospace" font-size="12">SHA-256</text>
+    <line x1="26" y1="62" x2="412" y2="62" stroke="#f2ecdf" stroke-opacity="0.14"/>
+
+    <g transform="translate(26 86)">
+      <text fill="#f2ecdf" fill-opacity="0.62" font-family="Consolas, 'Courier New', monospace" font-size="12" letter-spacing="1.2">ID-TEST ACCURACY</text>
+      <text y="49" fill="#f2ecdf" font-family="Georgia, 'Times New Roman', serif" font-size="47">82.9%</text>
+    </g>
+    <g transform="translate(236 86)">
+      <text fill="#f2ecdf" fill-opacity="0.62" font-family="Consolas, 'Courier New', monospace" font-size="12" letter-spacing="1.2">OOD AUROC</text>
+      <text y="49" fill="#f2ecdf" font-family="Georgia, 'Times New Roman', serif" font-size="47">0.803</text>
+    </g>
+    <line x1="26" y1="162" x2="412" y2="162" stroke="#f2ecdf" stroke-opacity="0.14"/>
+    <g transform="translate(26 188)">
+      <text fill="#f2ecdf" fill-opacity="0.62" font-family="Consolas, 'Courier New', monospace" font-size="12" letter-spacing="1.2">CONTRAST TEST</text>
+      <text y="49" fill="#f2ecdf" font-family="Georgia, 'Times New Roman', serif" font-size="47">14 pairs</text>
+    </g>
+    <g transform="translate(236 188)">
+      <text fill="#f2ecdf" fill-opacity="0.62" font-family="Consolas, 'Courier New', monospace" font-size="12" letter-spacing="1.2">BOOTSTRAP</text>
+      <text y="49" fill="#f2ecdf" font-family="Georgia, 'Times New Roman', serif" font-size="47">1,000</text>
+    </g>
+    <rect x="26" y="273" width="386" height="31" rx="15.5" fill="#f2ecdf" fill-opacity="0.08"/>
+    <text x="219" y="294" text-anchor="middle" fill="#c8ff39" font-family="Consolas, 'Courier New', monospace" font-size="11" font-weight="700" letter-spacing="1.1">SYNTHETIC · ENGLISH · EDUCATIONAL</text>
+  </g>
+
+  <g transform="translate(72 548)">
+    <line x1="18" y1="14" x2="1038" y2="14" stroke="#231f20" stroke-opacity="0.28" stroke-width="2"/>
+    <g fill="#f7f3ea" stroke="#231f20" stroke-width="2">
+      <circle cx="18" cy="14" r="9"/><circle cx="273" cy="14" r="9"/><circle cx="528" cy="14" r="9"/><circle cx="783" cy="14" r="9"/>
+    </g>
+    <circle cx="1038" cy="14" r="9" fill="#b94b3b" stroke="#b94b3b" stroke-width="2"/>
+    <g fill="#231f20" font-family="Consolas, 'Courier New', monospace" font-size="12" font-weight="700" letter-spacing="1.2">
+      <text x="18" y="45">FIT</text><text x="273" y="45">SELECT</text><text x="528" y="45">CALIBRATE</text><text x="783" y="45">FREEZE</text><text x="1038" y="45" text-anchor="end">TEST</text>
+    </g>
+  </g>
+</svg>
