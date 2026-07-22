@@ -6,17 +6,17 @@
     <meta name="referrer" content="no-referrer" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'none'; connect-src 'none'; worker-src 'none'; manifest-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'none'; connect-src 'self'; worker-src 'none'; manifest-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
     />
     <meta
       name="description"
-      content="ELIZA Lab is a transparent, local-only conversation engine for exploring rule-based dialogue systems."
+      content="ELIZA Lab is a reproducible, local machine-learning pipeline for training and inspecting an uncertainty-aware intent classifier."
     />
     <meta name="theme-color" content="#f2ecdf" />
-    <meta property="og:title" content="ELIZA Lab — A conversation you can inspect" />
+    <meta property="og:title" content="ELIZA Lab — Train it. Inspect it." />
     <meta
       property="og:description"
-      content="Try a private dialogue experiment and inspect the rule behind every response."
+      content="Train a small intent model, reproduce its evaluation and inspect every local prediction."
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://ejupi-djenis30.github.io/PsychologistRustBot/" />
@@ -24,16 +24,16 @@
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="675" />
-    <meta property="og:image:alt" content="ELIZA Lab showing a fictional prompt, its response, and the feeling-reflection rule trace." />
+    <meta property="og:image:alt" content="ELIZA Lab showing a local intent prediction and its inspectable feature trace." />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="ELIZA Lab — A conversation you can inspect" />
-    <meta name="twitter:description" content="Try a private dialogue experiment and inspect the rule behind every response." />
+    <meta name="twitter:title" content="ELIZA Lab — Train it. Inspect it." />
+    <meta name="twitter:description" content="Train a small intent model, reproduce its evaluation and inspect every local prediction." />
     <meta name="twitter:image" content="https://ejupi-djenis30.github.io/PsychologistRustBot/assets/social-preview.png" />
-    <meta name="twitter:image:alt" content="ELIZA Lab showing a fictional prompt, its response, and the feeling-reflection rule trace." />
+    <meta name="twitter:image:alt" content="ELIZA Lab showing a local intent prediction and its inspectable feature trace." />
     <link rel="canonical" href="https://ejupi-djenis30.github.io/PsychologistRustBot/" />
     <link rel="icon" href="assets/eliza-lab-mark.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css?v=1.1.2" />
-    <title>ELIZA Lab — A conversation you can inspect</title>
+    <link rel="stylesheet" href="styles.css?v=1.2.0-2" />
+    <title>ELIZA Lab — Train it. Inspect it.</title>
   </head>
   <body id="top">
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -43,9 +43,10 @@
         <span>ELIZA <strong>LAB</strong></span>
       </a>
       <nav aria-label="Primary navigation">
-        <a href="#experiment">Experiment</a>
-        <a href="#method">Method</a>
-        <a href="#safety">Safety</a>
+        <a href="#experiment">Inference</a>
+        <a href="#method">Pipeline</a>
+        <a href="#report">Model report</a>
+        <a href="#safety">Boundaries</a>
       </nav>
       <a class="source-link" href="https://github.com/ejupi-djenis30/PsychologistRustBot">
         Source <span aria-hidden="true">↗</span>
@@ -55,36 +56,36 @@
     <main id="main-content" tabindex="-1">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow"><span>01</span> Rule-based dialogue, made visible</p>
-          <h1 id="hero-title">A conversation<br />you can <em>inspect.</em></h1>
+          <p class="eyebrow"><span>01</span> Local ML, fully inspectable</p>
+          <h1 id="hero-title">Train the model.<br /><em>Inspect the decision.</em></h1>
           <p class="hero-lead">
-            ELIZA Lab turns a famous interaction pattern into a small, honest learning tool.
-            Every reply comes with its rule trace. Nothing leaves your browser.
+            ELIZA Lab is a complete intent-classification pipeline in Rust: validated data,
+            deterministic training, versioned weights, measured uncertainty and a hard abstention path.
           </p>
           <div class="hero-actions">
-            <a class="button button-primary" href="#experiment">Try the experiment</a>
-            <a class="button button-quiet" href="#method">See how it works</a>
+            <a class="button button-primary" href="#experiment">Inspect a prediction</a>
+            <a class="button button-quiet" href="#method">Open the pipeline</a>
           </div>
-          <ul class="hero-facts" aria-label="Product boundaries">
-            <li>No accounts</li>
-            <li>No transcript storage</li>
-            <li>Not therapy</li>
+          <ul class="hero-facts" aria-label="Project facts">
+            <li>112 synthetic examples</li>
+            <li>7 intent classes</li>
+            <li>No prompt telemetry</li>
           </ul>
         </div>
 
         <div class="hero-art" aria-hidden="true">
           <div class="hero-art__grid"></div>
-          <div class="dialogue-flow">
+          <div class="dialogue-flow model-flow">
             <div class="dialogue-card dialogue-card-a">
-              <span>INPUT</span>
-              <p>I feel uncertain about my next step.</p>
+              <span>FEATURE SPACE</span>
+              <p>TF-IDF word and character n-grams / 512 retained features</p>
             </div>
             <span class="flow-track"></span>
-            <div class="trace-stamp"><span>RULE 03</span><strong>FEELING → REFLECT</strong></div>
+            <div class="trace-stamp"><span>SOFTMAX V1</span><strong>7 CLASSES → SCORE</strong></div>
             <span class="flow-track"></span>
             <div class="dialogue-card dialogue-card-b">
-              <span>REFLECTION</span>
-              <p>What makes you feel uncertain about your next step?</p>
+              <span>DECISION GATE</span>
+              <p>Accept only when confidence and top-two margin clear their thresholds.</p>
             </div>
           </div>
         </div>
@@ -92,26 +93,26 @@
 
       <section class="experiment section" id="experiment" aria-labelledby="experiment-title">
         <div class="section-heading">
-          <p class="eyebrow"><span>02</span> Live experiment</p>
-          <h2 id="experiment-title">Talk to the rulebook.<br />Then open it.</h2>
+          <p class="eyebrow"><span>02</span> Local inference</p>
+          <h2 id="experiment-title">Make one prediction.<br />See what moved it.</h2>
           <p>
-            Use a harmless, fictional prompt. The inspector shows what matched and how pronouns
-            were reflected. The transcript exists only in this tab and clears on reload.
+            Use a harmless, fictional prompt. The inspector exposes the predicted class,
+            probability, margin and strongest positive feature contributions. Input stays in this tab.
           </p>
         </div>
 
-        <div class="lab-shell">
+        <div class="lab-shell" aria-busy="true">
           <div class="lab-topbar">
             <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
-            <p>LOCAL SESSION / NO STORAGE</p>
-            <button class="reset-button" type="button" data-reset>Clear session</button>
+            <p role="status" aria-live="polite" data-model-status>MODEL LOADING</p>
+            <button class="reset-button" type="button" data-reset data-model-gated disabled>Clear session</button>
           </div>
           <div class="lab-grid">
             <div class="conversation-panel">
               <div class="transcript" data-transcript role="log" aria-label="Conversation transcript" aria-live="polite" aria-relevant="additions">
                 <article class="message message-system">
                   <span>ELIZA / 00</span>
-                  <p>Hello. What is on your mind today?</p>
+                  <p>Hello. What would you like to examine today?</p>
                 </article>
               </div>
               <form class="composer" data-form>
@@ -120,39 +121,42 @@
                   <input
                     id="message"
                     name="message"
-                    maxlength="512"
+                    data-model-gated
+                    disabled
                     autocomplete="off"
                     required
                     aria-describedby="message-boundary"
-                    placeholder="I feel uncertain about my next step…"
+                    placeholder="I want to finish the prototype this week…"
                   />
-                  <button type="submit" aria-label="Send prompt">Send <span aria-hidden="true">↗</span></button>
+                  <button type="submit" aria-label="Send prompt" data-model-gated disabled>Send <span aria-hidden="true">↗</span></button>
                 </div>
-                <p class="composer-boundary" id="message-boundary">Fictional text only · 512-character limit · 40 visible turns</p>
+                <p class="composer-boundary" id="message-boundary">Fictional text only · 512-code-point limit · 40 visible turns</p>
               </form>
               <div class="samples" aria-label="Example prompts">
-                <button type="button" data-sample="I feel uncertain about my next step">Feeling</button>
-                <button type="button" data-sample="I paused because my plan changed">Reason</button>
-                <button type="button" data-sample="What should I notice?">Question</button>
+                <button type="button" data-sample="Today I feel calm" data-model-gated disabled>Feeling</button>
+                <button type="button" data-sample="I want to finish the prototype this week" data-model-gated disabled>Goal</button>
+                <button type="button" data-sample="Calculate the orbital period of a satellite" data-model-gated disabled>OOD test</button>
               </div>
             </div>
 
             <aside class="inspector" aria-labelledby="inspector-title">
               <div class="inspector-heading">
-                <p id="inspector-title">Response trace</p>
+                <p id="inspector-title">Prediction trace</p>
                 <span role="status" aria-live="polite" data-trace-status>IDLE</span>
               </div>
               <dl>
-                <div><dt>Rule</dt><dd data-rule>waiting-for-input</dd></div>
-                <div><dt>Keyword</dt><dd data-keyword>—</dd></div>
-                <div><dt>Transform</dt><dd data-transform>—</dd></div>
-                <div><dt>Network</dt><dd>0 requests</dd></div>
+                <div><dt>Boundary</dt><dd data-rule>waiting-for-input</dd></div>
+                <div><dt>Decision</dt><dd data-decision>—</dd></div>
+                <div><dt>Confidence</dt><dd data-confidence>—</dd></div>
+                <div><dt>Top-two margin</dt><dd data-margin>—</dd></div>
+                <div class="inspector-wide"><dt>Positive evidence</dt><dd data-evidence>—</dd></div>
+                <div><dt>Prompt network</dt><dd>0 requests</dd></div>
                 <div><dt>Persistence</dt><dd>none</dd></div>
                 <div><dt>Session cap</dt><dd>40 visible turns</dd></div>
               </dl>
               <div class="inspector-note">
                 <span aria-hidden="true">✳</span>
-                <p>A trace explains a match. It does not make the response intelligent or true.</p>
+                <p>A score explains this model's decision. It does not make the response intelligent or true.</p>
               </div>
             </aside>
           </div>
@@ -161,46 +165,95 @@
 
       <section class="method section" id="method" aria-labelledby="method-title">
         <div class="section-heading compact">
-          <p class="eyebrow"><span>03</span> Under the surface</p>
-          <h2 id="method-title">Small mechanism.<br />Large illusion.</h2>
+          <p class="eyebrow"><span>03</span> Reproducible pipeline</p>
+          <h2 id="method-title">Every stage is code.<br />Every artifact can be checked.</h2>
         </div>
         <div class="method-grid">
           <article>
-            <span>01 / NORMALIZE</span>
-            <h3>Read the shape.</h3>
-            <p>Whitespace and casing are normalized. The engine never sends the sentence elsewhere.</p>
+            <span>01 / VALIDATE</span>
+            <h3>Reject bad rows.</h3>
+            <p>The TSV parser enforces unique IDs and text, field boundaries and minimum class support.</p>
           </article>
           <article>
-            <span>02 / MATCH</span>
-            <h3>Choose one rule.</h3>
-            <p>Patterns run in a documented order: safety boundary, greeting, feeling, reason, ownership, question.</p>
+            <span>02 / SPLIT</span>
+            <h3>Freeze the holdout.</h3>
+            <p>A seeded, stratified split keeps every class represented. The vocabulary never sees holdout text.</p>
           </article>
           <article>
-            <span>03 / REFLECT</span>
-            <h3>Turn the sentence.</h3>
-            <p>A tiny pronoun map changes “my” to “your” and returns the thought as a question.</p>
+            <span>03 / VECTORIZE</span>
+            <h3>Build the feature space.</h3>
+            <p>Word uni- and bigrams combine with character 3–5 grams, TF-IDF weighting and L2 normalization.</p>
           </article>
           <article>
-            <span>04 / EXPLAIN</span>
-            <h3>Show the seam.</h3>
-            <p>The selected rule and transformed fragment stay visible so the illusion never hides the method.</p>
+            <span>04 / LEARN</span>
+            <h3>Fit real weights.</h3>
+            <p>Multinomial logistic regression learns seven classes through deterministic full-batch optimization.</p>
           </article>
+          <article>
+            <span>05 / ABSTAIN</span>
+            <h3>Know when to stop.</h3>
+            <p>Thresholds use train plus a separate OOD fixture. The untouched holdout is evaluated afterward.</p>
+          </article>
+        </div>
+
+        <div class="pipeline-map" aria-label="Machine-learning pipeline from corpus to decision">
+          <div class="pipeline-node"><span>01</span><strong>TSV corpus</strong><small>112 synthetic rows</small></div>
+          <i aria-hidden="true"></i>
+          <div class="pipeline-node"><span>02</span><strong>Seeded split</strong><small>91 train / 21 holdout</small></div>
+          <i aria-hidden="true"></i>
+          <div class="pipeline-node"><span>03</span><strong>TF-IDF</strong><small>512 retained features</small></div>
+          <i aria-hidden="true"></i>
+          <div class="pipeline-node"><span>04</span><strong>Softmax</strong><small>versioned JSON weights</small></div>
+          <i aria-hidden="true"></i>
+          <div class="pipeline-node pipeline-node-accent"><span>05</span><strong>Accept / abstain</strong><small>confidence + margin</small></div>
+        </div>
+      </section>
+
+      <section class="model-report section" id="report" aria-labelledby="report-title">
+        <div class="section-heading compact">
+          <p class="eyebrow"><span>04</span> Model report</p>
+          <h2 id="report-title">Measured honestly.<br />Kept in proportion.</h2>
+          <p>The checked-in report generates these values; CI verifies that the page has not embellished them.</p>
+        </div>
+        <div class="report-grid">
+          <dl class="metric-panel">
+            <div><dt>Holdout size</dt><dd data-report-metric="holdout-size">21</dd><small>3 rows per class</small></div>
+            <div><dt>Raw accuracy</dt><dd data-report-metric="holdout-accuracy">14 / 21</dd><small>66.7% before abstention</small></div>
+            <div><dt>Macro F1</dt><dd data-report-metric="holdout-macro-f1">0.661</dd><small>unweighted across 7 classes</small></div>
+            <div><dt>Decision coverage</dt><dd data-report-metric="holdout-coverage">7 / 21</dd><small>6 of 7 accepted predictions correct</small></div>
+            <div><dt>OOD accepted</dt><dd data-report-metric="ood-accepted">0 / 20</dd><small>separate unlabeled fixture</small></div>
+            <div><dt>Split seed</dt><dd data-report-metric="seed">20260722</dd><small>rebuilds the same partitions</small></div>
+          </dl>
+          <div class="report-limitations">
+            <p class="report-kicker">READ THIS BEFORE THE SCORES</p>
+            <h3>This is a learning benchmark, not a general-purpose NLP claim.</h3>
+            <p>
+              The corpus is synthetic and small. The holdout contains only 21 rows, and the
+              seven labels describe this demo's narrow interaction patterns. Accuracy and F1
+              do not establish real-world language understanding.
+            </p>
+            <p>
+              Thresholds were selected without the holdout. They require 45% confidence and a
+              0.20 top-two margin, trading coverage for a visible abstention path.
+            </p>
+            <a href="https://github.com/ejupi-djenis30/PsychologistRustBot/blob/master/docs/MODEL_CARD.md">Read the full model card <span aria-hidden="true">↗</span></a>
+          </div>
         </div>
       </section>
 
       <section class="safety section" id="safety" aria-labelledby="safety-title">
         <div>
-          <p class="eyebrow"><span>04</span> A clear boundary</p>
-          <h2 id="safety-title">A mirror is not a clinician.</h2>
+          <p class="eyebrow"><span>05</span> A hard boundary</p>
+          <h2 id="safety-title">A classifier is not a clinician.</h2>
         </div>
         <div class="safety-copy">
           <p>
-            ELIZA Lab is an educational software experiment. It does not understand a person,
-            assess risk, provide treatment, or replace qualified care.
+            ELIZA Lab is educational software. It does not understand a person, assess risk,
+            provide treatment or replace qualified care.
           </p>
           <p>
-            A small list of explicit safety phrases stops the simulation and points toward
-            immediate human help. It is a boundary, not reliable crisis detection.
+            A small list of explicit safety phrases runs before learned inference, stops the
+            simulation and points toward immediate human help. It is a boundary, not crisis detection.
           </p>
           <a href="https://github.com/ejupi-djenis30/PsychologistRustBot/blob/master/SECURITY.md">
             Read the safety and privacy model <span aria-hidden="true">↗</span>
@@ -209,12 +262,12 @@
       </section>
 
       <section class="provenance section" aria-labelledby="provenance-title">
-        <p class="eyebrow"><span>05</span> Refactored with intent</p>
-        <h2 id="provenance-title">The useful idea survived.<br />The unsafe product did not.</h2>
+        <p class="eyebrow"><span>06</span> Refactored with intent</p>
+        <h2 id="provenance-title">The useful question survived.<br />The unsafe product did not.</h2>
         <p>
           The original 2023 Telegram prototype stored conversations and implied therapeutic use.
           This edition removes Telegram, MySQL, OpenAI and the PHP admin panel. What remains is a
-          testable Rust engine and a transparent browser demonstration.
+          reproducible Rust ML pipeline, a deterministic fallback and a transparent browser lab.
         </p>
       </section>
     </main>
@@ -224,10 +277,10 @@
         <img src="assets/eliza-lab-mark.svg" width="36" height="36" alt="" />
         <span>ELIZA <strong>LAB</strong></span>
       </div>
-      <p>Designed as an experiment. Built to stay local.</p>
+      <p>Train locally. Measure honestly. Abstain visibly.</p>
       <a href="https://github.com/ejupi-djenis30/PsychologistRustBot">ELIZA Lab contributors ↗</a>
     </footer>
 
-    <script type="module" src="app.js?v=1.1.2"></script>
+    <script type="module" src="app.js?v=1.2.0-2"></script>
   </body>
 </html>

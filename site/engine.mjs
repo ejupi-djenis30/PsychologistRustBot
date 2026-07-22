@@ -61,16 +61,22 @@ const exceedsCharacterLimit = (value, limit) => {
   return false;
 };
 
-const createReply = (text, rule, turn, keyword = null, transformed = null) => ({
+const createReply = (text, rule, turn, keyword = null, transformed = null, model = null) => ({
   text,
   rule,
   turn,
   keyword,
   transformed,
+  model,
 });
 
 export class ElizaEngine {
   #turn = 0;
+  #model;
+
+  constructor(model = null) {
+    this.#model = model;
+  }
 
   get turn() {
     return this.#turn;
@@ -104,6 +110,47 @@ export class ElizaEngine {
         "safety-boundary",
         turn,
         "matched safety phrase",
+      );
+    }
+
+    if (this.#model) {
+      const prediction = this.#model.predict(trimmed);
+      const responses = new Map([
+        ["greeting", "Hello. What would you like to examine today?"],
+        ["feeling", "Which part of that feeling would be useful to examine?"],
+        ["reason", "Which part of that explanation matters most here?"],
+        ["ownership", "How does that situation affect what you can do next?"],
+        ["question", "What answer would feel most useful to explore?"],
+        ["goal", "What is the smallest concrete step you could test next?"],
+        ["observation", "What part of that observation stands out most to you?"],
+      ]);
+      const response = responses.get(prediction.label);
+      const accepted = prediction.accepted && Boolean(response);
+      const trace = {
+        version: this.#model.version,
+        label: prediction.label,
+        accepted,
+        confidence: prediction.confidence,
+        margin: prediction.margin,
+        probabilities: prediction.probabilities,
+        topFeatures: prediction.topFeatures,
+      };
+      if (accepted) {
+        return createReply(response, "ml-intent", turn, prediction.label, null, trace);
+      }
+      const fallbacks = [
+        "Tell me a little more about that.",
+        "What part of that stands out most to you?",
+        "How did you arrive at that thought?",
+        "What would change if you looked at it another way?",
+      ];
+      return createReply(
+        fallbacks[(turn - 1) % fallbacks.length],
+        "ml-abstain",
+        turn,
+        prediction.label,
+        null,
+        trace,
       );
     }
 

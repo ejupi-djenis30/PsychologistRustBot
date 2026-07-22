@@ -15,7 +15,7 @@ import {
 } from "../release-publish.mjs";
 
 const repository = "ejupi-djenis30/PsychologistRustBot";
-const tag = "v1.1.2";
+const tag = "v1.2.0";
 const expectedCommit = "a".repeat(40);
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 

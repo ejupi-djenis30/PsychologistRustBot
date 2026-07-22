@@ -1,0 +1,113 @@
+id	label	text
+greeting-001	greeting	Hello there
+greeting-002	greeting	Hi Eliza
+greeting-003	greeting	Hey, good to see you
+greeting-004	greeting	Good morning
+greeting-005	greeting	Good afternoon
+greeting-006	greeting	Good evening
+greeting-007	greeting	Greetings
+greeting-008	greeting	Hello again
+greeting-009	greeting	Hi there, lab
+greeting-010	greeting	I wanted to say hello
+greeting-011	greeting	Hey there
+greeting-012	greeting	Nice to meet you
+greeting-013	greeting	A quick hello before we start
+greeting-014	greeting	Welcome back
+greeting-015	greeting	Morning, Eliza
+greeting-016	greeting	It is good to be here
+feeling-001	feeling	I feel uncertain about my next step
+feeling-002	feeling	I am frustrated by the delay
+feeling-003	feeling	Today I feel calm
+feeling-004	feeling	That result left me worried
+feeling-005	feeling	I have been excited about the prototype
+feeling-006	feeling	The deadline makes me nervous
+feeling-007	feeling	I am disappointed with the outcome
+feeling-008	feeling	I feel proud of the progress
+feeling-009	feeling	The long queue was stressful
+feeling-010	feeling	I am relieved that the test passed
+feeling-011	feeling	I keep feeling stuck
+feeling-012	feeling	That change surprised me
+feeling-013	feeling	I feel curious about the result
+feeling-014	feeling	I am overwhelmed by the open tasks
+feeling-015	feeling	I am glad the build worked
+feeling-016	feeling	This choice leaves me uneasy
+reason-001	reason	I paused because the plan changed
+reason-002	reason	The build failed due to a missing file
+reason-003	reason	Since the deadline moved, I changed the scope
+reason-004	reason	The reason for the delay was an incomplete review
+reason-005	reason	A smaller dataset led to a faster experiment
+reason-006	reason	The test passed because the boundary was explicit
+reason-007	reason	I chose Rust for its strong type system
+reason-008	reason	The mismatch came from an outdated fixture
+reason-009	reason	That dependency explains the larger binary
+reason-010	reason	I changed direction after the first benchmark
+reason-011	reason	The noisy input caused an unstable result
+reason-012	reason	We reduced the scope so the experiment stayed measurable
+reason-013	reason	The second attempt worked thanks to a clean split
+reason-014	reason	The report is late as the data needed another check
+reason-015	reason	The interface is simpler because one step was removed
+reason-016	reason	A reproducible seed made the comparison possible
+ownership-001	ownership	My schedule changed this morning
+ownership-002	ownership	My project has three open tasks
+ownership-003	ownership	My plan needs another review
+ownership-004	ownership	My prototype is ready for testing
+ownership-005	ownership	My team uses a short release checklist
+ownership-006	ownership	My notes are spread across two documents
+ownership-007	ownership	My first attempt was too broad
+ownership-008	ownership	My local build is finally green
+ownership-009	ownership	My dataset contains only fictional examples
+ownership-010	ownership	My report still needs a conclusion
+ownership-011	ownership	My workstation runs the model offline
+ownership-012	ownership	My branch includes the latest fixes
+ownership-013	ownership	My preferred option is the smaller design
+ownership-014	ownership	My next review is on Friday
+ownership-015	ownership	My experiment uses a fixed seed
+ownership-016	ownership	My checklist catches missing files
+question-001	question	What should I inspect first?
+question-002	question	Where does the model store its weights?
+question-003	question	Can this run without a network connection?
+question-004	question	How do I reproduce the evaluation?
+question-005	question	Which feature influenced this prediction?
+question-006	question	Why was this example rejected?
+question-007	question	When should I retrain the classifier?
+question-008	question	Is the holdout split deterministic?
+question-009	question	Does the report include macro F1?
+question-010	question	Could the confidence threshold be higher?
+question-011	question	What happens when the input is unfamiliar?
+question-012	question	Who can verify the serialized model?
+question-013	question	Are the classes balanced?
+question-014	question	How many features were retained?
+question-015	question	Will the fallback remain available?
+question-016	question	What makes the result reproducible?
+goal-001	goal	I want to finish the prototype this week
+goal-002	goal	My next step is to write the evaluation tests
+goal-003	goal	I plan to simplify the command line interface
+goal-004	goal	I would like to publish a reproducible benchmark
+goal-005	goal	The goal is to remove the network dependency
+goal-006	goal	I aim to make the error messages clearer
+goal-007	goal	I need to validate the model artifact
+goal-008	goal	I intend to document every decision threshold
+goal-009	goal	I hope to complete the review tomorrow
+goal-010	goal	The target is a small and inspectable binary
+goal-011	goal	I am going to test the release archive
+goal-012	goal	I want a repeatable training command
+goal-013	goal	The next task is to compare the confusion matrices
+goal-014	goal	I would like to reduce uncertain predictions
+goal-015	goal	I plan on checking the browser parity fixture
+goal-016	goal	My objective is to keep inference entirely local
+observation-001	observation	The meeting ended twenty minutes early
+observation-002	observation	I noticed three warnings in the log
+observation-003	observation	The prototype contains four screens
+observation-004	observation	The current model file is versioned
+observation-005	observation	A fixed seed appears in the report
+observation-006	observation	The terminal printed a compact summary
+observation-007	observation	The browser retained only the visible session
+observation-008	observation	The second option has fewer moving parts
+observation-009	observation	The model produced an uncertain score
+observation-010	observation	The holdout rows are listed by identifier
+observation-011	observation	The source tree includes a small fixture
+observation-012	observation	The final row belongs to the observation class
+observation-013	observation	The weights are ordinary floating point values
+observation-014	observation	The local test completed in under a minute
+observation-015	observation	The classifier selected a single label
+observation-016	observation	The report records every class separately

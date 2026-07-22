@@ -5,6 +5,12 @@ on:
     branches: [master]
     paths:
       - "site/**"
+      - "models/**"
+      - "reports/**"
+      - "fixtures/**"
+      - "src/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -31,12 +37,32 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22.23.1
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
+        with:
+          toolchain: 1.81.0
       - run: node --test site/tests/*.test.mjs
-      - run: node site/scripts/validate-site.mjs
+      - name: Reproduce the model and report before deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo run --locked -- train \
+            --output target/pages-model.json \
+            --report target/pages-report.json
+          cmp models/eliza-intent-v1.json target/pages-model.json
+          cmp reports/eliza-intent-v1.json target/pages-report.json
+      - name: Stage the site with the verified model and report
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p pages-dist/data
+          cp -R site/. pages-dist/
+          cp models/eliza-intent-v1.json pages-dist/data/eliza-intent-v1.json
+          cp reports/eliza-intent-v1.json pages-dist/data/model-report-v1.json
+      - run: node site/scripts/validate-site.mjs --stage pages-dist
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: site
+          path: pages-dist
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

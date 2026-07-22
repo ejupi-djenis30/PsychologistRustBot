@@ -1,8 +1,8 @@
 # Contributing to ELIZA Lab
 
-ELIZA Lab explains a small rule-based dialogue engine. It is not therapy, diagnosis, crisis
-detection, or a substitute for a person. Contributions must keep that boundary obvious in code,
-copy, tests, and screenshots.
+ELIZA Lab implements a small, reproducible intent-classification pipeline with a deterministic
+dialogue fallback. It is not therapy, diagnosis, crisis detection, or a substitute for a person.
+Contributions must keep that boundary obvious in code, copy, data, tests, and screenshots.
 
 By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
@@ -19,13 +19,16 @@ cannot assess or monitor that situation.
 
 ## Local setup
 
-Install Rust 1.81 or newer and Node.js 20 or newer. The production engine has no third-party Rust
-dependencies.
+Install Rust 1.81 or newer and Node.js 20 or newer. Runtime inference is local; Serde is used only
+for the strict, versioned model and report formats.
 
 ```bash
 cargo fmt --check
 cargo clippy --all-targets -- -D warnings
 cargo test --all --locked
+cargo run --locked -- train --output target/model.json --report target/report.json
+cmp models/eliza-intent-v1.json target/model.json
+cmp reports/eliza-intent-v1.json target/report.json
 cargo build --release --locked
 node --test site/tests/*.test.mjs
 node site/scripts/validate-site.mjs
@@ -37,14 +40,19 @@ If you edit a workflow, run [`actionlint`](https://github.com/rhysd/actionlint) 
 ## What a good change includes
 
 - Add invented, non-sensitive test input for every behavior change.
-- Update both the Rust and JavaScript engines when their shared contract changes.
-- Add the case to `fixtures/parity.tsv` when both engines should produce the same trace.
+- Update both Rust and JavaScript inference when their shared model contract changes.
+- Add learned cases to `fixtures/ml-parity.tsv`; keep rule-only cases in `fixtures/parity.tsv`.
+- Regenerate `models/eliza-intent-v1.json` and `reports/eliza-intent-v1.json` after any supervised
+  corpus, OOD fixture, vectorizer, optimizer, or threshold-calibration change.
+- Never use holdout rows or their results to fit the vocabulary, weights, or decision thresholds.
+- Describe the 112-row corpus and 21-row holdout as synthetic educational fixtures. Do not turn
+  their metrics into a production-language claim.
 - Keep the 512-code-point input limit, bounded CLI reader, saturating turn count, and 40-turn browser
   transcript unless the PR explains and tests a safer replacement.
 - Describe safety phrase matching as a narrow exit condition. Do not call it detection, assessment,
   prevention, care, or clinical advice.
 - Keep the browser demo local-only: no analytics, accounts, transcript storage, remote models, or
-  network submission.
+  prompt submission. The checked-in model may load only as a same-origin static asset.
 - Avoid new dependencies unless a small standard-library implementation is clearly less safe.
 
 Safety phrase matching has known false positives and false negatives. A contribution must not hide

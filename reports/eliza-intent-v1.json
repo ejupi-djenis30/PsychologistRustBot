@@ -1,0 +1,1580 @@
+{
+  "schema_version": 1,
+  "model_kind": "eliza-intent-softmax",
+  "model_version": "1.0.0",
+  "dataset_fingerprint": "fnv1a64:e75750b1b0a83a78",
+  "seed": 20260722,
+  "total_examples": 112,
+  "class_counts": {
+    "feeling": 16,
+    "goal": 16,
+    "greeting": 16,
+    "observation": 16,
+    "ownership": 16,
+    "question": 16,
+    "reason": 16
+  },
+  "training_example_ids": [
+    "feeling-001",
+    "feeling-004",
+    "feeling-005",
+    "feeling-006",
+    "feeling-007",
+    "feeling-008",
+    "feeling-009",
+    "feeling-010",
+    "feeling-011",
+    "feeling-012",
+    "feeling-013",
+    "feeling-014",
+    "feeling-016",
+    "goal-001",
+    "goal-003",
+    "goal-005",
+    "goal-006",
+    "goal-007",
+    "goal-008",
+    "goal-009",
+    "goal-010",
+    "goal-011",
+    "goal-012",
+    "goal-013",
+    "goal-014",
+    "goal-015",
+    "greeting-001",
+    "greeting-002",
+    "greeting-003",
+    "greeting-004",
+    "greeting-005",
+    "greeting-006",
+    "greeting-009",
+    "greeting-010",
+    "greeting-011",
+    "greeting-013",
+    "greeting-014",
+    "greeting-015",
+    "greeting-016",
+    "observation-001",
+    "observation-002",
+    "observation-003",
+    "observation-004",
+    "observation-006",
+    "observation-007",
+    "observation-008",
+    "observation-009",
+    "observation-010",
+    "observation-011",
+    "observation-012",
+    "observation-013",
+    "observation-016",
+    "ownership-001",
+    "ownership-002",
+    "ownership-003",
+    "ownership-005",
+    "ownership-006",
+    "ownership-007",
+    "ownership-008",
+    "ownership-009",
+    "ownership-010",
+    "ownership-011",
+    "ownership-012",
+    "ownership-015",
+    "ownership-016",
+    "question-003",
+    "question-004",
+    "question-005",
+    "question-006",
+    "question-007",
+    "question-008",
+    "question-009",
+    "question-010",
+    "question-011",
+    "question-013",
+    "question-014",
+    "question-015",
+    "question-016",
+    "reason-001",
+    "reason-002",
+    "reason-003",
+    "reason-004",
+    "reason-005",
+    "reason-006",
+    "reason-007",
+    "reason-008",
+    "reason-009",
+    "reason-011",
+    "reason-013",
+    "reason-014",
+    "reason-015"
+  ],
+  "holdout_example_ids": [
+    "feeling-002",
+    "feeling-003",
+    "feeling-015",
+    "goal-002",
+    "goal-004",
+    "goal-016",
+    "greeting-007",
+    "greeting-008",
+    "greeting-012",
+    "observation-005",
+    "observation-014",
+    "observation-015",
+    "ownership-004",
+    "ownership-013",
+    "ownership-014",
+    "question-001",
+    "question-002",
+    "question-012",
+    "reason-010",
+    "reason-012",
+    "reason-016"
+  ],
+  "vocabulary_size": 512,
+  "training_metrics": {
+    "example_count": 91,
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "log_loss": 0.5692391706054384,
+    "coverage": 0.8681318681318682,
+    "selective_accuracy": 1.0,
+    "rejected_examples": 12,
+    "labels": [
+      "feeling",
+      "goal",
+      "greeting",
+      "observation",
+      "ownership",
+      "question",
+      "reason"
+    ],
+    "confusion_matrix": [
+      [
+        13,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        13,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        13,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        13,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        13,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        13,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        13
+      ]
+    ],
+    "per_class": [
+      {
+        "label": "feeling",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 13
+      },
+      {
+        "label": "goal",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 13
+      },
+      {
+        "label": "greeting",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 13
+      },
+      {
+        "label": "observation",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 13
+      },
+      {
+        "label": "ownership",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 13
+      },
+      {
+        "label": "question",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 13
+      },
+      {
+        "label": "reason",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 13
+      }
+    ],
+    "predictions": [
+      {
+        "id": "feeling-001",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6999160874693232,
+        "margin": 0.6316022698245944
+      },
+      {
+        "id": "feeling-004",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6657838236243727,
+        "margin": 0.5760874629574152
+      },
+      {
+        "id": "feeling-005",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.544008846846809,
+        "margin": 0.42232759912007756
+      },
+      {
+        "id": "feeling-006",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.45711966209673704,
+        "margin": 0.30286143884344646
+      },
+      {
+        "id": "feeling-007",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6148519784133537,
+        "margin": 0.4916583947932624
+      },
+      {
+        "id": "feeling-008",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6957083069302729,
+        "margin": 0.6052545955502804
+      },
+      {
+        "id": "feeling-009",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.3513834225993666,
+        "margin": 0.13227052804861106
+      },
+      {
+        "id": "feeling-010",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6194819744618446,
+        "margin": 0.5145532957695602
+      },
+      {
+        "id": "feeling-011",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6559266479217591,
+        "margin": 0.5332560035439127
+      },
+      {
+        "id": "feeling-012",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.4994639592859428,
+        "margin": 0.2586905145838223
+      },
+      {
+        "id": "feeling-013",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.7338196443671353,
+        "margin": 0.6409099569136858
+      },
+      {
+        "id": "feeling-014",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5574548777718459,
+        "margin": 0.4317201121576087
+      },
+      {
+        "id": "feeling-016",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.48598859833015556,
+        "margin": 0.3484909391436919
+      },
+      {
+        "id": "goal-001",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5500323567684133,
+        "margin": 0.4348690057020119
+      },
+      {
+        "id": "goal-003",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6466043092035871,
+        "margin": 0.5647816602929417
+      },
+      {
+        "id": "goal-005",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5549082433948483,
+        "margin": 0.38446092744353777
+      },
+      {
+        "id": "goal-006",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6444491693677615,
+        "margin": 0.5346167296275501
+      },
+      {
+        "id": "goal-007",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.4807639883388377,
+        "margin": 0.33843533357854527
+      },
+      {
+        "id": "goal-008",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.486794445490298,
+        "margin": 0.34841621203725737
+      },
+      {
+        "id": "goal-009",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6954958538815476,
+        "margin": 0.5962418309457309
+      },
+      {
+        "id": "goal-010",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.3474836777031412,
+        "margin": 0.15999602552169295
+      },
+      {
+        "id": "goal-011",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.4593582932765333,
+        "margin": 0.2054983006645585
+      },
+      {
+        "id": "goal-012",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5862399535490046,
+        "margin": 0.495151294256191
+      },
+      {
+        "id": "goal-013",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6298728053861053,
+        "margin": 0.5005580096734347
+      },
+      {
+        "id": "goal-014",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5019696146148128,
+        "margin": 0.3404141041933037
+      },
+      {
+        "id": "goal-015",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.3811366676380409,
+        "margin": 0.19827684424322192
+      },
+      {
+        "id": "greeting-001",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8450349859378737,
+        "margin": 0.8107403701221638
+      },
+      {
+        "id": "greeting-002",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.563582672839409,
+        "margin": 0.4442594548494019
+      },
+      {
+        "id": "greeting-003",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8085739694055368,
+        "margin": 0.7410950002477515
+      },
+      {
+        "id": "greeting-004",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8651549937637639,
+        "margin": 0.8334858412228888
+      },
+      {
+        "id": "greeting-005",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.801902113785968,
+        "margin": 0.76182140078336
+      },
+      {
+        "id": "greeting-006",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8383586221873872,
+        "margin": 0.8050351483873568
+      },
+      {
+        "id": "greeting-009",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6513103749919684,
+        "margin": 0.5695800004667492
+      },
+      {
+        "id": "greeting-010",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5012336317805132,
+        "margin": 0.27035653566482815
+      },
+      {
+        "id": "greeting-011",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.699810906118049,
+        "margin": 0.6418233930782294
+      },
+      {
+        "id": "greeting-013",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5936044763822836,
+        "margin": 0.5094496398395889
+      },
+      {
+        "id": "greeting-014",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.4311228620986038,
+        "margin": 0.26770507319232056
+      },
+      {
+        "id": "greeting-015",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.60256835549413,
+        "margin": 0.4959299006896999
+      },
+      {
+        "id": "greeting-016",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8420866362102611,
+        "margin": 0.7854317759369653
+      },
+      {
+        "id": "observation-001",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.577477091749304,
+        "margin": 0.44390217402638804
+      },
+      {
+        "id": "observation-002",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.31736390102110834,
+        "margin": 0.1862564577306484
+      },
+      {
+        "id": "observation-003",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.4934573466856435,
+        "margin": 0.3684764251595893
+      },
+      {
+        "id": "observation-004",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.538356081170847,
+        "margin": 0.40681737513490207
+      },
+      {
+        "id": "observation-006",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5132043404310914,
+        "margin": 0.3787114804574625
+      },
+      {
+        "id": "observation-007",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.49471347066649624,
+        "margin": 0.3823527492354274
+      },
+      {
+        "id": "observation-008",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.591140706348256,
+        "margin": 0.4725805612478058
+      },
+      {
+        "id": "observation-009",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5956700884573798,
+        "margin": 0.49890398748408765
+      },
+      {
+        "id": "observation-010",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5183037862535408,
+        "margin": 0.39248047184808454
+      },
+      {
+        "id": "observation-011",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.413556830718603,
+        "margin": 0.24230643015090172
+      },
+      {
+        "id": "observation-012",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5069821388717595,
+        "margin": 0.36844898109644125
+      },
+      {
+        "id": "observation-013",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6379584384308838,
+        "margin": 0.5548237953975175
+      },
+      {
+        "id": "observation-016",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.4427756306093413,
+        "margin": 0.21737366988294665
+      },
+      {
+        "id": "ownership-001",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.4791213329342326,
+        "margin": 0.37454684872388594
+      },
+      {
+        "id": "ownership-002",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6120695845203518,
+        "margin": 0.5178263057871344
+      },
+      {
+        "id": "ownership-003",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6290508233161537,
+        "margin": 0.5273179463376781
+      },
+      {
+        "id": "ownership-005",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.728982008440995,
+        "margin": 0.6720206486699324
+      },
+      {
+        "id": "ownership-006",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.715283038924259,
+        "margin": 0.6357999415427491
+      },
+      {
+        "id": "ownership-007",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.7324902734022902,
+        "margin": 0.6625155360823765
+      },
+      {
+        "id": "ownership-008",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.7054111307258949,
+        "margin": 0.628168943881855
+      },
+      {
+        "id": "ownership-009",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6524367978639876,
+        "margin": 0.5731791438083141
+      },
+      {
+        "id": "ownership-010",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6157448191123627,
+        "margin": 0.5062103989891739
+      },
+      {
+        "id": "ownership-011",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.4698875357307816,
+        "margin": 0.29738503821265394
+      },
+      {
+        "id": "ownership-012",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6321239642254929,
+        "margin": 0.5520308645737073
+      },
+      {
+        "id": "ownership-015",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.7661693510915116,
+        "margin": 0.6940096917034262
+      },
+      {
+        "id": "ownership-016",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.7395350258085455,
+        "margin": 0.6719033146568821
+      },
+      {
+        "id": "question-003",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6041737227412508,
+        "margin": 0.4984634170645969
+      },
+      {
+        "id": "question-004",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5588099093108652,
+        "margin": 0.4181040449173633
+      },
+      {
+        "id": "question-005",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6935379124197549,
+        "margin": 0.6308335880935977
+      },
+      {
+        "id": "question-006",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5501726905550258,
+        "margin": 0.4302081012609415
+      },
+      {
+        "id": "question-007",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6925033342010625,
+        "margin": 0.5889011885720887
+      },
+      {
+        "id": "question-008",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5262020874425655,
+        "margin": 0.42985408950406157
+      },
+      {
+        "id": "question-009",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.4766825081292535,
+        "margin": 0.35077832047583674
+      },
+      {
+        "id": "question-010",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.535788433806172,
+        "margin": 0.40198777298856087
+      },
+      {
+        "id": "question-011",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5405554269388413,
+        "margin": 0.4403924075497615
+      },
+      {
+        "id": "question-013",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5474911683171176,
+        "margin": 0.3649141378717546
+      },
+      {
+        "id": "question-014",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5163388170573987,
+        "margin": 0.4200914969309278
+      },
+      {
+        "id": "question-015",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.496079354558371,
+        "margin": 0.36665705181003794
+      },
+      {
+        "id": "question-016",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5857588960242273,
+        "margin": 0.4323579313810387
+      },
+      {
+        "id": "reason-001",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6317482486674652,
+        "margin": 0.5320395721915366
+      },
+      {
+        "id": "reason-002",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.41157219438793075,
+        "margin": 0.21265021137590442
+      },
+      {
+        "id": "reason-003",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.488783082161837,
+        "margin": 0.34498837618702466
+      },
+      {
+        "id": "reason-004",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5500952158722183,
+        "margin": 0.442111806330071
+      },
+      {
+        "id": "reason-005",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5049885176496471,
+        "margin": 0.3599967885967168
+      },
+      {
+        "id": "reason-006",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6849124107195187,
+        "margin": 0.6101658989185459
+      },
+      {
+        "id": "reason-007",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.4499126102411112,
+        "margin": 0.3130734084663506
+      },
+      {
+        "id": "reason-008",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.44494340616989375,
+        "margin": 0.21410515205922473
+      },
+      {
+        "id": "reason-009",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.3664861939288121,
+        "margin": 0.20070875185389325
+      },
+      {
+        "id": "reason-011",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5710412564798166,
+        "margin": 0.44947844848850255
+      },
+      {
+        "id": "reason-013",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.4508652240967426,
+        "margin": 0.26544014748266787
+      },
+      {
+        "id": "reason-014",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.41575091198211267,
+        "margin": 0.2630466234276357
+      },
+      {
+        "id": "reason-015",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6438941248957548,
+        "margin": 0.5562580347318604
+      }
+    ]
+  },
+  "holdout_metrics": {
+    "example_count": 21,
+    "accuracy": 0.6666666666666666,
+    "macro_f1": 0.6612244897959184,
+    "log_loss": 1.1975077484472954,
+    "coverage": 0.3333333333333333,
+    "selective_accuracy": 0.8571428571428571,
+    "rejected_examples": 14,
+    "labels": [
+      "feeling",
+      "goal",
+      "greeting",
+      "observation",
+      "ownership",
+      "question",
+      "reason"
+    ],
+    "confusion_matrix": [
+      [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        2,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        2,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        2,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2
+      ]
+    ],
+    "per_class": [
+      {
+        "label": "feeling",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 3
+      },
+      {
+        "label": "goal",
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "support": 3
+      },
+      {
+        "label": "greeting",
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "support": 3
+      },
+      {
+        "label": "observation",
+        "precision": 0.4,
+        "recall": 0.6666666666666666,
+        "f1": 0.5,
+        "support": 3
+      },
+      {
+        "label": "ownership",
+        "precision": 0.75,
+        "recall": 1.0,
+        "f1": 0.8571428571428571,
+        "support": 3
+      },
+      {
+        "label": "question",
+        "precision": 0.5,
+        "recall": 0.3333333333333333,
+        "f1": 0.4,
+        "support": 3
+      },
+      {
+        "label": "reason",
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "f1": 0.8,
+        "support": 3
+      }
+    ],
+    "predictions": [
+      {
+        "id": "feeling-002",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5460743149291752,
+        "margin": 0.43411368305176345
+      },
+      {
+        "id": "feeling-003",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6439279174041079,
+        "margin": 0.5732104059833881
+      },
+      {
+        "id": "feeling-015",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.42739415996561714,
+        "margin": 0.24741600909307945
+      },
+      {
+        "id": "goal-002",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.38742437445411776,
+        "margin": 0.13779297059287504
+      },
+      {
+        "id": "goal-004",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.5379387194709342,
+        "margin": 0.4342823789327709
+      },
+      {
+        "id": "goal-016",
+        "actual_label": "goal",
+        "predicted_label": "ownership",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.395726667058721,
+        "margin": 0.17275018964064898
+      },
+      {
+        "id": "greeting-007",
+        "actual_label": "greeting",
+        "predicted_label": "observation",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.28216698087733183,
+        "margin": 0.11478331368971342
+      },
+      {
+        "id": "greeting-008",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6053596674317182,
+        "margin": 0.5257448858977116
+      },
+      {
+        "id": "greeting-012",
+        "actual_label": "greeting",
+        "predicted_label": "goal",
+        "correct": false,
+        "accepted": true,
+        "confidence": 0.45599394453496245,
+        "margin": 0.33556465697280025
+      },
+      {
+        "id": "observation-005",
+        "actual_label": "observation",
+        "predicted_label": "question",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.2883852089578118,
+        "margin": 0.08044082132252778
+      },
+      {
+        "id": "observation-014",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.2833008717652493,
+        "margin": 0.06322013016073924
+      },
+      {
+        "id": "observation-015",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.4963516317827966,
+        "margin": 0.3549407777194632
+      },
+      {
+        "id": "ownership-004",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.4360613021760448,
+        "margin": 0.32642752239404005
+      },
+      {
+        "id": "ownership-013",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.3341457068633868,
+        "margin": 0.1670814319951554
+      },
+      {
+        "id": "ownership-014",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.6241296585248579,
+        "margin": 0.5321028434244146
+      },
+      {
+        "id": "question-001",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.3592241342814861,
+        "margin": 0.2231913280053174
+      },
+      {
+        "id": "question-002",
+        "actual_label": "question",
+        "predicted_label": "observation",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.2420051255631163,
+        "margin": 0.04646180843583447
+      },
+      {
+        "id": "question-012",
+        "actual_label": "question",
+        "predicted_label": "observation",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.38886420034231045,
+        "margin": 0.2511131250306637
+      },
+      {
+        "id": "reason-010",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.27735319707037304,
+        "margin": 0.12594374087973553
+      },
+      {
+        "id": "reason-012",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.32870447405448666,
+        "margin": 0.13680428177200563
+      },
+      {
+        "id": "reason-016",
+        "actual_label": "reason",
+        "predicted_label": "goal",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.320893928658237,
+        "margin": 0.03953787005057918
+      }
+    ]
+  },
+  "calibration": {
+    "strategy": "grid-search-training-plus-ood-v1",
+    "training_example_count": 91,
+    "ood_example_count": 20,
+    "maximum_ood_coverage": 0.0,
+    "minimum_training_selective_accuracy": 0.98,
+    "selected_thresholds": {
+      "minimum_confidence": 0.45,
+      "minimum_margin": 0.2
+    },
+    "observed_training_coverage": 0.8681318681318682,
+    "observed_training_selective_accuracy": 1.0,
+    "observed_ood_coverage": 0.0,
+    "holdout_used_for_calibration": false
+  },
+  "ood_metrics": {
+    "example_count": 20,
+    "accepted_examples": 0,
+    "rejected_examples": 20,
+    "coverage": 0.0,
+    "abstention_rate": 1.0,
+    "mean_confidence": 0.2575401388107952,
+    "mean_margin": 0.07782770672653731,
+    "predictions": [
+      {
+        "id": "ood-001",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.2702603076596085,
+        "margin": 0.05700292905776491
+      },
+      {
+        "id": "ood-002",
+        "predicted_label": "goal",
+        "accepted": false,
+        "confidence": 0.3166912051835947,
+        "margin": 0.07807313403891555
+      },
+      {
+        "id": "ood-003",
+        "predicted_label": "greeting",
+        "accepted": false,
+        "confidence": 0.24171855934103342,
+        "margin": 0.046249181988775284
+      },
+      {
+        "id": "ood-004",
+        "predicted_label": "feeling",
+        "accepted": false,
+        "confidence": 0.19156477397415042,
+        "margin": 0.006464509128917023
+      },
+      {
+        "id": "ood-005",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.33279285806552394,
+        "margin": 0.15407803498923792
+      },
+      {
+        "id": "ood-006",
+        "predicted_label": "feeling",
+        "accepted": false,
+        "confidence": 0.20767976865111717,
+        "margin": 0.027638418388877456
+      },
+      {
+        "id": "ood-007",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.24917128521201312,
+        "margin": 0.0964307381890297
+      },
+      {
+        "id": "ood-008",
+        "predicted_label": "goal",
+        "accepted": false,
+        "confidence": 0.38309721237407346,
+        "margin": 0.24583086762942558
+      },
+      {
+        "id": "ood-009",
+        "predicted_label": "goal",
+        "accepted": false,
+        "confidence": 0.2725065073342931,
+        "margin": 0.07646045225949413
+      },
+      {
+        "id": "ood-010",
+        "predicted_label": "reason",
+        "accepted": false,
+        "confidence": 0.3743333975347401,
+        "margin": 0.21507084953316397
+      },
+      {
+        "id": "ood-011",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.19991728093981648,
+        "margin": 0.01198281537909568
+      },
+      {
+        "id": "ood-012",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.4454943051993184,
+        "margin": 0.2631390370924014
+      },
+      {
+        "id": "ood-013",
+        "predicted_label": "reason",
+        "accepted": false,
+        "confidence": 0.19261187598378698,
+        "margin": 0.028939096909982087
+      },
+      {
+        "id": "ood-014",
+        "predicted_label": "goal",
+        "accepted": false,
+        "confidence": 0.26079750394215573,
+        "margin": 0.05475547084810456
+      },
+      {
+        "id": "ood-015",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.2701618974396396,
+        "margin": 0.0940450278312695
+      },
+      {
+        "id": "ood-016",
+        "predicted_label": "goal",
+        "accepted": false,
+        "confidence": 0.19468561986211366,
+        "margin": 0.006720432181303415
+      },
+      {
+        "id": "ood-017",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.20915515095500403,
+        "margin": 0.02670922238167392
+      },
+      {
+        "id": "ood-018",
+        "predicted_label": "greeting",
+        "accepted": false,
+        "confidence": 0.17432426509171597,
+        "margin": 0.021908980271614864
+      },
+      {
+        "id": "ood-019",
+        "predicted_label": "greeting",
+        "accepted": false,
+        "confidence": 0.17432426509171597,
+        "margin": 0.021908980271614864
+      },
+      {
+        "id": "ood-020",
+        "predicted_label": "reason",
+        "accepted": false,
+        "confidence": 0.18951473638048907,
+        "margin": 0.023145956160084413
+      }
+    ]
+  }
+}

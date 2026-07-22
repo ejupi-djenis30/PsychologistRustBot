@@ -1,31 +1,37 @@
 <p align="center">
-  <img src="site/assets/eliza-lab-lockup.svg" width="720" alt="ELIZA Lab — transparent dialogue, entirely local" />
+  <img src="site/assets/eliza-lab-lockup.svg" width="720" alt="ELIZA Lab — local machine learning you can inspect" />
 </p>
 
 # ELIZA Lab
 
 [![CI](https://github.com/ejupi-djenis30/PsychologistRustBot/actions/workflows/ci.yml/badge.svg)](https://github.com/ejupi-djenis30/PsychologistRustBot/actions/workflows/ci.yml)
 
-> A transparent, local-only conversation engine for learning how early rule-based dialogue systems work.
+> Train a real intent classifier locally, reproduce its evaluation, and inspect every decision.
 
 This repository began as a Telegram “psychologist” bot. That framing was misleading, and the
 implementation stored sensitive conversations in an insecure database. The project has been
-rebuilt as **ELIZA Lab**: an educational Rust engine and browser demo with no accounts, network
-calls, transcript storage, diagnosis, or therapeutic claims.
+rebuilt as **ELIZA Lab**: an educational Rust machine-learning pipeline and browser lab with no
+accounts, prompt submission, transcript storage, diagnosis, or therapeutic claims.
 
 [Open the interactive demo](https://ejupi-djenis30.github.io/PsychologistRustBot/) ·
-[Support](SUPPORT.md) · [Read the safety model](SECURITY.md)
+[Model card](docs/MODEL_CARD.md) · [Dataset contract](docs/DATASET.md) ·
+[Architecture](docs/ARCHITECTURE.md) · [Safety model](SECURITY.md)
 
 ## What makes it useful
 
-- **Rule traces:** every response names the pattern that produced it.
-- **Private by construction:** the Rust CLI and web demo run locally and do not store input.
-- **Deterministic:** the same turn sequence produces the same fallback sequence.
-- **Honest boundaries:** a small phrase list exits the experiment instead of imitating care. It
-  is deliberately not presented as crisis detection.
-- **Bounded sessions:** prompts stop at 512 Unicode code points, CLI lines are byte-bounded, and
-  the browser retains at most 40 visible turns.
-- **Cross-runtime contract:** Rust and JavaScript run against the same response corpus in CI.
+- **A complete learning pipeline:** strict TSV validation, a deterministic stratified split,
+  training-only vocabulary fitting, TF-IDF features, multinomial logistic regression, evaluation,
+  uncertainty calibration, serialization, and inference live in the repository.
+- **Inspectable predictions:** JSON and browser traces expose all class probabilities, confidence,
+  top-two margin, and the strongest positive feature contributions.
+- **Reproducible artifacts:** two identical training runs produce byte-identical model and report
+  files. The report records every split ID and every holdout prediction.
+- **Real abstention:** thresholds are selected from training plus a separate OOD fixture without
+  looking at the holdout. Inputs with weak evidence use a deterministic fallback.
+- **Private by construction:** CLI and browser inference are local. Prompts are not stored or sent
+  to a model service.
+- **Hard non-clinical boundary:** input limits and explicit safety-stop phrases run before ML
+  inference. The stop is not presented as crisis detection.
 
 ## Install a verified build
 
@@ -45,22 +51,48 @@ Compare it with the matching `.sha256` file or `SHA256SUMS`, then verify its Git
 gh attestation verify <downloaded-archive> --repo ejupi-djenis30/PsychologistRustBot
 ```
 
-Extract the archive and run the included `eliza-lab` executable. It needs no account, network
-connection, model download, or database.
+Extract the archive and run the included `eliza-lab` executable. Model `1.0.0` and the synthetic
+fixtures are embedded, so inference, evaluation, and retraining need no separate model download.
+The application version (`1.2.0`) and model version are intentionally independent.
 
 ## Run it
 
-To build and run from source instead:
+Inspect one learned prediction:
 
 ```bash
-cargo run
+cargo run --locked -- infer --json "Today I feel calm"
 ```
 
-For a single deterministic response:
+Start an uncertainty-aware local session:
 
 ```bash
-cargo run -- --once "I feel uncertain about my next step"
+cargo run --locked -- chat
 ```
+
+Rebuild the checked-in model and evaluation report from the embedded synthetic fixtures:
+
+```bash
+cargo run --locked -- train
+cargo run --locked -- evaluate
+```
+
+Use `--dataset`, `--ood`, `--model`, `--output`, or `--report` to supply explicit paths. The CLI
+refuses collisions between inputs and outputs. The original deterministic rule mode remains
+available for comparison:
+
+```bash
+cargo run --locked -- --once "I feel uncertain about my next step"
+```
+
+## Honest evaluation boundary
+
+The checked-in corpus has 112 synthetic English examples. Seed `20260722` produces 91 training
+rows and a 21-row holdout. On that small holdout the model records 14/21 raw accuracy, macro-F1
+`0.661`, and 7/21 decision coverage; 6 of the 7 accepted predictions are correct. It accepts 0 of
+20 rows in the separate synthetic OOD fixture used during threshold selection.
+
+Those figures verify this pipeline. They do not demonstrate production NLP generalization. Read
+the [model card](docs/MODEL_CARD.md) before interpreting them.
 
 ## Verify it
 
@@ -98,7 +130,7 @@ GitHub Release assembled by the workflow.
 
 A release can only be published from a `v*` tag pushed for the version in `Cargo.toml`, with a dated
 section for that version in `CHANGELOG.md` and no pending text under `Unreleased`. For example,
-version `1.1.2` accepts `v1.1.2` and rejects every other tag. The workflow assembles all four native
+version `1.2.0` accepts `v1.2.0` and rejects every other tag. The workflow assembles all four native
 archives from verified file-descriptor snapshots, creates a consolidated `SHA256SUMS` file covering
 every release asset, and adds GitHub provenance attestations. The publish job independently verifies
 each attestation against this repository, workflow, tag ref, and source commit before it can touch a
@@ -138,21 +170,26 @@ To test a proposed tag without creating one, start the **Release** workflow manu
 the tag in `release_tag`, or run:
 
 ```bash
-node scripts/release-contract.mjs verify --tag v1.1.2
+node scripts/release-contract.mjs verify --tag v1.2.0
 ```
 
 ## Architecture
 
 ```text
-src/lib.rs       pure rule engine and trace model
-src/main.rs      local CLI adapter
-site/            static explanatory interface for GitHub Pages
-site/tests/      browser-engine regression tests
+src/ml.rs                   data, vectorizer, training, metrics, model IO
+src/lib.rs                  hard boundaries and dialogue routing
+src/main.rs                 train / evaluate / infer / chat CLI
+fixtures/                   supervised, OOD, and parity corpora
+models/                     versioned learned artifact
+reports/                    generated split, calibration, and metrics
+site/ml-engine.mjs          browser implementation of model inference
+docs/                       model card, dataset contract, architecture
 ```
 
-The production engine has no third-party runtime dependencies. It keeps only a saturating turn
-counter in memory. The browser demo mirrors the same documented rule order, and both engines run
-against [`fixtures/parity.tsv`](fixtures/parity.tsv) to prevent silent response drift.
+Rust and JavaScript run the same versioned model against
+[`fixtures/ml-parity.tsv`](fixtures/ml-parity.tsv). The original rule fallback retains its separate
+[`fixtures/parity.tsv`](fixtures/parity.tsv) contract. See [the architecture document](docs/ARCHITECTURE.md)
+for data flow and failure behavior.
 
 The safety phrase list is only an exit condition for the experiment. It can miss urgent language
 and can match benign discussion of a phrase. Never use this project to assess a person or decide
