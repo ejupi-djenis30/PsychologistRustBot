@@ -12,6 +12,9 @@ psychologist, therapist, medical device, crisis service, or source of diagnosis.
 
 - The dialogue engine stores only a saturating numeric turn counter; model weights are read-only.
 - The command-line application does not write transcripts or analytics.
+- Open-set batch inference reads bounded JSONL, emits one result at a time, and does not retain a
+  transcript. Bundle verification rejects symlinks, oversized files and SHA-256 mismatches before
+  inference.
 - The GitHub Pages demo downloads the versioned model as a same-origin static asset, then performs
   feature extraction and inference in the tab without submitting prompts.
 - There are no accounts, cookies, databases, API keys, or remote models.

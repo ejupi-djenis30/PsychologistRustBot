@@ -4,6 +4,7 @@
 //! intent routing, but input limits and the non-clinical safety exit always run before inference.
 
 pub mod ml;
+pub mod open_set;
 
 pub const MAX_INPUT_CHARS: usize = 512;
 
@@ -238,6 +239,102 @@ impl ElizaEngine {
             top_features: prediction.top_features.clone(),
         };
 
+        if accepted {
+            Reply {
+                text: response
+                    .expect("accepted predictions have a mapped response")
+                    .into(),
+                rule_id: "ml-intent",
+                keyword: Some(prediction.label),
+                transformed_fragment: None,
+                turn,
+                model_trace: Some(model_trace),
+            }
+        } else {
+            Reply {
+                text: FALLBACKS[(turn - 1) % FALLBACKS.len()].into(),
+                rule_id: "ml-abstain",
+                keyword: Some(prediction.label),
+                transformed_fragment: None,
+                turn,
+                model_trace: Some(model_trace),
+            }
+        }
+    }
+
+    /// Uses the primary open-set bundle while keeping the same hard input and safety boundaries as
+    /// the legacy classifier. The operating policy, including abstention, is owned by the bundle.
+    pub fn respond_with_open_set(
+        &mut self,
+        input: &str,
+        runtime: &open_set::CompiledModel,
+    ) -> Reply {
+        self.turn = self.turn.saturating_add(1);
+        let turn = self.turn;
+        let trimmed = input.trim();
+        if trimmed.is_empty() {
+            return reply(
+                "Take your time. What would you like to examine?",
+                "empty-input",
+                None,
+                None,
+                turn,
+            );
+        }
+        if trimmed.chars().nth(MAX_INPUT_CHARS).is_some() {
+            return reply(
+                "That is more text than this small teaching demo can inspect at once. Try one short thought.",
+                "input-boundary",
+                None,
+                None,
+                turn,
+            );
+        }
+        let normalized = normalize(trimmed);
+        if SAFETY_PHRASES
+            .iter()
+            .any(|phrase| contains_phrase(&normalized, phrase))
+        {
+            return reply(
+                "This demo cannot assess or support an emergency. If you might act on thoughts of suicide or self-harm, call your local emergency number now or reach a trusted person who can stay with you.",
+                "safety-boundary",
+                Some("matched safety phrase"),
+                None,
+                turn,
+            );
+        }
+
+        let prediction = runtime.predict(trimmed);
+        let response = match prediction.label.as_str() {
+            "greeting" => Some("Hello. What would you like to examine today?"),
+            "feeling" => Some("Which part of that feeling would be useful to examine?"),
+            "reason" => Some("Which part of that explanation matters most here?"),
+            "ownership" => Some("How does that situation affect what you can do next?"),
+            "question" => Some("What answer would feel most useful to explore?"),
+            "goal" => Some("What is the smallest concrete step you could test next?"),
+            "observation" => Some("What part of that observation stands out most to you?"),
+            _ => None,
+        };
+        let accepted = prediction.accepted && response.is_some();
+        let model_trace = ModelTrace {
+            model_version: runtime.model().model_version.clone(),
+            label: prediction.label.clone(),
+            accepted,
+            confidence: prediction.confidence,
+            margin: prediction.probability_margin,
+            probabilities: prediction.probabilities.clone(),
+            top_features: prediction
+                .explanation
+                .top_contributions
+                .iter()
+                .map(|contribution| ml::FeatureContribution {
+                    feature: contribution.feature.clone(),
+                    value: contribution.value,
+                    weight: contribution.top_weight - contribution.runner_up_weight,
+                    contribution: contribution.contribution,
+                })
+                .collect(),
+        };
         if accepted {
             Reply {
                 text: response

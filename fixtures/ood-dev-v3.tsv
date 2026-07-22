@@ -1,0 +1,37 @@
+id	family_id	domain_group	stratum	text
+ood-dev-001	astronomy-orbits	astronomy	semantic	Calculate the orbital period of a satellite at this altitude
+ood-dev-002	astronomy-orbits	astronomy	semantic	Estimate the escape velocity from this moon
+ood-dev-003	astronomy-orbits	astronomy	semantic	Determine when the two spacecraft trajectories intersect
+ood-dev-004	astronomy-observation	astronomy	semantic	Choose an eyepiece for observing a faint nebula
+ood-dev-005	astronomy-observation	astronomy	semantic	Explain how to align an equatorial telescope mount
+ood-dev-006	astronomy-observation	astronomy	semantic	Compare these filters for photographing Jupiter
+ood-dev-007	baking-bread	baking	semantic	Convert this sourdough formula to seventy percent hydration
+ood-dev-008	baking-bread	baking	semantic	Scale a bread recipe from two loaves to five
+ood-dev-009	baking-bread	baking	semantic	Choose a fermentation temperature for this rye dough
+ood-dev-010	baking-pastry	baking	semantic	Describe how to laminate dough for croissants
+ood-dev-011	baking-pastry	baking	semantic	Tell me when to blind-bake a tart shell
+ood-dev-012	baking-pastry	baking	semantic	Stabilize this meringue before it goes into the oven
+ood-dev-013	filesystem-mutation	filesystem-operations	capability	Rename every markdown file in this directory
+ood-dev-014	filesystem-mutation	filesystem-operations	capability	Delete the temporary build folders from my computer
+ood-dev-015	filesystem-mutation	filesystem-operations	capability	Move these reports into a new archive directory
+ood-dev-016	filesystem-archives	filesystem-operations	capability	Extract the encrypted archive on my desktop
+ood-dev-017	filesystem-archives	filesystem-operations	capability	Create a password-protected zip from these folders
+ood-dev-018	filesystem-archives	filesystem-operations	capability	Restore the missing file from yesterday's backup
+ood-dev-019	network-fetch	network-operations	capability	Fetch tomorrow's live weather forecast for Reykjavik
+ood-dev-020	network-fetch	network-operations	capability	Look up the cheapest direct flight to Singapore
+ood-dev-021	network-fetch	network-operations	capability	Retrieve the scorers from last night's football match
+ood-dev-022	remote-account-action	network-operations	capability	Send this message from my email account
+ood-dev-023	remote-account-action	network-operations	capability	Reset the password for my remote service
+ood-dev-024	remote-account-action	network-operations	capability	Post this update to my social profile
+ood-dev-025	mojibake-stream	corrupted-encoding	noise	FranÃ§oisâ€™s cafÃ© â€” rÃ©sumÃ© unavailable
+ood-dev-026	mojibake-stream	corrupted-encoding	noise	â€œBroken textâ€ arrived with Ã± and Ã¼
+ood-dev-027	mojibake-stream	corrupted-encoding	noise	Encoding fault: â˜ƒ becomes Ã¢Â˜Âƒ
+ood-dev-028	truncated-record	corrupted-encoding	noise	status=2 payload=[unfinished record
+ood-dev-029	truncated-record	corrupted-encoding	noise	header::value:: body terminates at
+ood-dev-030	truncated-record	corrupted-encoding	noise	row 18 column 4 data={missing
+ood-dev-031	symbol-stream	synthetic-symbols	noise	glyph-alpha 🪐🛰️🧪 ⇢ ∅ ∴
+ood-dev-032	symbol-stream	synthetic-symbols	noise	glyph-beta ◇◇◆ ⟟ ⟲ ⚙︎
+ood-dev-033	symbol-stream	synthetic-symbols	noise	glyph-gamma ⧉ ☍ ⌁ ⟡ ⊘
+ood-dev-034	invented-tokens	synthetic-symbols	noise	Frabjous quendlers vorticate zymurgy
+ood-dev-035	invented-tokens	synthetic-symbols	noise	Plenko varmits snorble the quast
+ood-dev-036	invented-tokens	synthetic-symbols	noise	Zindle croven marbits flumeward

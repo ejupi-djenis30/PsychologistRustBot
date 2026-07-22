@@ -1,61 +1,128 @@
 # Dataset contract
 
+ELIZA Lab v3 uses four synthetic, English-only fixtures. They are designed to exercise the
+pipeline without collecting conversations or importing personal data. They are not evidence of
+population-level language understanding.
+
 ## Supervised corpus
 
-[`fixtures/intents-v1.tsv`](../fixtures/intents-v1.tsv) is UTF-8 TSV with this exact header:
+[`fixtures/intents-v3.tsv`](../fixtures/intents-v3.tsv) has this exact UTF-8 TSV schema:
 
 ```text
-id<TAB>label<TAB>text
+id<TAB>group_id<TAB>label<TAB>text
 ```
 
-Every row must have a non-empty stable ID, a lowercase label, and a fictional English prompt no
-longer than 512 Unicode code points. IDs and normalized text must be unique. Each label needs at
-least five rows so a stratified train/holdout split is possible. Rows must contain exactly the
-documented number of tab-separated fields; tabs inside IDs, labels, or prompt text are rejected.
+The frozen corpus contains 525 prompts: seven labels, fifteen paraphrase families per label and
+five prompts per family. A family belongs to exactly one label. Family support must be uniform and
+at least three prompts; this prevents the row count itself from revealing which families will land
+in training or evaluation.
 
-| Label | Narrow meaning in this dataset |
+| Label | Meaning inside this dataset |
 | --- | --- |
 | `greeting` | An opening or salutation |
 | `feeling` | A direct statement of an emotional state |
-| `reason` | An explanation, cause, or consequence |
-| `ownership` | A statement centered on the speaker's own object, plan, or context |
+| `reason` | An explanation, cause or consequence |
+| `ownership` | A statement about the speaker's own object, plan or context |
 | `question` | A direct request for an answer or explanation |
-| `goal` | An intention, objective, or next step |
+| `goal` | An intention, objective or next step |
 | `observation` | A descriptive statement without another listed intent |
 
-The corpus has 112 synthetic rows, 16 for each class. It was written for this repository and does
-not contain real conversations or personal, clinical, account, or contact data.
+IDs, normalized texts and model-feature identities must be unique. The parser also rejects empty
+fields, unknown labels, oversized text, groups that cross labels and datasets that cannot populate
+all four partitions.
 
-## Reproducible split
+### Near-duplicate gate
 
-ELIZA Lab groups rows by label, orders them using a stable FNV-1a hash of the seed, ID, label, and
-normalized text, and places 20% of each class in holdout. Seed `20260722` yields 91 train rows and
-21 holdout rows, three per class. IDs for both partitions are written to the model report.
+The audit uses the exact feature families consumed by the model: normalized word uni- and bigrams
+plus character 3-, 4- and 5-grams. It rejects:
 
-The vectorizer is fit after the split and receives only training rows. A regression test constructs
-holdout-only terms and verifies that none enter the vocabulary.
+- any cross-family pair with raw feature Jaccard similarity greater than or equal to `0.30`;
+- any same-label cross-family pair with residual Jaccard similarity greater than or equal to
+  `0.25`, after removing features present in at least three families of that label.
 
-The dataset fingerprint sorts canonical rows before hashing, so reordering the TSV does not invent
-a new dataset identity. FNV is used for deterministic identity and partitioning, not security.
+The search is prefix-indexed. It does not enumerate every possible pair, and it fails closed after
+500,000 candidate pairs or 5,000,000 posting comparisons. Tests cover both the rejection rule and
+the workload boundary.
 
-## Out-of-domain fixture
+## Four-way supervised split
 
-[`fixtures/ood-v1.tsv`](../fixtures/ood-v1.tsv) uses this header:
+The split hashes whole families within each label. For fifteen families per label it assigns nine
+families to training and two each to development, calibration and ID-test.
+
+| Partition | Families | Rows | May influence |
+| --- | ---: | ---: | --- |
+| Train | 63 | 315 | Vocabulary, IDF and classifier weights |
+| Development | 14 | 70 | Candidate selection and abstention thresholds |
+| Calibration | 14 | 70 | Temperature scaling only |
+| ID-test | 14 | 70 | Final in-domain metrics only |
+
+Every label appears in every partition. No family crosses a partition. The seed and every row
+assignment are stored in `split-plan.json`; the plan's SHA-256 is linked from the model, policy,
+metrics and bundle manifest.
+
+## OOD populations
+
+[`fixtures/ood-dev-v3.tsv`](../fixtures/ood-dev-v3.tsv) and
+[`fixtures/ood-test-v3.tsv`](../fixtures/ood-test-v3.tsv) use:
 
 ```text
-id<TAB>text
+id<TAB>family_id<TAB>domain_group<TAB>stratum<TAB>text
 ```
 
-Its 20 synthetic rows intentionally ask for unrelated capabilities. They have no labels because
-forcing them into one of the seven in-domain classes would create a false ground truth. Threshold
-calibration can measure how many pass or abstain, but cannot report OOD accuracy.
+Each population contains 36 prompts, twelve families, six broader domains and three prompts per
+family. The three strata are balanced at twelve rows each:
 
-Neither supervised holdout rows nor their metrics participate in threshold selection. Calibration
-accepts the typed deterministic split, verifies its dataset fingerprint and seed, reconstructs the
-train/holdout boundary, and rejects any OOD ID or normalized text that overlaps supervised data.
+- `semantic`: coherent requests outside the seven intent definitions;
+- `capability`: requests that would require an external side effect or unavailable tool;
+- `noise`: corrupted, synthetic or incomplete input.
 
-## Editing the corpus
+Each broader domain contains two families and belongs to one stratum. Development and test use
+different families and different broader domains. OOD-development may select the abstention
+policy. OOD-test is evaluated only after model, temperature and thresholds are frozen.
 
-A corpus change creates a new fingerprint and can move both the deterministic split and learned
-weights. A pull request that changes data must therefore regenerate the model and report, explain
-the class-level effect, and keep all examples fictional and non-clinical.
+The bootstrap resamples OOD-test by broader domain, not by sentence. Per-stratum coverage and
+discrimination metrics are reported separately so a good aggregate cannot hide one weak category.
+
+## Paired contrast test
+
+[`fixtures/contrast-test-v3.tsv`](../fixtures/contrast-test-v3.tsv) uses:
+
+```text
+id<TAB>pair_id<TAB>variant<TAB>label<TAB>text
+```
+
+It contains 28 prompts in fourteen two-row pairs. Each pair has one `a` and one `b` variant with
+different intent labels. The surrounding wording is deliberately similar while the decisive
+meaning changes. All seven labels appear exactly four times. This makes a separate anti-shortcut
+check: the report measures row accuracy, macro F1, pair accuracy, prediction-flip rate and
+abstention coverage.
+
+The contrast test is never passed to model selection, fitting, calibration or threshold selection.
+It is opened only after the model and policy are frozen. It is still a small, synthetic,
+source-authored test rather than an external benchmark.
+
+## Editing and release discipline
+
+A fixture edit invalidates its SHA-256, split, weights and metrics. Freeze the supervised, both OOD
+fixtures and the contrast test first, record their hashes, derive a fresh deterministic seed, and
+then run the final evaluation once. Do not rewrite prompts, choose a new seed or tune the model
+after inspecting the frozen ID-test, OOD-test or contrast-test results.
+
+### Final v3 freeze
+
+The final source fixtures were frozen before the release evaluation with these raw-file and
+canonical model-row SHA-256 digests:
+
+| Fixture | Raw file SHA-256 | Canonical row fingerprint |
+| --- | --- | --- |
+| `intents-v3.tsv` | `6c025bd19fe196273107f82c60a1d59efec939c6ab0e2b7fefe45a1243dae82a` | `efc3d4a3f38d8bf3f81026b72bbd5394de779e654d793bae638fed48485f269c` |
+| `ood-dev-v3.tsv` | `dbc6525969a9a4512c75324a24a67db4d0618b061114114ab0e04c5f7c744b9a` | `71d012f7ee16acb666bcc333473148705c8554c839042ad604744e234b7614a9` |
+| `ood-test-v3.tsv` | `8ff19c105423c08ff81fa702874ada69824d8798d7b786db5dcec1f30d36743a` | `ff9cea872481cf69944fa98406727a1c4c09120d1e0a38fbab6d2150a734a00c` |
+| `contrast-test-v3.tsv` | `90c413ab970e5f1d9e0d2ea1c85f2a542a1bcd2319a4fde4ce97b9fc745d8a56` | `8f4427267cdc4aa58ff3a2e64968f0c6f1784edb98e5e81cbfb6f250fdb4fa3f` |
+
+The seed is derived mechanically. In the table order above, concatenate the domain separator
+`eliza-open-set-v3-final-seed`, a newline, each lowercase raw digest followed by a newline, hash
+that UTF-8 string with SHA-256, interpret the first eight digest bytes as an unsigned big-endian
+integer, and reduce it modulo `2^53`. The seed-material digest is
+`a70e5d2d9fa2c31386d1adaa2a2bb9163f8641f740ab719928bdd8a7d8e1aae3`; the resulting experiment
+seed is `4043100207104787`. It was fixed without observing final ID, OOD or contrast metrics.

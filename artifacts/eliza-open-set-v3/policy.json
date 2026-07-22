@@ -1,0 +1,14 @@
+{
+  "schema_version": 3,
+  "model_version": "3.0.0",
+  "dataset_sha256": "efc3d4a3f38d8bf3f81026b72bbd5394de779e654d793bae638fed48485f269c",
+  "split_plan_sha256": "94b02ab4dcc7b8ec34ed7e1c6b9c2aef4b67801d5b2389d7ba54551d5362c333",
+  "temperature": 0.184848849699,
+  "minimum_confidence": 0.7,
+  "minimum_probability_margin": 0.4,
+  "temperature_source": "calibration-partition-temperature-scaling-v3",
+  "threshold_source": "fixed-development-plus-ood-development-grid-v3",
+  "calibration_example_count": 70,
+  "development_example_count": 70,
+  "ood_development_example_count": 36
+}

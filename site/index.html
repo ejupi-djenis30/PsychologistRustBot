@@ -32,7 +32,7 @@
     <meta name="twitter:image:alt" content="ELIZA Lab showing a local intent prediction and its inspectable feature trace." />
     <link rel="canonical" href="https://ejupi-djenis30.github.io/PsychologistRustBot/" />
     <link rel="icon" href="assets/eliza-lab-mark.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css?v=1.2.0-2" />
+    <link rel="stylesheet" href="styles.css?v=1.3.0-1" />
     <title>ELIZA Lab — Train it. Inspect it.</title>
   </head>
   <body id="top">
@@ -45,7 +45,7 @@
       <nav aria-label="Primary navigation">
         <a href="#experiment">Inference</a>
         <a href="#method">Pipeline</a>
-        <a href="#report">Model report</a>
+        <a href="#open-set-v3">Model report</a>
         <a href="#safety">Boundaries</a>
       </nav>
       <a class="source-link" href="https://github.com/ejupi-djenis30/PsychologistRustBot">
@@ -67,8 +67,8 @@
             <a class="button button-quiet" href="#method">Open the pipeline</a>
           </div>
           <ul class="hero-facts" aria-label="Project facts">
-            <li>112 synthetic examples</li>
-            <li>7 intent classes</li>
+            <li>525 reviewed prompts</li>
+            <li>105 paraphrase families</li>
             <li>No prompt telemetry</li>
           </ul>
         </div>
@@ -78,10 +78,10 @@
           <div class="dialogue-flow model-flow">
             <div class="dialogue-card dialogue-card-a">
               <span>FEATURE SPACE</span>
-              <p>TF-IDF word and character n-grams / 512 retained features</p>
+              <p>TF-IDF word and character n-grams / development-selected feature budget</p>
             </div>
             <span class="flow-track"></span>
-            <div class="trace-stamp"><span>SOFTMAX V1</span><strong>7 CLASSES → SCORE</strong></div>
+            <div class="trace-stamp"><span>OPEN-SET V3</span><strong>7 INTENTS + ABSTAIN</strong></div>
             <span class="flow-track"></span>
             <div class="dialogue-card dialogue-card-b">
               <span>DECISION GATE</span>
@@ -135,7 +135,7 @@
               <div class="samples" aria-label="Example prompts">
                 <button type="button" data-sample="Today I feel calm" data-model-gated disabled>Feeling</button>
                 <button type="button" data-sample="I want to finish the prototype this week" data-model-gated disabled>Goal</button>
-                <button type="button" data-sample="Calculate the orbital period of a satellite" data-model-gated disabled>OOD test</button>
+                <button type="button" data-sample="Calculate the orbital period of a satellite" data-model-gated disabled>OOD probe</button>
               </div>
             </div>
 
@@ -172,12 +172,12 @@
           <article>
             <span>01 / VALIDATE</span>
             <h3>Reject bad rows.</h3>
-            <p>The TSV parser enforces unique IDs and text, field boundaries and minimum class support.</p>
+            <p>The parser enforces equal family support, unique model features and bounded near-duplicate review.</p>
           </article>
           <article>
             <span>02 / SPLIT</span>
-            <h3>Freeze the holdout.</h3>
-            <p>A seeded, stratified split keeps every class represented. The vocabulary never sees holdout text.</p>
+            <h3>Separate the roles.</h3>
+            <p>Whole groups enter train, development, calibration or ID-test. Every class remains represented.</p>
           </article>
           <article>
             <span>03 / VECTORIZE</span>
@@ -187,56 +187,78 @@
           <article>
             <span>04 / LEARN</span>
             <h3>Fit real weights.</h3>
-            <p>Multinomial logistic regression learns seven classes through deterministic full-batch optimization.</p>
+            <p>Only the 315 training rows fit TF-IDF and multinomial logistic-regression parameters.</p>
           </article>
           <article>
             <span>05 / ABSTAIN</span>
-            <h3>Know when to stop.</h3>
-            <p>Thresholds use train plus a separate OOD fixture. The untouched holdout is evaluated afterward.</p>
+            <h3>Calibrate, then stop.</h3>
+            <p>Calibration fits temperature. Development plus OOD-development select the abstention policy.</p>
           </article>
         </div>
 
         <div class="pipeline-map" aria-label="Machine-learning pipeline from corpus to decision">
-          <div class="pipeline-node"><span>01</span><strong>TSV corpus</strong><small>112 synthetic rows</small></div>
+          <div class="pipeline-node"><span>01</span><strong>Grouped TSV</strong><small>525 prompts / 105 families</small></div>
           <i aria-hidden="true"></i>
-          <div class="pipeline-node"><span>02</span><strong>Seeded split</strong><small>91 train / 21 holdout</small></div>
+          <div class="pipeline-node"><span>02</span><strong>SplitPlan</strong><small>315 / 70 / 70 / 70</small></div>
           <i aria-hidden="true"></i>
-          <div class="pipeline-node"><span>03</span><strong>TF-IDF</strong><small>512 retained features</small></div>
+          <div class="pipeline-node"><span>03</span><strong>Fit + scale</strong><small>weights / temperature</small></div>
           <i aria-hidden="true"></i>
-          <div class="pipeline-node"><span>04</span><strong>Softmax</strong><small>versioned JSON weights</small></div>
+          <div class="pipeline-node"><span>04</span><strong>Freeze policy</strong><small>development + OOD-dev</small></div>
           <i aria-hidden="true"></i>
-          <div class="pipeline-node pipeline-node-accent"><span>05</span><strong>Accept / abstain</strong><small>confidence + margin</small></div>
+          <div class="pipeline-node pipeline-node-accent"><span>05</span><strong>Open tests</strong><small>ID + OOD + contrast</small></div>
         </div>
       </section>
 
-      <section class="model-report section" id="report" aria-labelledby="report-title">
+      <section class="open-set-report section" id="open-set-v3" aria-labelledby="open-set-v3-title">
         <div class="section-heading compact">
-          <p class="eyebrow"><span>04</span> Model report</p>
-          <h2 id="report-title">Measured honestly.<br />Kept in proportion.</h2>
-          <p>The checked-in report generates these values; CI verifies that the page has not embellished them.</p>
+          <p class="eyebrow"><span>04</span> Verified model report</p>
+          <h2 id="open-set-v3-title">Choose, calibrate and test<br />on different evidence.</h2>
+          <p>
+            The v3 experiment gives training, development, probability calibration and ID-test
+            their own group-disjoint partitions. OOD threshold data, OOD-test and the paired
+            contrast test stay separate too.
+          </p>
+          <p class="report-kicker" role="status" aria-live="polite" data-v3-status>REPORT LOADING</p>
         </div>
-        <div class="report-grid">
+
+        <div class="v3-protocol" aria-label="Leak-resistant open-set evaluation protocol">
+          <article><span>01</span><strong>Train</strong><small data-v3-count="train">315 grouped rows</small></article>
+          <i aria-hidden="true"></i>
+          <article><span>02</span><strong>Development</strong><small data-v3-count="development">70 rows for model selection and thresholds</small></article>
+          <i aria-hidden="true"></i>
+          <article><span>03</span><strong>Calibration</strong><small data-v3-count="calibration">70 rows for temperature</small></article>
+          <i aria-hidden="true"></i>
+          <article class="v3-protocol-test"><span>04</span><strong>ID-test</strong><small data-v3-count="id-test">70 untouched rows</small></article>
+        </div>
+
+        <div class="report-grid v3-report-grid">
           <dl class="metric-panel">
-            <div><dt>Holdout size</dt><dd data-report-metric="holdout-size">21</dd><small>3 rows per class</small></div>
-            <div><dt>Raw accuracy</dt><dd data-report-metric="holdout-accuracy">14 / 21</dd><small>66.7% before abstention</small></div>
-            <div><dt>Macro F1</dt><dd data-report-metric="holdout-macro-f1">0.661</dd><small>unweighted across 7 classes</small></div>
-            <div><dt>Decision coverage</dt><dd data-report-metric="holdout-coverage">7 / 21</dd><small>6 of 7 accepted predictions correct</small></div>
-            <div><dt>OOD accepted</dt><dd data-report-metric="ood-accepted">0 / 20</dd><small>separate unlabeled fixture</small></div>
-            <div><dt>Split seed</dt><dd data-report-metric="seed">20260722</dd><small>rebuilds the same partitions</small></div>
+            <div><dt>ID-test accuracy</dt><dd data-v3-metric="accuracy">—</dd><small data-v3-interval="accuracy">available after bundle verification</small></div>
+            <div><dt>ID-test macro F1</dt><dd data-v3-metric="macro-f1">—</dd><small data-v3-interval="macro-f1">available after bundle verification</small></div>
+            <div><dt>Learned vs unigram</dt><dd data-v3-metric="baseline-delta">—</dd><small>macro-F1 difference on the same ID-test</small></div>
+            <div><dt>Decision coverage</dt><dd data-v3-metric="coverage">—</dd><small>accepted rows after the frozen gate</small></div>
+            <div><dt>ID-test NLL</dt><dd data-v3-metric="nll">—</dd><small>measured only after the policy was frozen</small></div>
+            <div><dt>OOD-test AUROC</dt><dd data-v3-metric="ood-auroc">—</dd><small data-v3-interval="ood-auroc">domain-cluster interval after verification</small></div>
+            <div><dt>OOD-test FPR @ 95 TPR</dt><dd data-v3-metric="ood-fpr95">—</dd><small>lower is better</small></div>
+            <div><dt>OOD-test coverage</dt><dd data-v3-metric="ood-coverage">—</dd><small>reported across 36 untouched prompts</small></div>
+            <div><dt>Contrast pair accuracy</dt><dd data-v3-metric="contrast-pair-accuracy">—</dd><small>both meaning-changing variants correct</small></div>
           </dl>
-          <div class="report-limitations">
-            <p class="report-kicker">READ THIS BEFORE THE SCORES</p>
-            <h3>This is a learning benchmark, not a general-purpose NLP claim.</h3>
+          <div class="report-limitations v3-limitations">
+            <p class="report-kicker">WHAT THE CONTRACT PROVES — AND WHAT IT DOES NOT</p>
+            <h3>No test row chooses a weight, temperature or threshold.</h3>
             <p>
-              The corpus is synthetic and small. The holdout contains only 21 rows, and the
-              seven labels describe this demo's narrow interaction patterns. Accuracy and F1
-              do not establish real-world language understanding.
+              Temperature scaling sees only calibration rows. Confidence and probability-margin
+              thresholds see only development plus OOD-development. The ID, OOD and paired
+              contrast tests are opened afterward. Family and domain-cluster intervals preserve
+              dependence instead of pretending every sentence is an independent experiment.
             </p>
             <p>
-              Thresholds were selected without the holdout. They require 45% confidence and a
-              0.20 top-two margin, trading coverage for a visible abstention path.
+              The report also reconstructs majority and unigram baselines and separates semantic,
+              capability and noise OOD behaviour. Fourteen paired contrasts probe lexical
+              shortcuts without entering any tuning API. All prompts remain synthetic and
+              English-only. This is an auditable experiment, not a production-language claim.
             </p>
-            <a href="https://github.com/ejupi-djenis30/PsychologistRustBot/blob/master/docs/MODEL_CARD.md">Read the full model card <span aria-hidden="true">↗</span></a>
+            <a href="data/open-set-v3/metrics.json">Inspect the complete v3 metrics <span aria-hidden="true">↗</span></a>
           </div>
         </div>
       </section>
@@ -267,7 +289,8 @@
         <p>
           The original 2023 Telegram prototype stored conversations and implied therapeutic use.
           This edition removes Telegram, MySQL, OpenAI and the PHP admin panel. What remains is a
-          reproducible Rust ML pipeline, a deterministic fallback and a transparent browser lab.
+          reproducible Rust ML pipeline, verified open-set inference, visible abstention and a
+          transparent browser lab.
         </p>
       </section>
     </main>
@@ -281,6 +304,6 @@
       <a href="https://github.com/ejupi-djenis30/PsychologistRustBot">ELIZA Lab contributors ↗</a>
     </footer>
 
-    <script type="module" src="app.js?v=1.2.0-2"></script>
+    <script type="module" src="app.js?v=3.0.0-1"></script>
   </body>
 </html>

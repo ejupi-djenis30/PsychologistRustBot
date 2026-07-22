@@ -29,7 +29,7 @@ test("the prompt limit is not delegated to UTF-16 maxlength", async () => {
   assert.match(app, /count === MAX_INPUT_CHARS/);
 });
 
-test("the lab stays inert until model loading or fallback finishes", async () => {
+test("the lab enables controls only after a verified model loads", async () => {
   const html = await readFile(new URL("index.html", siteRoot), "utf8");
   const app = await readFile(new URL("app.js", siteRoot), "utf8");
 
@@ -37,8 +37,12 @@ test("the lab stays inert until model loading or fallback finishes", async () =>
   assert.match(html, /role="status" aria-live="polite" data-model-status/);
   assert.ok((html.match(/data-model-gated disabled/gu) ?? []).length >= 5);
   assert.match(html, /name="message"\s+data-model-gated\s+disabled/s);
-  assert.match(app, /finally\s*\{\s*setModelReady\(\)/s);
+  assert.match(app, /try\s*\{[\s\S]*setModelReady\(\);[\s\S]*\}\s*catch\s*\{[\s\S]*setModelFailed\(\);/s);
+  assert.doesNotMatch(app, /finally\s*\{\s*setModelReady\(\)/s);
+  assert.match(app, /activeModel = null;\s*engine = null;/s);
   assert.match(app, /control\.disabled = false/);
+  assert.match(app, /control\.disabled = true/);
+  assert.match(app, /if \(!activeModel \|\| !engine\) return;/);
 });
 
 test("the app versions every transitive local module", async () => {
@@ -47,5 +51,6 @@ test("the app versions every transitive local module", async () => {
 
   assert.match(html, /src="app\.js\?v=[^"\s]+"/);
   assert.match(app, /from "\.\/engine\.mjs\?v=[^"\s]+"/);
-  assert.match(app, /from "\.\/ml-engine\.mjs\?v=[^"\s]+"/);
+  assert.match(app, /from "\.\/open-set-engine\.mjs\?v=[^"\s]+"/);
+  assert.doesNotMatch(app, /from "\.\/ml-engine\.mjs/);
 });

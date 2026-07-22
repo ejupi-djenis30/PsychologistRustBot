@@ -24,14 +24,60 @@ accounts, prompt submission, transcript storage, diagnosis, or therapeutic claim
   uncertainty calibration, serialization, and inference live in the repository.
 - **Inspectable predictions:** JSON and browser traces expose all class probabilities, confidence,
   top-two margin, and the strongest positive feature contributions.
-- **Reproducible artifacts:** two identical training runs produce byte-identical model and report
-  files. The report records every split ID and every holdout prediction.
-- **Real abstention:** thresholds are selected from training plus a separate OOD fixture without
-  looking at the holdout. Inputs with weak evidence use a deterministic fallback.
+- **Reproducible artifacts:** a declared nine-decimal reporting precision makes the complete v3
+  bundle byte-identical across supported release targets. The report still records every final
+  prediction, while model and policy precision remain unchanged.
+- **Real abstention:** calibration, policy selection, ID-test and OOD-test have different roles.
+  Inputs with weak evidence abstain instead of being presented as confident classifications.
 - **Private by construction:** CLI and browser inference are local. Prompts are not stored or sent
   to a model service.
 - **Hard non-clinical boundary:** input limits and explicit safety-stop phrases run before ML
   inference. The stop is not presented as crisis detection.
+
+## Open-set protocol v3
+
+The checked-in [`artifacts/eliza-open-set-v3`](artifacts/eliza-open-set-v3) bundle is the primary
+model path. The older v1 artifact remains available only through the explicit `--legacy-v1` flag.
+V3 makes the evaluation boundary concrete:
+
+- semantically related rows stay together through explicit `group_id` values;
+- train, development, probability calibration and ID-test are four separate partitions;
+- OOD-development selects the abstention thresholds, while a different OOD-test fixture measures
+  the frozen policy afterward;
+- a separate paired contrast test probes meaning-changing edits only after every choice is frozen.
+
+Temperature scaling sees only calibration. A fixed, coarse confidence/margin grid sees only
+development plus OOD-development. Role-specific Rust types keep both final tests out of every
+selection API, and the bundle records those inputs directly.
+
+The supervised fixture has 525 rows in 105 equal five-prompt families. Each OOD population has 36
+rows in twelve multi-prompt families, six broader domains and balanced semantic, capability and
+noise strata. The contrast fixture adds 28 rows in fourteen label-changing pairs. A training-only
+majority baseline and Laplace unigram Naive Bayes baseline are reconstructed from the split plan
+during verification.
+
+The bundle separates `model.json`, `policy.json`, `metrics.json` and `split-plan.json`. A final
+manifest links their exact bytes with SHA-256. Build, verify and reproduce it with:
+
+```bash
+cargo run --locked -- train-v3 --output target/open-set-v3
+cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v3
+cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v3
+```
+
+`train-v3` replaces only an empty destination or a bundle that already passes the complete v3
+verification contract. It will not repurpose an unrelated non-empty directory.
+
+Run bounded batch inference without validating or indexing the vocabulary again for every row:
+
+```bash
+printf '%s\n' '{"id":"sample-1","text":"Today I feel calm"}' \
+  | cargo run --locked -- infer-batch --bundle artifacts/eliza-open-set-v3
+```
+
+Every v3 prediction includes calibrated probabilities and a contrastive explanation for the top
+class against the runner-up. The explanation records its bias delta and feature sum, and tests
+verify that they reconstruct the exact top-two logit margin.
 
 ## Install a verified build
 
@@ -51,9 +97,10 @@ Compare it with the matching `.sha256` file or `SHA256SUMS`, then verify its Git
 gh attestation verify <downloaded-archive> --repo ejupi-djenis30/PsychologistRustBot
 ```
 
-Extract the archive and run the included `eliza-lab` executable. Model `1.0.0` and the synthetic
-fixtures are embedded, so inference, evaluation, and retraining need no separate model download.
-The application version (`1.2.0`) and model version are intentionally independent.
+Extract the archive and run the included `eliza-lab` executable. Open-set bundle model `3.0.0`, the
+legacy `1.0.0` compatibility artifact and synthetic fixtures are embedded, so inference,
+verification and retraining need no separate model download.
+The application version (`1.3.0`) and bundled model versions are intentionally independent.
 
 ## Run it
 
@@ -69,30 +116,32 @@ Start an uncertainty-aware local session:
 cargo run --locked -- chat
 ```
 
-Rebuild the checked-in model and evaluation report from the embedded synthetic fixtures:
+Rebuild a v3 bundle from the embedded synthetic fixtures:
 
 ```bash
-cargo run --locked -- train
-cargo run --locked -- evaluate
+cargo run --locked -- train-v3 --output target/open-set-v3
+cargo run --locked -- bundle verify --bundle target/open-set-v3
 ```
 
-Use `--dataset`, `--ood`, `--model`, `--output`, or `--report` to supply explicit paths. The CLI
-refuses collisions between inputs and outputs. The original deterministic rule mode remains
-available for comparison:
+The CLI refuses collisions between inputs and outputs. Legacy model inference is deliberately
+separate from the default path:
 
 ```bash
-cargo run --locked -- --once "I feel uncertain about my next step"
+cargo run --locked -- infer --legacy-v1 --model models/eliza-intent-v1.json --json "Today I feel calm"
 ```
 
 ## Honest evaluation boundary
 
-The checked-in corpus has 112 synthetic English examples. Seed `20260722` produces 91 training
-rows and a 21-row holdout. On that small holdout the model records 14/21 raw accuracy, macro-F1
-`0.661`, and 7/21 decision coverage; 6 of the 7 accepted predictions are correct. It accepts 0 of
-20 rows in the separate synthetic OOD fixture used during threshold selection.
+The corpus, OOD fixtures and split are synthetic by design. The exact released values live in the
+cryptographically linked [`metrics.json`](artifacts/eliza-open-set-v3/metrics.json), and the browser
+recomputes their ledgers before showing them. Read the [model card](docs/MODEL_CARD.md) before
+interpreting accuracy, calibration or OOD discrimination.
 
-Those figures verify this pipeline. They do not demonstrate production NLP generalization. Read
-the [model card](docs/MODEL_CARD.md) before interpreting them.
+An earlier prerelease run was discarded after review found partition-correlated family sizes and
+singleton OOD families. The current protocol equalizes family support before splitting, keeps
+broader OOD domains disjoint, reports per-stratum metrics and compares the learned model with a
+training-only unigram baseline. These controls make the experiment more credible; they do not make
+it a production language model.
 
 ## Verify it
 
@@ -100,6 +149,8 @@ the [model card](docs/MODEL_CARD.md) before interpreting them.
 cargo fmt --check
 cargo clippy --all-targets --locked -- -D warnings
 cargo test --all --locked
+cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v3
+cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v3
 node --test site/tests/*.test.mjs
 node site/scripts/validate-site.mjs
 node --test scripts/tests/*.test.mjs
@@ -130,7 +181,7 @@ GitHub Release assembled by the workflow.
 
 A release can only be published from a `v*` tag pushed for the version in `Cargo.toml`, with a dated
 section for that version in `CHANGELOG.md` and no pending text under `Unreleased`. For example,
-version `1.2.0` accepts `v1.2.0` and rejects every other tag. The workflow assembles all four native
+version `1.3.0` accepts `v1.3.0` and rejects every other tag. The workflow assembles all four native
 archives from verified file-descriptor snapshots, creates a consolidated `SHA256SUMS` file covering
 every release asset, and adds GitHub provenance attestations. The publish job independently verifies
 each attestation against this repository, workflow, tag ref, and source commit before it can touch a
@@ -170,19 +221,21 @@ To test a proposed tag without creating one, start the **Release** workflow manu
 the tag in `release_tag`, or run:
 
 ```bash
-node scripts/release-contract.mjs verify --tag v1.2.0
+node scripts/release-contract.mjs verify --tag v1.3.0
 ```
 
 ## Architecture
 
 ```text
-src/ml.rs                   data, vectorizer, training, metrics, model IO
+src/open_set.rs             v3 data contracts, typed splits, training, evaluation, bundles, inference
+src/ml.rs                   explicit legacy-v1 compatibility implementation
 src/lib.rs                  hard boundaries and dialogue routing
 src/main.rs                 train / evaluate / infer / chat CLI
-fixtures/                   supervised, OOD, and parity corpora
+fixtures/                   supervised, OOD, contrast, and parity corpora
 models/                     versioned learned artifact
 reports/                    generated split, calibration, and metrics
-site/ml-engine.mjs          browser implementation of model inference
+artifacts/eliza-open-set-v3 SHA-256-linked model, policy, metrics, and split plan
+site/open-set-engine.mjs    trust-root verification and browser v3 inference
 docs/                       model card, dataset contract, architecture
 ```
 

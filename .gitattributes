@@ -1,0 +1,5 @@
+# Release manifests hash the committed bytes, so digest-bound text must keep LF on every runner.
+/artifacts/eliza-open-set-v3/*.json text eol=lf
+/models/*.json text eol=lf
+/reports/*.json text eol=lf
+/fixtures/*.tsv text eol=lf

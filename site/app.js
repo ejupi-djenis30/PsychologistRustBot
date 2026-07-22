@@ -1,5 +1,5 @@
-import { ElizaEngine, MAX_INPUT_CHARS } from "./engine.mjs?v=1.2.0-2";
-import { IntentModel } from "./ml-engine.mjs?v=1.2.0-2";
+import { ElizaEngine, MAX_INPUT_CHARS } from "./engine.mjs?v=3.0.0-1";
+import { loadOpenSetBundle } from "./open-set-engine.mjs?v=3.0.0-1";
 
 const MAX_TRANSCRIPT_MESSAGES = 80;
 const form = document.querySelector("[data-form]");
@@ -15,8 +15,9 @@ const modelStatus = document.querySelector("[data-model-status]");
 const traceStatus = document.querySelector("[data-trace-status]");
 const labShell = document.querySelector(".lab-shell");
 const gatedControls = document.querySelectorAll("[data-model-gated]");
+const v3Status = document.querySelector("[data-v3-status]");
 
-let engine = new ElizaEngine();
+let engine = null;
 let activeModel = null;
 
 const setModelReady = () => {
@@ -28,22 +29,109 @@ const setModelReady = () => {
   });
 };
 
+const setModelFailed = () => {
+  labShell?.setAttribute("aria-busy", "false");
+  gatedControls.forEach((control) => {
+    if (control instanceof HTMLButtonElement || control instanceof HTMLInputElement) {
+      control.disabled = true;
+    }
+  });
+};
+
 const initializeModel = async () => {
   try {
-    const response = await fetch("./data/eliza-intent-v1.json", {
-      cache: "no-cache",
-      credentials: "same-origin",
-    });
-    if (!response.ok) throw new Error(`model request failed with ${response.status}`);
-    activeModel = new IntentModel(await response.json());
+    activeModel = await loadOpenSetBundle("./data/open-set-v3");
     engine = new ElizaEngine(activeModel);
-    if (modelStatus) modelStatus.textContent = `ML ${activeModel.version} READY`;
+    renderOpenSetReport(activeModel.metrics);
+    if (modelStatus) modelStatus.textContent = `ML ${activeModel.version} VERIFIED`;
+    setModelReady();
   } catch {
     activeModel = null;
-    engine = new ElizaEngine();
-    if (modelStatus) modelStatus.textContent = "RULE FALLBACK";
-  } finally {
-    setModelReady();
+    engine = null;
+    if (modelStatus) modelStatus.textContent = "V3 VERIFICATION FAILED — INTERACTION DISABLED";
+    if (v3Status) {
+      v3Status.textContent = "V3 VERIFICATION FAILED — NO INFERENCE AVAILABLE";
+      v3Status.dataset.state = "error";
+    }
+    setModelFailed();
+  }
+};
+
+const finiteMetric = (value, label) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new TypeError(`${label} is not finite`);
+  }
+  return value;
+};
+
+const setV3Text = (selector, value) => {
+  const target = document.querySelector(selector);
+  if (target) target.textContent = value;
+};
+
+const renderOpenSetReport = (report) => {
+  const counts = report.partition_counts;
+  const id = report.id_test;
+  const bootstrap = report.bootstrap_95;
+  const ood = report.ood_test;
+  const contrast = report.contrast_test;
+  for (const [partition, suffix] of [
+    ["train", "grouped rows"],
+    ["development", "rows for model selection and thresholds"],
+    ["calibration", "rows for temperature"],
+    ["id-test", "untouched rows"],
+  ]) {
+    const count = counts[partition];
+    setV3Text(`[data-v3-count="${partition}"]`, `${count} ${suffix}`);
+  }
+  const accuracy = finiteMetric(id.accuracy, "ID accuracy");
+  const macroF1 = finiteMetric(id.macro_f1, "ID macro F1");
+  const coverage = finiteMetric(id.coverage, "ID coverage");
+  const nll = finiteMetric(id.calibration.negative_log_likelihood, "ID NLL");
+  const auroc = finiteMetric(ood.discrimination.auroc, "OOD AUROC");
+  const fpr95 = finiteMetric(ood.discrimination.fpr_at_95_tpr, "OOD FPR95");
+  const oodCoverage = finiteMetric(ood.coverage, "OOD coverage");
+  const contrastPairAccuracy = finiteMetric(
+    contrast.pair_accuracy,
+    "contrast pair accuracy",
+  );
+  const baselineDelta = finiteMetric(
+    report.baselines.learned_minus_unigram_macro_f1,
+    "learned-minus-unigram macro F1",
+  );
+  setV3Text('[data-v3-metric="accuracy"]', `${(accuracy * 100).toFixed(1)}%`);
+  setV3Text('[data-v3-metric="macro-f1"]', macroF1.toFixed(3));
+  setV3Text(
+    '[data-v3-metric="coverage"]',
+    `${Math.round(coverage * id.example_count)} / ${id.example_count}`,
+  );
+  setV3Text('[data-v3-metric="nll"]', nll.toFixed(3));
+  setV3Text('[data-v3-metric="ood-auroc"]', auroc.toFixed(3));
+  setV3Text('[data-v3-metric="ood-fpr95"]', fpr95.toFixed(3));
+  setV3Text('[data-v3-metric="ood-coverage"]', `${(oodCoverage * 100).toFixed(1)}%`);
+  setV3Text(
+    '[data-v3-metric="contrast-pair-accuracy"]',
+    `${Math.round(contrastPairAccuracy * contrast.pair_count)} / ${contrast.pair_count}`,
+  );
+  setV3Text(
+    '[data-v3-metric="baseline-delta"]',
+    `${baselineDelta >= 0 ? "+" : ""}${baselineDelta.toFixed(3)}`,
+  );
+  setV3Text(
+    '[data-v3-interval="accuracy"]',
+    `95% bootstrap: ${(finiteMetric(bootstrap.id_accuracy.lower_95, "accuracy lower") * 100).toFixed(1)}–${(finiteMetric(bootstrap.id_accuracy.upper_95, "accuracy upper") * 100).toFixed(1)}%`,
+  );
+  setV3Text(
+    '[data-v3-interval="macro-f1"]',
+    `95% bootstrap: ${finiteMetric(bootstrap.id_macro_f1.lower_95, "macro F1 lower").toFixed(3)}–${finiteMetric(bootstrap.id_macro_f1.upper_95, "macro F1 upper").toFixed(3)}`,
+  );
+  setV3Text(
+    '[data-v3-interval="ood-auroc"]',
+    `95% bootstrap: ${finiteMetric(bootstrap.ood_auroc.lower_95, "AUROC lower").toFixed(3)}–${finiteMetric(bootstrap.ood_auroc.upper_95, "AUROC upper").toFixed(3)}`,
+  );
+  if (v3Status) {
+    v3Status.textContent = `VERIFIED MODEL ${report.model_version} / ${bootstrap.resamples} BOOTSTRAP RESAMPLES`;
+    v3Status.dataset.state = "ready";
   }
 };
 
@@ -88,6 +176,7 @@ const scrollTranscript = () => {
 };
 
 const runPrompt = (value) => {
+  if (!activeModel || !engine) return;
   const prompt = String(value ?? "").trim();
   if (!prompt) return;
 
@@ -152,6 +241,7 @@ document.querySelectorAll("[data-sample]").forEach((button) => {
 });
 
 resetButton?.addEventListener("click", () => {
+  if (!activeModel) return;
   engine = new ElizaEngine(activeModel);
   transcript?.replaceChildren();
   appendMessage("ELIZA", "Hello. What is on your mind today?", 0, "message-system");

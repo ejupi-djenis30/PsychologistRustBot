@@ -15,6 +15,7 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 const workflow = readFileSync(path.join(repositoryRoot, ".github", "workflows", "release.yml"), "utf8");
 const continuousIntegration = readFileSync(path.join(repositoryRoot, ".github", "workflows", "ci.yml"), "utf8");
 const pages = readFileSync(path.join(repositoryRoot, ".github", "workflows", "pages.yml"), "utf8");
+const gitAttributes = readFileSync(path.join(repositoryRoot, ".gitattributes"), "utf8");
 const workflowFixtures = path.join(repositoryRoot, "scripts", "tests", "fixtures", "workflows");
 const hiddenJobWriteAll = readFileSync(path.join(workflowFixtures, "hidden-job-write-all.yml"), "utf8");
 const hiddenStepsFloatingAction = readFileSync(path.join(workflowFixtures, "hidden-steps-floating-action.yml"), "utf8");
@@ -106,6 +107,46 @@ test("release tooling and permissions stay pinned and least-privilege", () => {
   assert.match(publish, /GH_CLI_VERSION: "2\.94\.0"/u);
   assert.match(publish, /GH_CLI_SHA256: "a757f1ba6db18f4de8cbadb244843a5f89bc75b5e7c6fc127d2bd77fbd12ed62"/u);
   assert.match(publish, /sha256sum --check --strict/u);
+});
+
+test("every native release binary proves the V3 model contract before packaging", () => {
+  const build = jobBlock("build");
+  const buildIndex = build.indexOf("name: Build locked release binary");
+  const smokeIndex = build.indexOf("name: Smoke-test built CLI");
+  const packageIndex = build.indexOf("name: Package binary with checksum and provenance metadata");
+  assert.ok(buildIndex >= 0 && smokeIndex > buildIndex && packageIndex > smokeIndex);
+  assert.match(build, /node scripts\/release-contract\.mjs smoke/u);
+  assert.match(build, /--bundle artifacts\/eliza-open-set-v3/u);
+  assert.match(build, /--legacy-model models\/eliza-intent-v1\.json/u);
+  assert.match(build, /node scripts\/release-contract\.mjs smoke-archive/u);
+
+  const releaseContract = readFileSync(path.join(repositoryRoot, "scripts", "release-contract.mjs"), "utf8");
+  for (const required of [
+    '["infer", "--json", "Hello, I want to make a concrete plan"]',
+    '["infer", "--bundle", resolvedBundle, "--json"',
+    '["bundle", "verify", "--bundle", resolvedBundle]',
+    '["bundle", "reproduce", "--bundle", resolvedBundle]',
+    'trace?.model?.version === "3.0.0"',
+    'typeof trace.model.accepted === "boolean"',
+    'Number.isFinite(trace.model.confidence)',
+    'Number.isFinite(trace.model.margin)',
+    '"--legacy-v1"',
+  ]) {
+    assert.ok(releaseContract.includes(required), `release smoke is missing ${required}`);
+  }
+  assert.doesNotMatch(releaseContract, /spawnSync\(resolvedBinary, \["--once"/u);
+  assert.doesNotMatch(releaseContract, /rule=feeling-reflection/u);
+});
+
+test("digest-bound fixtures keep LF bytes on every release runner", () => {
+  for (const pattern of [
+    "/artifacts/eliza-open-set-v3/*.json text eol=lf",
+    "/models/*.json text eol=lf",
+    "/reports/*.json text eol=lf",
+    "/fixtures/*.tsv text eol=lf",
+  ]) {
+    assert.ok(gitAttributes.includes(pattern), `missing cross-platform byte contract: ${pattern}`);
+  }
 });
 
 test("the release candidate gate rejects every fail-open or contract drift mutation", () => {
