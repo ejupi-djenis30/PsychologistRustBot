@@ -972,6 +972,106 @@ h1 em {
   font-weight: 800;
 }
 
+.open-set-report {
+  border-top: 1px solid var(--line);
+  background:
+    linear-gradient(rgba(31, 29, 27, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 29, 27, 0.028) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.open-set-report [data-v2-status] {
+  margin: 1.5rem 0 0;
+}
+
+.open-set-report [data-v2-status][data-state="ready"] {
+  color: var(--rust-dark);
+}
+
+.open-set-report [data-v2-status][data-state="error"] {
+  color: var(--rust);
+}
+
+.v2-protocol {
+  display: grid;
+  grid-template-columns: minmax(9rem, 1fr) 2rem minmax(9rem, 1fr) 2rem minmax(9rem, 1fr) 2rem minmax(9rem, 1fr);
+  align-items: stretch;
+  margin-bottom: 3rem;
+}
+
+.v2-protocol article {
+  display: grid;
+  min-height: 10rem;
+  padding: 1.2rem;
+  align-content: space-between;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--paper);
+  box-shadow: 0.45rem 0.45rem 0 rgba(31, 29, 27, 0.08);
+}
+
+.v2-protocol article > span,
+.v2-protocol article > small {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+}
+
+.v2-protocol article > span {
+  color: var(--rust-dark);
+  font-weight: 800;
+}
+
+.v2-protocol article > strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+}
+
+.v2-protocol article > small {
+  color: var(--muted);
+}
+
+.v2-protocol > i {
+  position: relative;
+  width: 100%;
+  height: 1px;
+  align-self: center;
+  background: var(--ink);
+}
+
+.v2-protocol > i::after {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-top: 1px solid var(--ink);
+  border-right: 1px solid var(--ink);
+  content: "";
+  rotate: 45deg;
+  translate: 0 -50%;
+}
+
+.v2-protocol .v2-protocol-test {
+  border-color: var(--rust);
+  color: var(--paper);
+  background: var(--rust);
+}
+
+.v2-protocol .v2-protocol-test > span,
+.v2-protocol .v2-protocol-test > small {
+  color: var(--paper);
+}
+
+.v2-report-grid {
+  box-shadow: 0.75rem 0.75rem 0 rgba(31, 29, 27, 0.12);
+}
+
+.v2-limitations {
+  background: #15211d;
+}
+
 .safety {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.65fr);
@@ -1080,6 +1180,32 @@ footer > a {
 
   .pipeline-map {
     grid-template-columns: 1fr;
+  }
+
+  .v2-protocol {
+    grid-template-columns: 1fr;
+    width: min(100%, 34rem);
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .v2-protocol > i {
+    width: 1px;
+    height: 2rem;
+    justify-self: center;
+  }
+
+  .v2-protocol > i::after {
+    top: auto;
+    right: auto;
+    bottom: 0;
+    left: 50%;
+    rotate: 135deg;
+    translate: -50% 0;
+  }
+
+  .v2-protocol article {
+    min-height: 8rem;
   }
 
   .pipeline-map > i {
@@ -1228,6 +1354,10 @@ footer > a {
 
   .pipeline-map {
     padding: 1rem;
+  }
+
+  .v2-protocol article {
+    min-height: 7rem;
   }
 
   .metric-panel {

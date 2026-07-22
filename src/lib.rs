@@ -4,6 +4,7 @@
 //! intent routing, but input limits and the non-clinical safety exit always run before inference.
 
 pub mod ml;
+pub mod open_set;
 
 pub const MAX_INPUT_CHARS: usize = 512;
 

@@ -1,7 +1,8 @@
 use serde_json::Value;
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
+use std::process::{Command, Output, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 static TEMP_SEQUENCE: AtomicUsize = AtomicUsize::new(0);
@@ -201,4 +202,64 @@ fn inference_json_keeps_probabilities_contributions_and_hard_safety_boundary() {
     let safety: Value = serde_json::from_slice(&safety.stdout).unwrap();
     assert_eq!(safety["boundary"], "safety-boundary");
     assert!(safety["model"].is_null());
+}
+
+#[test]
+fn open_set_bundle_reproduces_and_serves_bounded_jsonl_predictions() {
+    let directory = TestDirectory::new();
+    let bundle = directory.path().join("bundle-v2");
+    let trained = Command::new(binary())
+        .current_dir(directory.path())
+        .args([
+            "train-v2",
+            "--output",
+            bundle.to_str().unwrap(),
+            "--bootstrap-resamples",
+            "100",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        trained.status.success(),
+        "{}",
+        String::from_utf8_lossy(&trained.stderr)
+    );
+    assert!(String::from_utf8_lossy(&trained.stdout).contains("14 ID-test"));
+
+    for operation in ["verify", "reproduce"] {
+        let output = Command::new(binary())
+            .current_dir(directory.path())
+            .args(["bundle", operation, "--bundle", bundle.to_str().unwrap()])
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{operation}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    let mut child = Command::new(binary())
+        .current_dir(directory.path())
+        .args(["infer-batch", "--bundle", bundle.to_str().unwrap()])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(b"{\"id\":\"case-1\",\"text\":\"Today I feel calm\"}\n")
+        .unwrap();
+    let output = child.wait_with_output().unwrap();
+    assert!(output.status.success());
+    let prediction: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(prediction["id"], "case-1");
+    assert!(prediction["prediction"]["confidence"].is_number());
+    assert_eq!(
+        prediction["prediction"]["explanation"]["top_label"],
+        prediction["prediction"]["label"]
+    );
 }

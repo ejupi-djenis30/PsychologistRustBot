@@ -2,6 +2,11 @@ use eliza_lab::ml::{
     write_training_artifacts, Dataset, EvaluationMetrics, IntentModel, MlError, OodDataset,
     OodMetrics, TrainingConfig,
 };
+use eliza_lab::open_set::{
+    embedded_bundle, predict_jsonl, reproduce_bundle, run_open_set_experiment, verify_bundle,
+    write_bundle, GroupedDataset, OpenSetOodDataset, OpenSetTrainingConfig,
+    DEFAULT_BOOTSTRAP_RESAMPLES,
+};
 use eliza_lab::{ElizaEngine, Reply, MAX_INPUT_CHARS};
 use serde::Serialize;
 use std::env;
@@ -14,6 +19,10 @@ const DEFAULT_DATASET: &str = "fixtures/intents-v1.tsv";
 const DEFAULT_OOD_DATASET: &str = "fixtures/ood-v1.tsv";
 const DEFAULT_MODEL: &str = "models/eliza-intent-v1.json";
 const DEFAULT_REPORT: &str = "reports/eliza-intent-v1.json";
+const DEFAULT_V2_DATASET: &str = "fixtures/intents-v2.tsv";
+const DEFAULT_V2_OOD_DEVELOPMENT: &str = "fixtures/ood-dev-v2.tsv";
+const DEFAULT_V2_OOD_TEST: &str = "fixtures/ood-test-v2.tsv";
+const DEFAULT_V2_BUNDLE: &str = "artifacts/eliza-open-set-v2";
 const MAX_INPUT_BYTES: usize = MAX_INPUT_CHARS * 4;
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -70,8 +79,11 @@ fn run() -> Result<(), Box<dyn Error>> {
     let arguments = env::args().skip(1).collect::<Vec<_>>();
     match arguments.first().map(String::as_str) {
         Some("train") => train_command(&arguments[1..]),
+        Some("train-v2") => train_v2_command(&arguments[1..]),
         Some("evaluate") => evaluate_command(&arguments[1..]),
         Some("infer") => infer_command(&arguments[1..]),
+        Some("infer-batch") => infer_batch_command(&arguments[1..]),
+        Some("bundle") => bundle_command(&arguments[1..]),
         Some("chat") => chat_command(&arguments[1..]),
         Some("dataset") => dataset_command(&arguments[1..]),
         Some("--once") => legacy_once(&arguments[1..]),
@@ -85,6 +97,198 @@ fn run() -> Result<(), Box<dyn Error>> {
         .into()),
         None => interactive(None),
     }
+}
+
+fn train_v2_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
+    let mut dataset_path = None;
+    let mut ood_development_path = None;
+    let mut ood_test_path = None;
+    let mut output_path = PathBuf::from(DEFAULT_V2_BUNDLE);
+    let mut bootstrap_resamples = DEFAULT_BOOTSTRAP_RESAMPLES;
+    let mut config = OpenSetTrainingConfig::default();
+    let mut index = 0;
+    while index < arguments.len() {
+        match arguments[index].as_str() {
+            "--dataset" => dataset_path = Some(PathBuf::from(option_value(arguments, &mut index)?)),
+            "--ood-development" => {
+                ood_development_path = Some(PathBuf::from(option_value(arguments, &mut index)?))
+            }
+            "--ood-test" => {
+                ood_test_path = Some(PathBuf::from(option_value(arguments, &mut index)?))
+            }
+            "--output" => output_path = PathBuf::from(option_value(arguments, &mut index)?),
+            "--seed" => config.seed = parse_option(arguments, &mut index, "seed")?,
+            "--epochs" => config.epochs = parse_option(arguments, &mut index, "epochs")?,
+            "--learning-rate" => {
+                config.learning_rate = parse_option(arguments, &mut index, "learning rate")?
+            }
+            "--l2" => config.l2_penalty = parse_option(arguments, &mut index, "L2 penalty")?,
+            "--max-features" => {
+                config.vectorizer.max_features =
+                    parse_option(arguments, &mut index, "max features")?
+            }
+            "--bootstrap-resamples" => {
+                bootstrap_resamples = parse_option(arguments, &mut index, "bootstrap resamples")?
+            }
+            "--help" | "-h" => {
+                print_train_v2_help();
+                return Ok(());
+            }
+            option => return Err(CliError(format!("unknown train-v2 option `{option}`")).into()),
+        }
+        index += 1;
+    }
+
+    let dataset = match dataset_path.as_deref() {
+        Some(path) => GroupedDataset::read(path)?,
+        None => GroupedDataset::bundled()?,
+    };
+    let ood_development = match ood_development_path.as_deref() {
+        Some(path) => OpenSetOodDataset::read(path)?,
+        None => OpenSetOodDataset::bundled_development()?,
+    };
+    let ood_test = match ood_test_path.as_deref() {
+        Some(path) => OpenSetOodDataset::read(path)?,
+        None => OpenSetOodDataset::bundled_test()?,
+    };
+    let result = run_open_set_experiment(
+        &dataset,
+        &ood_development,
+        &ood_test,
+        config,
+        bootstrap_resamples,
+    )?;
+    let manifest = write_bundle(&output_path, &result)?;
+    println!("bundle       {}", output_path.display());
+    println!("model        {}", result.model.model_version);
+    println!("dataset      {}", manifest.dataset_sha256);
+    println!("split plan   {}", manifest.split_plan_sha256);
+    println!(
+        "partitions   {} train / {} development / {} calibration / {} ID-test",
+        result.metrics.partition_counts["train"],
+        result.metrics.partition_counts["development"],
+        result.metrics.partition_counts["calibration"],
+        result.metrics.partition_counts["id-test"]
+    );
+    println!("temperature  {:.6}", result.policy.temperature);
+    println!(
+        "thresholds   confidence={:.2} probability-margin={:.2} (development + OOD-development only)",
+        result.policy.minimum_confidence, result.policy.minimum_probability_margin
+    );
+    println!(
+        "ID-test      n={} accuracy={:.4} macro-f1={:.4} coverage={:.4} aurc={:.4}",
+        result.metrics.id_test.example_count,
+        result.metrics.id_test.accuracy,
+        result.metrics.id_test.macro_f1,
+        result.metrics.id_test.coverage,
+        result.metrics.id_test.aurc
+    );
+    println!(
+        "OOD-test     n={} accepted={} auroc={:.4} aupr-in={:.4} fpr95={:.4}",
+        result.metrics.ood_test.example_count,
+        result.metrics.ood_test.accepted_examples,
+        result.metrics.ood_test.discrimination.auroc,
+        result.metrics.ood_test.discrimination.aupr_in_domain,
+        result.metrics.ood_test.discrimination.fpr_at_95_tpr
+    );
+    Ok(())
+}
+
+fn bundle_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
+    let operation = arguments
+        .first()
+        .map(String::as_str)
+        .ok_or_else(|| CliError("bundle requires `verify` or `reproduce`".into()))?;
+    let mut bundle_path = PathBuf::from(DEFAULT_V2_BUNDLE);
+    let mut dataset_path = None;
+    let mut ood_development_path = None;
+    let mut ood_test_path = None;
+    let mut index = 1;
+    while index < arguments.len() {
+        match arguments[index].as_str() {
+            "--bundle" => bundle_path = PathBuf::from(option_value(arguments, &mut index)?),
+            "--dataset" => dataset_path = Some(PathBuf::from(option_value(arguments, &mut index)?)),
+            "--ood-development" => {
+                ood_development_path = Some(PathBuf::from(option_value(arguments, &mut index)?))
+            }
+            "--ood-test" => {
+                ood_test_path = Some(PathBuf::from(option_value(arguments, &mut index)?))
+            }
+            "--help" | "-h" => {
+                print_bundle_help();
+                return Ok(());
+            }
+            option => return Err(CliError(format!("unknown bundle option `{option}`")).into()),
+        }
+        index += 1;
+    }
+    match operation {
+        "verify" => {
+            let verified = verify_bundle(&bundle_path)?;
+            println!("verified     {}", bundle_path.display());
+            println!("model        {}", verified.model.model_version);
+            println!("dataset      {}", verified.manifest.dataset_sha256);
+            println!(
+                "payloads     {} (plus manifest)",
+                verified.manifest.files.len()
+            );
+        }
+        "reproduce" => {
+            let dataset = match dataset_path.as_deref() {
+                Some(path) => GroupedDataset::read(path)?,
+                None => GroupedDataset::bundled()?,
+            };
+            let ood_development = match ood_development_path.as_deref() {
+                Some(path) => OpenSetOodDataset::read(path)?,
+                None => OpenSetOodDataset::bundled_development()?,
+            };
+            let ood_test = match ood_test_path.as_deref() {
+                Some(path) => OpenSetOodDataset::read(path)?,
+                None => OpenSetOodDataset::bundled_test()?,
+            };
+            reproduce_bundle(&bundle_path, &dataset, &ood_development, &ood_test)?;
+            println!("reproduced   {}", bundle_path.display());
+        }
+        other => {
+            return Err(CliError(format!(
+                "unknown bundle operation `{other}`; expected `verify` or `reproduce`"
+            ))
+            .into())
+        }
+    }
+    Ok(())
+}
+
+fn infer_batch_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
+    let mut bundle_path = None;
+    let mut index = 0;
+    while index < arguments.len() {
+        match arguments[index].as_str() {
+            "--bundle" => bundle_path = Some(PathBuf::from(option_value(arguments, &mut index)?)),
+            "--help" | "-h" => {
+                println!(
+                    "Usage: eliza-lab infer-batch [--bundle PATH]\n\
+                     Reads bounded JSONL objects with `id` and `text` from stdin and writes one prediction per line.\n\
+                     Without --bundle, the verified v2 bundle embedded in the release binary is used."
+                );
+                return Ok(());
+            }
+            option => return Err(CliError(format!("unknown infer-batch option `{option}`")).into()),
+        }
+        index += 1;
+    }
+    let runtime = match bundle_path.as_deref() {
+        Some(path) => verify_bundle(path)?.compile()?,
+        None => embedded_bundle()?.compile()?,
+    };
+    let stdin = io::stdin();
+    let stdout = io::stdout();
+    let count = predict_jsonl(&runtime, &mut stdin.lock(), &mut stdout.lock())?;
+    eprintln!(
+        "processed {count} rows with model {}",
+        runtime.model().model_version
+    );
+    Ok(())
 }
 
 fn train_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
@@ -620,12 +824,41 @@ fn print_help() {
          Local, explainable intent classification with a non-clinical dialogue shell.\n\n\
          USAGE\n\
            eliza-lab train [options]\n\
+           eliza-lab train-v2 [options]\n\
            eliza-lab evaluate [options]\n\
            eliza-lab infer [options] <fictional prompt>\n\
+           eliza-lab infer-batch [--bundle PATH] < input.jsonl\n\
+           eliza-lab bundle <verify|reproduce> [options]\n\
            eliza-lab chat [--model PATH]\n\
            eliza-lab dataset check [--dataset PATH]\n\
            eliza-lab --once <prompt>       Legacy rule-only response\n\n\
          Run a command with --help for details. With no command, the rule-only shell starts."
+    );
+}
+
+fn print_train_v2_help() {
+    println!(
+        "Usage: eliza-lab train-v2 [options]\n\
+         --dataset PATH              Grouped TSV input (default embedded {DEFAULT_V2_DATASET})\n\
+         --ood-development PATH      OOD data used only for threshold selection (default embedded {DEFAULT_V2_OOD_DEVELOPMENT})\n\
+         --ood-test PATH             Independent OOD evaluation data (default embedded {DEFAULT_V2_OOD_TEST})\n\
+         --output DIRECTORY          Verified artifact bundle (default {DEFAULT_V2_BUNDLE})\n\
+         --seed INTEGER              Deterministic split and bootstrap seed\n\
+         --epochs INTEGER            Full-batch gradient steps\n\
+         --learning-rate FLOAT       Initial learning rate\n\
+         --l2 FLOAT                  L2 penalty\n\
+         --max-features INTEGER      Vocabulary cap\n\
+         --bootstrap-resamples N     Label-stratified 95% interval resamples"
+    );
+}
+
+fn print_bundle_help() {
+    println!(
+        "Usage: eliza-lab bundle <verify|reproduce> [options]\n\
+         --bundle PATH               Bundle directory (default {DEFAULT_V2_BUNDLE})\n\
+         --dataset PATH              Grouped dataset used by reproduce\n\
+         --ood-development PATH      OOD-development data used by reproduce\n\
+         --ood-test PATH             OOD-test data used by reproduce"
     );
 }
 

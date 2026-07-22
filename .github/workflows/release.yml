@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Optional tag to validate against Cargo.toml (for example v1.2.0)"
+        description: "Optional tag to validate against Cargo.toml (for example v1.3.0)"
         required: false
         type: string
 
@@ -73,6 +73,20 @@ jobs:
           cargo fmt --check
           cargo clippy --all-targets --locked -- -D warnings
           cargo test --all --locked
+
+      - name: Reproduce every embedded ML artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo run --locked -- train \
+            --output target/release-model-v1.json \
+            --report target/release-report-v1.json
+          cmp models/eliza-intent-v1.json target/release-model-v1.json
+          cmp reports/eliza-intent-v1.json target/release-report-v1.json
+          cargo run --locked -- train-v2 --output target/release-open-set-v2
+          diff --recursive --brief artifacts/eliza-open-set-v2 target/release-open-set-v2
+          cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v2
+          cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v2
 
       - name: Audit locked Rust dependencies against pinned RustSec data
         shell: bash

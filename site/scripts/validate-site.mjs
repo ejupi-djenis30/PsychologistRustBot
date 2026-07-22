@@ -10,8 +10,15 @@ const app = await readFile(path.join(siteRoot, "app.js"), "utf8");
 const styles = await readFile(path.join(siteRoot, "styles.css"), "utf8");
 const modelBytes = await readFile(path.join(repositoryRoot, "models/eliza-intent-v1.json"));
 const reportBytes = await readFile(path.join(repositoryRoot, "reports/eliza-intent-v1.json"));
+const v2BundleRoot = path.join(repositoryRoot, "artifacts/eliza-open-set-v2");
+const v2ManifestBytes = await readFile(path.join(v2BundleRoot, "manifest.json"));
+const v2MetricsBytes = await readFile(path.join(v2BundleRoot, "metrics.json"));
+const v2PolicyBytes = await readFile(path.join(v2BundleRoot, "policy.json"));
 const model = JSON.parse(modelBytes);
 const report = JSON.parse(reportBytes);
+const v2Manifest = JSON.parse(v2ManifestBytes);
+const v2Metrics = JSON.parse(v2MetricsBytes);
+const v2Policy = JSON.parse(v2PolicyBytes);
 const expectedCsp = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'none'; connect-src 'self'; worker-src 'none'; manifest-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'";
 const socialPreviewUrl = "https://ejupi-djenis30.github.io/PsychologistRustBot/assets/social-preview.png";
 
@@ -64,6 +71,7 @@ assert.doesNotMatch(
 assert.match(app, /for \(const character of value\)/, "The input limit must count code points");
 assert.match(app, /message-safety/, "Safety exits must have a distinct accessible message");
 assert.match(app, /\.\/data\/eliza-intent-v1\.json/, "The app must load the staged learned model");
+assert.match(app, /\.\/data\/open-set-v2\/metrics\.json/, "The app must load the staged v2 report");
 assert.match(app, /RULE FALLBACK/, "A model-load failure must be visible");
 assert.match(app, /topFeatures/, "The browser trace must expose feature contributions");
 assert.match(html, /class="lab-shell" aria-busy="true"/);
@@ -74,6 +82,7 @@ assert.match(app, /finally\s*\{\s*setModelReady\(\)/s);
 assert.match(styles, /\.message-user\b/, "User messages must have a matching style");
 assert.match(styles, /\.message-safety\b/, "Safety messages must have a matching style");
 assert.match(styles, /\.pipeline-map\s*\{/, "The pipeline diagram must be code-built");
+assert.match(styles, /\.v2-protocol\s*\{/, "The v2 protocol diagram must be code-built");
 assert.match(styles, /\.skip-link\s*\{/, "The skip link must have a visible style");
 assert.match(styles, /\.skip-link:focus-visible\s*\{/, "The skip link needs a keyboard-focus state");
 
@@ -92,6 +101,34 @@ assert.equal(report.ood_metrics.accepted_examples, 0);
 assert.equal(report.calibration.holdout_used_for_calibration, false);
 assert.equal(model.training_config.thresholds.minimum_confidence, 0.45);
 assert.equal(model.training_config.thresholds.minimum_margin, 0.2);
+
+assert.equal(v2Manifest.schema_version, 2);
+assert.equal(v2Manifest.bundle_kind, "eliza-open-set-bundle");
+assert.equal(v2Manifest.model_version, "2.0.0");
+assert.equal(v2Metrics.schema_version, 2);
+assert.equal(v2Metrics.dataset_sha256, v2Manifest.dataset_sha256);
+assert.equal(v2Metrics.split_plan_sha256, v2Manifest.split_plan_sha256);
+assert.deepEqual(v2Metrics.partition_counts, {
+  calibration: 14,
+  development: 14,
+  "id-test": 14,
+  "ood-development": 20,
+  "ood-test": 20,
+  train: 70,
+});
+assert.equal(v2Metrics.threshold_selection.id_test_used, false);
+assert.equal(v2Metrics.threshold_selection.ood_test_used, false);
+assert.equal(v2Policy.temperature_source, "calibration-partition-temperature-scaling-v2");
+assert.equal(v2Policy.threshold_source, "development-plus-ood-development-grid-v2");
+assert.equal(v2Metrics.bootstrap_95.resamples, 1_000);
+assert.equal(v2Metrics.id_test.example_count, 14);
+assert.equal(v2Metrics.ood_test.example_count, 20);
+assert.ok(v2Metrics.id_test.accuracy >= v2Metrics.bootstrap_95.id_accuracy.lower_95);
+assert.ok(v2Metrics.id_test.accuracy <= v2Metrics.bootstrap_95.id_accuracy.upper_95);
+assert.ok(v2Metrics.ood_test.discrimination.auroc >= v2Metrics.bootstrap_95.ood_auroc.lower_95);
+assert.ok(v2Metrics.ood_test.discrimination.auroc <= v2Metrics.bootstrap_95.ood_auroc.upper_95);
+assert.match(html, /No test row chooses a weight, temperature or threshold\./);
+assert.match(html, /OOD FPR is still weak/i);
 
 for (const [metric, visibleValue] of [
   ["holdout-size", "21"],
@@ -141,6 +178,13 @@ if (stageIndex >= 0) {
     reportBytes,
     "The deployed report must be byte-identical to the checked-in report",
   );
+  for (const file of ["manifest.json", "metrics.json", "model.json", "policy.json", "split-plan.json"]) {
+    assert.deepEqual(
+      await readFile(path.join(stage, "data/open-set-v2", file)),
+      await readFile(path.join(v2BundleRoot, file)),
+      `The deployed v2 ${file} must be byte-identical to the checked-in bundle`,
+    );
+  }
 }
 
 console.log("ELIZA Lab site and model-report validation passed.");

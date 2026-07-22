@@ -1,5 +1,53 @@
 # Dataset contract
 
+## Version-two grouped corpus
+
+[`fixtures/intents-v2.tsv`](../fixtures/intents-v2.tsv) adds an explicit grouping boundary:
+
+```text
+id<TAB>group_id<TAB>label<TAB>text
+```
+
+`group_id` identifies related wording that must never cross partitions. A group belongs to exactly
+one label, IDs and normalized text remain unique, and every label needs at least four groups. The
+current synthetic fixture has eight two-row groups per label. These pairs are only an initial
+leakage-control mechanism; they are not a substitute for a larger independently annotated corpus.
+
+Seed `20260722` hashes whole groups within each label and produces four typed partitions. For each
+label, the split assigns roughly 10% of groups to each non-training partition, with at least one
+group in every partition and at least one left for training. The checked-in eight-group labels
+therefore use one group for each evaluation role and five for training; larger datasets scale the
+quotas instead of keeping fixed one-group tests. The strategy identifier is
+`group-stratified-scaled-four-way-v2`.
+
+| Partition | Rows | May influence |
+| --- | ---: | --- |
+| Train | 70 | TF-IDF vocabulary and classifier weights |
+| Development | 14 | Confidence and probability-margin thresholds |
+| Calibration | 14 | Temperature scaling only |
+| ID-test | 14 | Final ID metrics only |
+
+Every label appears in every partition. No ID or group appears in more than one partition. The
+serialized split plan lists every assignment and is SHA-256 linked to the model, policy and metrics
+through the v2 artifact manifest.
+
+## Version-two OOD populations
+
+[`fixtures/ood-dev-v2.tsv`](../fixtures/ood-dev-v2.tsv) and
+[`fixtures/ood-test-v2.tsv`](../fixtures/ood-test-v2.tsv) use:
+
+```text
+id<TAB>group_id<TAB>text
+```
+
+OOD-development has 20 rows and may influence only the abstention thresholds. OOD-test has 20
+different rows and is opened only after the temperature and thresholds are frozen. The loader
+rejects reused IDs, groups or normalized text across supervised, OOD-development and OOD-test.
+
+Both sets remain synthetic and small. AUROC, AUPR and FPR at 95% TPR describe only these fixtures;
+the deterministic row-bootstrap intervals expose within-fixture sampling uncertainty but cannot
+measure between-group variation or manufacture external validity.
+
 ## Supervised corpus
 
 [`fixtures/intents-v1.tsv`](../fixtures/intents-v1.tsv) is UTF-8 TSV with this exact header:

@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## 1.3.0 — 2026-07-22
+
+- Add an experimental open-set v2 path with explicit group IDs and group-disjoint train,
+  development, calibration and ID-test partitions. Keep OOD-development separate from OOD-test and
+  encode the no-test-leakage boundary in typed APIs.
+- Fit a real temperature scale on calibration rows, select confidence and probability-margin
+  thresholds only from development plus OOD-development, then report ECE, multiclass Brier, NLL,
+  risk-coverage, AURC, OOD AUROC/AUPR/FPR@95TPR and deterministic label-stratified row-bootstrap intervals on
+  untouched tests.
+- Add SHA-256-linked v2 model, operating-policy, metrics and split-plan artifacts with verify and
+  in-memory reproduce commands. Compile and index a verified model once for bounded JSONL batch
+  inference.
+- Replace top-class-only evidence in v2 with contrastive top-versus-runner-up contributions whose
+  bias and feature terms are tested against the exact logit margin. Present the wider intervals and
+  weak OOD FPR on Pages instead of upgrading the project claim.
+
 ## 1.2.0 — 2026-07-22
 
 - Replace the cosmetic rule-only framing with a real, local intent-classification pipeline:

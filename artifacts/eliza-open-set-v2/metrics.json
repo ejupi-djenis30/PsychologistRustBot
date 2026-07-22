@@ -1,0 +1,592 @@
+{
+  "schema_version": 2,
+  "model_version": "2.0.0",
+  "dataset_sha256": "4e0ca0a3b98a91d324c4dc5514d0a24c2d2546a96a483b6a83d8d49a5d5ec872",
+  "split_plan_sha256": "7489643fd051f9dc7af5509048c8b930b9a674848e4224146eda0cc1e3ce1818",
+  "ood_development_sha256": "a231c152721d493fe32906d6ca659effbb439f143d4b95960b3fc860846e06f9",
+  "ood_test_sha256": "66b922905610b207fe95cdd22885903adc6bf70c580c627011659d163282df92",
+  "partition_counts": {
+    "calibration": 14,
+    "development": 14,
+    "id-test": 14,
+    "ood-development": 20,
+    "ood-test": 20,
+    "train": 70
+  },
+  "threshold_selection": {
+    "strategy": "development-plus-ood-development-grid-v2",
+    "development_example_count": 14,
+    "ood_development_example_count": 20,
+    "minimum_development_selective_accuracy": 0.75,
+    "maximum_ood_development_coverage": 0.1,
+    "selected_confidence": 0.86,
+    "selected_probability_margin": 0.81,
+    "observed_development_coverage": 0.5,
+    "observed_development_selective_accuracy": 1.0,
+    "observed_ood_development_coverage": 0.1,
+    "id_test_used": false,
+    "ood_test_used": false
+  },
+  "uncalibrated_calibration_partition": {
+    "negative_log_likelihood": 1.1966254499264228,
+    "multiclass_brier": 0.5717773625702736,
+    "expected_calibration_error": 0.20095574205975417,
+    "ece_bins": 10
+  },
+  "calibrated_calibration_partition": {
+    "negative_log_likelihood": 0.8213153168564895,
+    "multiclass_brier": 0.4808871317494952,
+    "expected_calibration_error": 0.21004690635548398,
+    "ece_bins": 10
+  },
+  "id_test": {
+    "example_count": 14,
+    "accuracy": 0.7857142857142857,
+    "macro_f1": 0.780952380952381,
+    "coverage": 0.35714285714285715,
+    "selective_accuracy": 1.0,
+    "calibration": {
+      "negative_log_likelihood": 0.7407319189965248,
+      "multiclass_brier": 0.40182723901860706,
+      "expected_calibration_error": 0.3529463277155202,
+      "ece_bins": 10
+    },
+    "aurc": 0.10940686297829155,
+    "risk_coverage_curve": [
+      {
+        "accepted": 1,
+        "coverage": 0.07142857142857142,
+        "risk": 0.0
+      },
+      {
+        "accepted": 2,
+        "coverage": 0.14285714285714285,
+        "risk": 0.0
+      },
+      {
+        "accepted": 3,
+        "coverage": 0.21428571428571427,
+        "risk": 0.0
+      },
+      {
+        "accepted": 4,
+        "coverage": 0.2857142857142857,
+        "risk": 0.0
+      },
+      {
+        "accepted": 5,
+        "coverage": 0.35714285714285715,
+        "risk": 0.0
+      },
+      {
+        "accepted": 6,
+        "coverage": 0.42857142857142855,
+        "risk": 0.0
+      },
+      {
+        "accepted": 7,
+        "coverage": 0.5,
+        "risk": 0.1428571428571429
+      },
+      {
+        "accepted": 8,
+        "coverage": 0.5714285714285714,
+        "risk": 0.25
+      },
+      {
+        "accepted": 9,
+        "coverage": 0.6428571428571429,
+        "risk": 0.2222222222222222
+      },
+      {
+        "accepted": 10,
+        "coverage": 0.7142857142857143,
+        "risk": 0.19999999999999996
+      },
+      {
+        "accepted": 11,
+        "coverage": 0.7857142857142857,
+        "risk": 0.18181818181818177
+      },
+      {
+        "accepted": 12,
+        "coverage": 0.8571428571428571,
+        "risk": 0.16666666666666663
+      },
+      {
+        "accepted": 13,
+        "coverage": 0.9285714285714286,
+        "risk": 0.15384615384615385
+      },
+      {
+        "accepted": 14,
+        "coverage": 1.0,
+        "risk": 0.2142857142857143
+      }
+    ],
+    "predictions": [
+      {
+        "id": "feeling-015",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.8967402901772341,
+        "probability_margin": 0.8376403756301394,
+        "probabilities": {
+          "feeling": 0.8967402901772341,
+          "goal": 0.05909991454709473,
+          "greeting": 0.00499476924364589,
+          "observation": 0.0037099696678523216,
+          "ownership": 0.0026797228099278035,
+          "question": 0.016940724312162776,
+          "reason": 0.01583460924208237
+        }
+      },
+      {
+        "id": "feeling-016",
+        "actual_label": "feeling",
+        "predicted_label": "feeling",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.3480010490769525,
+        "probability_margin": 0.0031726702245639116,
+        "probabilities": {
+          "feeling": 0.3480010490769525,
+          "goal": 0.03515728452989337,
+          "greeting": 0.3448283788523886,
+          "observation": 0.07061419860966577,
+          "ownership": 0.038243677425512206,
+          "question": 0.02952238897553339,
+          "reason": 0.13363302253005424
+        }
+      },
+      {
+        "id": "goal-001",
+        "actual_label": "goal",
+        "predicted_label": "goal",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9179236881824163,
+        "probability_margin": 0.8893799430321634,
+        "probabilities": {
+          "feeling": 0.005645524322531377,
+          "goal": 0.9179236881824163,
+          "greeting": 0.012285955567335638,
+          "observation": 0.02854374515025296,
+          "ownership": 0.0009587736793295652,
+          "question": 0.007575953325081515,
+          "reason": 0.027066359773052807
+        }
+      },
+      {
+        "id": "goal-002",
+        "actual_label": "goal",
+        "predicted_label": "ownership",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.7591952695343267,
+        "probability_margin": 0.5264288511988505,
+        "probabilities": {
+          "feeling": 0.0008883603842702479,
+          "goal": 0.23276641833547615,
+          "greeting": 0.0008905390377493907,
+          "observation": 0.0013380453529925577,
+          "ownership": 0.7591952695343267,
+          "question": 0.0008850798829030665,
+          "reason": 0.004036287472281696
+        }
+      },
+      {
+        "id": "greeting-001",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9999666767990681,
+        "probability_margin": 0.9999565037581283,
+        "probabilities": {
+          "feeling": 4.041505323359164e-6,
+          "goal": 4.159420499311546e-6,
+          "greeting": 0.9999666767990681,
+          "observation": 4.43527345363298e-6,
+          "ownership": 2.34454511277746e-6,
+          "question": 0.000010173040939838307,
+          "reason": 8.169415602874753e-6
+        }
+      },
+      {
+        "id": "greeting-002",
+        "actual_label": "greeting",
+        "predicted_label": "greeting",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.33947232673931793,
+        "probability_margin": 0.21289680570432964,
+        "probabilities": {
+          "feeling": 0.12443630431316888,
+          "goal": 0.09492097233793302,
+          "greeting": 0.33947232673931793,
+          "observation": 0.10059226330500255,
+          "ownership": 0.10665681184979868,
+          "question": 0.1265755210349883,
+          "reason": 0.10734580041979078
+        }
+      },
+      {
+        "id": "observation-015",
+        "actual_label": "observation",
+        "predicted_label": "observation",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.8197896822910118,
+        "probability_margin": 0.7063794895809922,
+        "probabilities": {
+          "feeling": 0.003624096676802718,
+          "goal": 0.0028224332365598946,
+          "greeting": 0.007117543663502108,
+          "observation": 0.8197896822910118,
+          "ownership": 0.0015124360364855663,
+          "question": 0.051723615385618295,
+          "reason": 0.1134101927100196
+        }
+      },
+      {
+        "id": "observation-016",
+        "actual_label": "observation",
+        "predicted_label": "question",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.7740490862808362,
+        "probability_margin": 0.617198065926653,
+        "probabilities": {
+          "feeling": 0.002273133336190331,
+          "goal": 0.0028743299805872127,
+          "greeting": 0.0010956114072840592,
+          "observation": 0.1568510203541832,
+          "ownership": 0.006126206738420726,
+          "question": 0.7740490862808362,
+          "reason": 0.05673061190249834
+        }
+      },
+      {
+        "id": "ownership-015",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9738487268607041,
+        "probability_margin": 0.9602685618138717,
+        "probabilities": {
+          "feeling": 0.0007078062105593482,
+          "goal": 0.0027673889683205713,
+          "greeting": 0.0006368120710302401,
+          "observation": 0.013580165046832491,
+          "ownership": 0.9738487268607041,
+          "question": 0.0004191193287080268,
+          "reason": 0.00803998151384501
+        }
+      },
+      {
+        "id": "ownership-016",
+        "actual_label": "ownership",
+        "predicted_label": "ownership",
+        "correct": true,
+        "accepted": true,
+        "confidence": 0.9625817178941419,
+        "probability_margin": 0.9482845979053786,
+        "probabilities": {
+          "feeling": 0.00250637213761424,
+          "goal": 0.0142971199887634,
+          "greeting": 0.00563158823008563,
+          "observation": 0.0036423827848371827,
+          "ownership": 0.9625817178941419,
+          "question": 0.000909294161773724,
+          "reason": 0.010431524802783908
+        }
+      },
+      {
+        "id": "question-003",
+        "actual_label": "question",
+        "predicted_label": "goal",
+        "correct": false,
+        "accepted": false,
+        "confidence": 0.2953751813690016,
+        "probability_margin": 0.008909054192418608,
+        "probabilities": {
+          "feeling": 0.04669004668947436,
+          "goal": 0.2953751813690016,
+          "greeting": 0.020530699815782483,
+          "observation": 0.06587428621401384,
+          "ownership": 0.286466127176583,
+          "question": 0.08226070719353967,
+          "reason": 0.20280295154160513
+        }
+      },
+      {
+        "id": "question-004",
+        "actual_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.33277061531864777,
+        "probability_margin": 0.02331599877800028,
+        "probabilities": {
+          "feeling": 0.012475276314264644,
+          "goal": 0.3094546165406475,
+          "greeting": 0.01488395882745623,
+          "observation": 0.07519278056296222,
+          "ownership": 0.024072289838619303,
+          "question": 0.33277061531864777,
+          "reason": 0.23115046259740218
+        }
+      },
+      {
+        "id": "reason-003",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.6312077652870594,
+        "probability_margin": 0.4739892665815124,
+        "probabilities": {
+          "feeling": 0.15721849870554697,
+          "goal": 0.026338697487491864,
+          "greeting": 0.004542626685702897,
+          "observation": 0.02167874985234922,
+          "ownership": 0.003292460252515069,
+          "question": 0.15572120172933465,
+          "reason": 0.6312077652870594
+        }
+      },
+      {
+        "id": "reason-004",
+        "actual_label": "reason",
+        "predicted_label": "reason",
+        "correct": true,
+        "accepted": false,
+        "confidence": 0.6650684105403276,
+        "probability_margin": 0.5391185030900999,
+        "probabilities": {
+          "feeling": 0.01562143669097447,
+          "goal": 0.106113316678732,
+          "greeting": 0.001711744626149524,
+          "observation": 0.12594990745022774,
+          "ownership": 0.004680951747606967,
+          "question": 0.08085423226598168,
+          "reason": 0.6650684105403276
+        }
+      }
+    ]
+  },
+  "ood_test": {
+    "example_count": 20,
+    "accepted_examples": 0,
+    "coverage": 0.0,
+    "discrimination": {
+      "auroc": 0.75,
+      "aupr_in_domain": 0.7840646090936095,
+      "fpr_at_95_tpr": 0.85
+    },
+    "predictions": [
+      {
+        "id": "ood-test-001",
+        "predicted_label": "reason",
+        "accepted": false,
+        "confidence": 0.5943586606969518,
+        "probability_margin": 0.3285826756358371
+      },
+      {
+        "id": "ood-test-002",
+        "predicted_label": "goal",
+        "accepted": false,
+        "confidence": 0.2915945292053084,
+        "probability_margin": 0.07048440216761162
+      },
+      {
+        "id": "ood-test-003",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.6507722155756052,
+        "probability_margin": 0.45432752833370676
+      },
+      {
+        "id": "ood-test-004",
+        "predicted_label": "goal",
+        "accepted": false,
+        "confidence": 0.5832800629108372,
+        "probability_margin": 0.3846884320430669
+      },
+      {
+        "id": "ood-test-005",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.601798711948069,
+        "probability_margin": 0.3283905852243157
+      },
+      {
+        "id": "ood-test-006",
+        "predicted_label": "goal",
+        "accepted": false,
+        "confidence": 0.491339192939272,
+        "probability_margin": 0.20152106897778754
+      },
+      {
+        "id": "ood-test-007",
+        "predicted_label": "goal",
+        "accepted": false,
+        "confidence": 0.8654476784651429,
+        "probability_margin": 0.7962149733840685
+      },
+      {
+        "id": "ood-test-008",
+        "predicted_label": "goal",
+        "accepted": false,
+        "confidence": 0.7006888557117774,
+        "probability_margin": 0.46313225547832476
+      },
+      {
+        "id": "ood-test-009",
+        "predicted_label": "ownership",
+        "accepted": false,
+        "confidence": 0.3753413427562726,
+        "probability_margin": 0.1501595949095762
+      },
+      {
+        "id": "ood-test-010",
+        "predicted_label": "reason",
+        "accepted": false,
+        "confidence": 0.5141728587179814,
+        "probability_margin": 0.14085916691637318
+      },
+      {
+        "id": "ood-test-011",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.2686673006874533,
+        "probability_margin": 0.021624163682257336
+      },
+      {
+        "id": "ood-test-012",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.5548742653052394,
+        "probability_margin": 0.37003895383498386
+      },
+      {
+        "id": "ood-test-013",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.38212072154884663,
+        "probability_margin": 0.014845798497118923
+      },
+      {
+        "id": "ood-test-014",
+        "predicted_label": "observation",
+        "accepted": false,
+        "confidence": 0.5553387818757668,
+        "probability_margin": 0.3973479193344499
+      },
+      {
+        "id": "ood-test-015",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.3617666657309187,
+        "probability_margin": 0.04070876499669224
+      },
+      {
+        "id": "ood-test-016",
+        "predicted_label": "reason",
+        "accepted": false,
+        "confidence": 0.51891508331456,
+        "probability_margin": 0.24964879435227227
+      },
+      {
+        "id": "ood-test-017",
+        "predicted_label": "question",
+        "accepted": false,
+        "confidence": 0.24222163197024912,
+        "probability_margin": 0.05344336298892838
+      },
+      {
+        "id": "ood-test-018",
+        "predicted_label": "greeting",
+        "accepted": false,
+        "confidence": 0.33947232673931793,
+        "probability_margin": 0.21289680570432964
+      },
+      {
+        "id": "ood-test-019",
+        "predicted_label": "greeting",
+        "accepted": false,
+        "confidence": 0.33947232673931793,
+        "probability_margin": 0.21289680570432964
+      },
+      {
+        "id": "ood-test-020",
+        "predicted_label": "reason",
+        "accepted": false,
+        "confidence": 0.30739600648331067,
+        "probability_margin": 0.14017606283248943
+      }
+    ]
+  },
+  "bootstrap_95": {
+    "strategy": "label-stratified-id-row-and-population-stratified-ood-percentile-v2",
+    "seed": 20260722,
+    "resamples": 1000,
+    "confidence_level": 0.95,
+    "id_accuracy": {
+      "value": 0.7857142857142857,
+      "lower_95": 0.6428571428571429,
+      "upper_95": 0.9285714285714286
+    },
+    "id_macro_f1": {
+      "value": 0.780952380952381,
+      "lower_95": 0.5809523809523809,
+      "upper_95": 0.9238095238095239
+    },
+    "id_negative_log_likelihood": {
+      "value": 0.7407319189965248,
+      "lower_95": 0.4532572177365097,
+      "upper_95": 1.0244741319363628
+    },
+    "id_multiclass_brier": {
+      "value": 0.40182723901860706,
+      "lower_95": 0.21029258737530607,
+      "upper_95": 0.5903827284123572
+    },
+    "id_expected_calibration_error": {
+      "value": 0.3529463277155202,
+      "lower_95": 0.22054935538393872,
+      "upper_95": 0.48292468252901105
+    },
+    "id_aurc": {
+      "value": 0.10940686297829155,
+      "lower_95": 0.0051020408163265285,
+      "upper_95": 0.2798469387755102
+    },
+    "ood_auroc": {
+      "value": 0.75,
+      "lower_95": 0.6214285714285714,
+      "upper_95": 0.8642857142857143
+    },
+    "ood_aupr_in_domain": {
+      "value": 0.7840646090936095,
+      "lower_95": 0.666627799871086,
+      "upper_95": 0.8917027417027416
+    },
+    "ood_fpr_at_95_tpr": {
+      "value": 0.85,
+      "lower_95": 0.65,
+      "upper_95": 1.0
+    }
+  },
+  "limitations": [
+    "All current examples are synthetic and English-only.",
+    "The four-way ID split is group-disjoint but still small; confidence intervals are therefore wide.",
+    "OOD discrimination is measured only on the checked-in synthetic OOD-test fixture.",
+    "ID confidence intervals resample rows within labels, not groups; with one ID-test group per label, they do not estimate between-group variation.",
+    "This classifier is not suitable for clinical, safety, employment, or other decisions about people."
+  ]
+}
