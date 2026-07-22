@@ -8,6 +8,7 @@ use crate::ml::{MlError, VectorizerConfig};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::fmt::Write as _;
 use std::fs;
 use std::io::{BufRead, Read, Write};
 use std::path::Path;
@@ -2966,7 +2967,11 @@ fn safe_ratio(numerator: f64, denominator: f64) -> f64 {
 
 fn sha256_hex(bytes: &[u8]) -> String {
     let digest = Sha256::digest(bytes);
-    digest.iter().map(|byte| format!("{byte:02x}")).collect()
+    let mut output = String::with_capacity(digest.len() * 2);
+    for byte in digest {
+        write!(output, "{byte:02x}").expect("writing to a String cannot fail");
+    }
+    output
 }
 
 fn valid_sha256(value: &str) -> bool {
