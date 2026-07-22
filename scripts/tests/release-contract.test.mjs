@@ -57,17 +57,33 @@ function createCompleteFixture(prefix) {
   writeFileSync(path.join(evidenceDirectory, "release-contract.json"), `${JSON.stringify(contract, null, 2)}\n`);
   copyFileSync(lockPath, path.join(evidenceDirectory, "Cargo.lock"));
   writeFileSync(path.join(evidenceDirectory, "cargo-tree.txt"), `${contract.package} v${contract.version}\n`, "utf8");
-  const rootId = `path+file:///workspace#${contract.package}@${contract.version}`;
+  const lockPackages = readFileSync(lockPath, "utf8")
+    .split("[[package]]")
+    .slice(1)
+    .map((block, index) => {
+      const name = block.match(/^\s*name\s*=\s*"([^"]+)"/mu)?.[1];
+      const version = block.match(/^\s*version\s*=\s*"([^"]+)"/mu)?.[1];
+      assert.ok(name && version, "test fixture must parse every Cargo.lock package");
+      return { id: `fixture:${index}:${name}@${version}`, name, version, source: null, license: null };
+    });
+  const rootPackage = lockPackages.find(
+    (entry) => entry.name === contract.package && entry.version === contract.version,
+  );
+  assert.ok(rootPackage, "test fixture must contain the workspace root package");
+  const rootId = rootPackage.id;
   const metadata = {
-    packages: [{ id: rootId, name: contract.package, version: contract.version, source: null, license: null }],
-    resolve: { root: rootId, nodes: [{ id: rootId, dependencies: [] }] },
+    packages: lockPackages,
+    resolve: {
+      root: rootId,
+      nodes: lockPackages.map((entry) => ({ id: entry.id, dependencies: [] })),
+    },
   };
   writeFileSync(path.join(evidenceDirectory, "cargo-metadata.json"), `${JSON.stringify(metadata, null, 2)}\n`, "utf8");
   const sbom = generateSpdx(metadata, { manifestPath, lockPath });
   writeFileSync(path.join(evidenceDirectory, `${contract.package}-v${contract.version}.spdx.json`), `${JSON.stringify(sbom, null, 2)}\n`, "utf8");
   const auditReport = {
     database: { "advisory-count": 1166, "last-commit": null, "last-updated": null },
-    lockfile: { "dependency-count": 1 },
+    lockfile: { "dependency-count": lockPackages.length },
     settings: { target_arch: [], target_os: [], severity: null, ignore: [], informational_warnings: ["unmaintained", "unsound", "notice"] },
     vulnerabilities: { found: false, count: 0, list: [] },
     warnings: {},

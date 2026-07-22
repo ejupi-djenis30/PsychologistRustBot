@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+## 1.2.0 — 2026-07-22
+
+- Replace the cosmetic rule-only framing with a real, local intent-classification pipeline:
+  validated TSV data, a deterministic stratified split, training-only TF-IDF features,
+  multinomial logistic regression, L2 regularization, versioned JSON weights, and reproducible
+  train/evaluate/infer commands.
+- Add uncertainty calibration that uses training data plus a separate unlabeled OOD fixture while
+  leaving the 21-row holdout untouched until final evaluation. Record probabilities, margins,
+  feature contributions, per-class metrics, a confusion matrix, and every holdout decision.
+- Embed model `1.0.0` and the synthetic fixtures in native CLI builds, retain the deterministic
+  rule mode, and enforce input and non-clinical safety boundaries before learned inference.
+- Run the same model in Rust and the browser with a shared parity fixture. If the static model
+  cannot load or validate, the site identifies its deterministic rule fallback explicitly.
+- Add a model card, dataset contract, architecture guide, OOD limitations, byte-reproducibility
+  tests, strict model-validation tests, safe output-path handling, and generated-report checks.
+- Rebuild the Pages presentation around code-rendered pipeline geometry and restrained report
+  copy that states the small holdout, 14/21 raw accuracy, 0.661 macro-F1, and 7/21 coverage without
+  making general NLP or clinical claims.
+
 ## 1.1.2 — 2026-07-20
 
 - Reissue the verified builds from the repository's privacy-safe history. The ELIZA engine and

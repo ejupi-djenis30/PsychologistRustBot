@@ -1,12 +1,12 @@
 [package]
 name = "eliza-lab"
-version = "1.1.2"
+version = "1.2.0"
 edition = "2021"
 rust-version = "1.81"
-description = "A transparent, local-only ELIZA conversation engine for learning how rule-based dialogue systems work."
+description = "A local, explainable intent-classification lab with a non-clinical dialogue interface."
 repository = "https://github.com/ejupi-djenis30/PsychologistRustBot"
 license = "MIT"
-keywords = ["eliza", "dialogue", "education", "privacy"]
+keywords = ["machine-learning", "nlp", "eliza", "cli", "privacy"]
 categories = ["command-line-utilities"]
 publish = false
 
@@ -19,6 +19,8 @@ name = "eliza-lab"
 path = "src/main.rs"
 
 [dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
 
 [profile.release]
 codegen-units = 1

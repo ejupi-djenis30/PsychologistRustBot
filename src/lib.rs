@@ -1,7 +1,9 @@
-//! A small, transparent ELIZA-style engine.
+//! A transparent, local dialogue and intent-classification laboratory.
 //!
-//! The engine is intentionally local and deterministic. It keeps only a turn counter,
-//! never writes conversation content, and exposes the rule used for every response.
+//! The deterministic rule engine remains available on its own. A trained model can be added for
+//! intent routing, but input limits and the non-clinical safety exit always run before inference.
+
+pub mod ml;
 
 pub const MAX_INPUT_CHARS: usize = 512;
 
@@ -22,14 +24,34 @@ const SAFETY_PHRASES: [&str; 14] = [
     "immediate danger",
 ];
 
+const FALLBACKS: [&str; 4] = [
+    "Tell me a little more about that.",
+    "What part of that stands out most to you?",
+    "How did you arrive at that thought?",
+    "What would change if you looked at it another way?",
+];
+
+/// Confidence information produced by the optional learned intent model.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ModelTrace {
+    pub model_version: String,
+    pub label: String,
+    pub accepted: bool,
+    pub confidence: f64,
+    pub margin: f64,
+    pub probabilities: std::collections::BTreeMap<String, f64>,
+    pub top_features: Vec<ml::FeatureContribution>,
+}
+
 /// A response together with the rule trace shown by the learning interface.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Reply {
     pub text: String,
     pub rule_id: &'static str,
     pub keyword: Option<String>,
     pub transformed_fragment: Option<String>,
     pub turn: usize,
+    pub model_trace: Option<ModelTrace>,
 }
 
 /// Deterministic conversation engine with no transcript storage.
@@ -145,12 +167,6 @@ impl ElizaEngine {
             );
         }
 
-        const FALLBACKS: [&str; 4] = [
-            "Tell me a little more about that.",
-            "What part of that stands out most to you?",
-            "How did you arrive at that thought?",
-            "What would change if you looked at it another way?",
-        ];
         reply(
             FALLBACKS[(turn - 1) % FALLBACKS.len()],
             "fallback",
@@ -158,6 +174,91 @@ impl ElizaEngine {
             None,
             turn,
         )
+    }
+
+    /// Routes a prompt through a learned intent model after enforcing hard input and safety
+    /// boundaries. Low-confidence predictions abstain and use a deterministic fallback.
+    pub fn respond_with_model(&mut self, input: &str, model: &ml::IntentModel) -> Reply {
+        self.turn = self.turn.saturating_add(1);
+        let turn = self.turn;
+        let trimmed = input.trim();
+
+        if trimmed.is_empty() {
+            return reply(
+                "Take your time. What would you like to examine?",
+                "empty-input",
+                None,
+                None,
+                turn,
+            );
+        }
+        if trimmed.chars().nth(MAX_INPUT_CHARS).is_some() {
+            return reply(
+                "That is more text than this small teaching demo can inspect at once. Try one short thought.",
+                "input-boundary",
+                None,
+                None,
+                turn,
+            );
+        }
+
+        let normalized = normalize(trimmed);
+        if SAFETY_PHRASES
+            .iter()
+            .any(|phrase| contains_phrase(&normalized, phrase))
+        {
+            return reply(
+                "This demo cannot assess or support an emergency. If you might act on thoughts of suicide or self-harm, call your local emergency number now or reach a trusted person who can stay with you.",
+                "safety-boundary",
+                Some("matched safety phrase"),
+                None,
+                turn,
+            );
+        }
+
+        let prediction = model.predict(trimmed);
+        let response = match prediction.label.as_str() {
+            "greeting" => Some("Hello. What would you like to examine today?"),
+            "feeling" => Some("Which part of that feeling would be useful to examine?"),
+            "reason" => Some("Which part of that explanation matters most here?"),
+            "ownership" => Some("How does that situation affect what you can do next?"),
+            "question" => Some("What answer would feel most useful to explore?"),
+            "goal" => Some("What is the smallest concrete step you could test next?"),
+            "observation" => Some("What part of that observation stands out most to you?"),
+            _ => None,
+        };
+        let accepted = prediction.accepted && response.is_some();
+        let model_trace = ModelTrace {
+            model_version: model.model_version.clone(),
+            label: prediction.label.clone(),
+            accepted,
+            confidence: prediction.confidence,
+            margin: prediction.margin,
+            probabilities: prediction.probabilities.clone(),
+            top_features: prediction.top_features.clone(),
+        };
+
+        if accepted {
+            Reply {
+                text: response
+                    .expect("accepted predictions have a mapped response")
+                    .into(),
+                rule_id: "ml-intent",
+                keyword: Some(prediction.label),
+                transformed_fragment: None,
+                turn,
+                model_trace: Some(model_trace),
+            }
+        } else {
+            Reply {
+                text: FALLBACKS[(turn - 1) % FALLBACKS.len()].into(),
+                rule_id: "ml-abstain",
+                keyword: Some(prediction.label),
+                transformed_fragment: None,
+                turn,
+                model_trace: Some(model_trace),
+            }
+        }
     }
 }
 
@@ -174,6 +275,7 @@ fn reply(
         keyword: keyword.map(str::to_string),
         transformed_fragment,
         turn,
+        model_trace: None,
     }
 }
 
@@ -313,5 +415,30 @@ mod tests {
         assert_eq!(first.rule_id, "fallback");
         assert_eq!(second.rule_id, "fallback");
         assert_ne!(first.text, second.text);
+    }
+
+    #[test]
+    fn safety_boundary_precedes_learned_inference() {
+        let dataset = ml::Dataset::from_tsv(
+            "id\tlabel\ttext\n\
+             g1\tgreeting\thello\n\
+             g2\tgreeting\thi there\n\
+             g3\tgreeting\tgood morning\n\
+             g4\tgreeting\tgreetings\n\
+             g5\tgreeting\thello again\n\
+             q1\tquestion\twhat now?\n\
+             q2\tquestion\twhere next?\n\
+             q3\tquestion\thow so?\n\
+             q4\tquestion\twhich one?\n\
+             q5\tquestion\tcan it work?\n",
+        )
+        .unwrap();
+        let (model, _) = ml::IntentModel::train(&dataset, ml::TrainingConfig::default()).unwrap();
+        let mut engine = ElizaEngine::new();
+
+        let response = engine.respond_with_model("hello, I want to die", &model);
+
+        assert_eq!(response.rule_id, "safety-boundary");
+        assert!(response.model_trace.is_none());
     }
 }

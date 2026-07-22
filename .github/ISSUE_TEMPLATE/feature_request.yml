@@ -30,9 +30,9 @@ body:
     attributes:
       label: Main area
       options:
-        - Rust rule engine
+        - Rust ML pipeline or model
         - Command-line experience
-        - Browser engine or interface
+        - Browser learned inference or interface
         - Accessibility
         - Parity testing
         - Documentation

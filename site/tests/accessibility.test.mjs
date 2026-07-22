@@ -19,3 +19,33 @@ test("the skip link exposes a visible keyboard state and a usable target size", 
   assert.match(styles, /\.skip-link\s*\{[^}]*min-height:\s*2\.75rem;/s);
   assert.match(styles, /\.skip-link:focus-visible\s*\{[^}]*transform:\s*translateY\(0\);/s);
 });
+
+test("the prompt limit is not delegated to UTF-16 maxlength", async () => {
+  const html = await readFile(new URL("index.html", siteRoot), "utf8");
+  const app = await readFile(new URL("app.js", siteRoot), "utf8");
+
+  assert.doesNotMatch(html, /\bmaxlength=/);
+  assert.match(app, /for \(const character of value\)/);
+  assert.match(app, /count === MAX_INPUT_CHARS/);
+});
+
+test("the lab stays inert until model loading or fallback finishes", async () => {
+  const html = await readFile(new URL("index.html", siteRoot), "utf8");
+  const app = await readFile(new URL("app.js", siteRoot), "utf8");
+
+  assert.match(html, /class="lab-shell" aria-busy="true"/);
+  assert.match(html, /role="status" aria-live="polite" data-model-status/);
+  assert.ok((html.match(/data-model-gated disabled/gu) ?? []).length >= 5);
+  assert.match(html, /name="message"\s+data-model-gated\s+disabled/s);
+  assert.match(app, /finally\s*\{\s*setModelReady\(\)/s);
+  assert.match(app, /control\.disabled = false/);
+});
+
+test("the app versions every transitive local module", async () => {
+  const html = await readFile(new URL("index.html", siteRoot), "utf8");
+  const app = await readFile(new URL("app.js", siteRoot), "utf8");
+
+  assert.match(html, /src="app\.js\?v=[^"\s]+"/);
+  assert.match(app, /from "\.\/engine\.mjs\?v=[^"\s]+"/);
+  assert.match(app, /from "\.\/ml-engine\.mjs\?v=[^"\s]+"/);
+});

@@ -5,21 +5,22 @@
 Safety and security fixes target the current default branch. Earlier Git revisions document the
 legacy prototype and are not maintained releases.
 
-ELIZA Lab is an educational dialogue-system demonstration. It is not a psychologist, therapist,
-medical device, crisis service, or source of diagnosis.
+ELIZA Lab is an educational machine-learning and dialogue-system demonstration. It is not a
+psychologist, therapist, medical device, crisis service, or source of diagnosis.
 
 ## Data handling
 
-- The Rust engine stores only a saturating numeric turn counter in memory.
+- The dialogue engine stores only a saturating numeric turn counter; model weights are read-only.
 - The command-line application does not write transcripts or analytics.
-- The GitHub Pages demo makes no network requests after its static assets load.
+- The GitHub Pages demo downloads the versioned model as a same-origin static asset, then performs
+  feature extraction and inference in the tab without submitting prompts.
 - There are no accounts, cookies, databases, API keys, or remote models.
 - Prompts are capped at 512 Unicode characters. The CLI drains oversized input lines without
   retaining them, and the browser keeps at most 40 visible turns.
 
 ## Safety boundary
 
-The engine matches a small, explicit set of safety phrases only to stop the simulation and direct
+Before learned inference, the engine matches a small, explicit set of safety phrases only to stop the simulation and direct
 the visitor toward immediate human help. Phrase matching uses word boundaries, but it still has
 both false positives and false negatives. It does not infer intent, assess risk, monitor a person,
 or guarantee that urgent language will be recognized. It must not be used as a safety tool.

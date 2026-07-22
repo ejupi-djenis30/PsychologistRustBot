@@ -30,6 +30,15 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets --locked -- -D warnings
       - run: cargo test --all --locked
+      - name: Reproduce the checked-in model and report
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo run --locked -- train \
+            --output target/reproduced-model.json \
+            --report target/reproduced-report.json
+          cmp models/eliza-intent-v1.json target/reproduced-model.json
+          cmp reports/eliza-intent-v1.json target/reproduced-report.json
 
   site:
     timeout-minutes: 5

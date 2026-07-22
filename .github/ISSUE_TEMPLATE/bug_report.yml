@@ -15,9 +15,9 @@ body:
     attributes:
       label: Affected area
       options:
-        - Rust rule engine
+        - Rust ML pipeline or model
         - Command-line interface
-        - Browser rule engine
+        - Browser learned inference
         - Browser interface or accessibility
         - Shared parity fixture
         - Documentation or automation
@@ -28,7 +28,7 @@ body:
     attributes:
       label: Version or commit
       description: Paste the release number or commit SHA you tested.
-      placeholder: "1.1.2 or d502316"
+      placeholder: "1.2.0 or d502316"
     validations:
       required: true
   - type: input
