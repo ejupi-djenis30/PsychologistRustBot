@@ -24,8 +24,9 @@ accounts, prompt submission, transcript storage, diagnosis, or therapeutic claim
   uncertainty calibration, serialization, and inference live in the repository.
 - **Inspectable predictions:** JSON and browser traces expose all class probabilities, confidence,
   top-two margin, and the strongest positive feature contributions.
-- **Reproducible artifacts:** two identical v3 runs produce byte-identical model, policy, metrics
-  and split-plan files. The report records every final prediction.
+- **Reproducible artifacts:** a declared nine-decimal reporting precision makes the complete v3
+  bundle byte-identical across supported release targets. The report still records every final
+  prediction, while model and policy precision remain unchanged.
 - **Real abstention:** calibration, policy selection, ID-test and OOD-test have different roles.
   Inputs with weak evidence abstain instead of being presented as confident classifications.
 - **Private by construction:** CLI and browser inference are local. Prompts are not stored or sent

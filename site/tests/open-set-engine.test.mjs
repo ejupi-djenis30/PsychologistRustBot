@@ -44,7 +44,7 @@ const parsedBundle = async () => {
   };
 };
 
-const close = (left, right) => Math.abs(left - right) <= 1e-10;
+const close = (left, right) => Math.abs(left - right) <= 2e-9;
 
 test("the browser loads and verifies all five v3 bundle artifacts", async () => {
   const files = await readBundle();

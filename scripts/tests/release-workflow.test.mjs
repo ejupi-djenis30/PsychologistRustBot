@@ -15,6 +15,7 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 const workflow = readFileSync(path.join(repositoryRoot, ".github", "workflows", "release.yml"), "utf8");
 const continuousIntegration = readFileSync(path.join(repositoryRoot, ".github", "workflows", "ci.yml"), "utf8");
 const pages = readFileSync(path.join(repositoryRoot, ".github", "workflows", "pages.yml"), "utf8");
+const gitAttributes = readFileSync(path.join(repositoryRoot, ".gitattributes"), "utf8");
 const workflowFixtures = path.join(repositoryRoot, "scripts", "tests", "fixtures", "workflows");
 const hiddenJobWriteAll = readFileSync(path.join(workflowFixtures, "hidden-job-write-all.yml"), "utf8");
 const hiddenStepsFloatingAction = readFileSync(path.join(workflowFixtures, "hidden-steps-floating-action.yml"), "utf8");
@@ -121,6 +122,7 @@ test("every native release binary proves the V3 model contract before packaging"
 
   const releaseContract = readFileSync(path.join(repositoryRoot, "scripts", "release-contract.mjs"), "utf8");
   for (const required of [
+    '["infer", "--json", "Hello, I want to make a concrete plan"]',
     '["infer", "--bundle", resolvedBundle, "--json"',
     '["bundle", "verify", "--bundle", resolvedBundle]',
     '["bundle", "reproduce", "--bundle", resolvedBundle]',
@@ -134,6 +136,17 @@ test("every native release binary proves the V3 model contract before packaging"
   }
   assert.doesNotMatch(releaseContract, /spawnSync\(resolvedBinary, \["--once"/u);
   assert.doesNotMatch(releaseContract, /rule=feeling-reflection/u);
+});
+
+test("digest-bound fixtures keep LF bytes on every release runner", () => {
+  for (const pattern of [
+    "/artifacts/eliza-open-set-v3/*.json text eol=lf",
+    "/models/*.json text eol=lf",
+    "/reports/*.json text eol=lf",
+    "/fixtures/*.tsv text eol=lf",
+  ]) {
+    assert.ok(gitAttributes.includes(pattern), `missing cross-platform byte contract: ${pattern}`);
+  }
 });
 
 test("the release candidate gate rejects every fail-open or contract drift mutation", () => {

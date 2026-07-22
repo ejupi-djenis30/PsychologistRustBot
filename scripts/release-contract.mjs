@@ -647,31 +647,48 @@ export function smokeBinary(
   invariant(existsSync(resolvedBundle), `Cannot verify missing V3 bundle: ${resolvedBundle}`);
   invariant(existsSync(resolvedLegacyModel), `Cannot smoke-test missing legacy model: ${resolvedLegacyModel}`);
 
+  const embeddedInference = runBinary(
+    resolvedBinary,
+    ["infer", "--json", "Hello, I want to make a concrete plan"],
+    "Embedded V3 inference smoke test",
+    120_000,
+  );
   const inference = runBinary(
     resolvedBinary,
     ["infer", "--bundle", resolvedBundle, "--json", "Hello, I want to make a concrete plan"],
     "Primary V3 inference smoke test",
     120_000,
   );
-  let trace;
-  try {
-    trace = JSON.parse(inference.stdout);
-  } catch (error) {
-    throw new Error(`Primary V3 inference did not return JSON: ${error.message}`);
+  const traces = [];
+  for (const [label, result] of [
+    ["Embedded V3 inference", embeddedInference],
+    ["External V3 bundle inference", inference],
+  ]) {
+    try {
+      traces.push(JSON.parse(result.stdout));
+    } catch (error) {
+      throw new Error(`${label} did not return JSON: ${error.message}`);
+    }
   }
-  invariant(trace?.model?.version === "3.0.0", "Primary inference did not use model 3.0.0");
+  for (const trace of traces) {
+    invariant(trace?.model?.version === "3.0.0", "V3 inference did not use model 3.0.0");
+    invariant(
+      trace.boundary === "ml-intent" || trace.boundary === "ml-abstain",
+      "V3 inference did not expose the learned-policy boundary",
+    );
+    invariant(typeof trace.model.accepted === "boolean", "V3 inference omitted its accept/abstain decision");
+    invariant(Number.isFinite(trace.model.confidence), "V3 inference omitted policy confidence");
+    invariant(Number.isFinite(trace.model.margin), "V3 inference omitted policy probability margin");
+    invariant(
+      trace.model.probabilities && Object.keys(trace.model.probabilities).length === 7,
+      "V3 inference omitted its seven-class probability trace",
+    );
+    invariant(Array.isArray(trace.model.top_features), "V3 inference omitted feature evidence");
+  }
   invariant(
-    trace.boundary === "ml-intent" || trace.boundary === "ml-abstain",
-    "Primary inference did not expose the learned-policy boundary",
+    isDeepStrictEqual(traces[0], traces[1]),
+    "Embedded and external V3 bundle inference produced different traces",
   );
-  invariant(typeof trace.model.accepted === "boolean", "Primary inference omitted its accept/abstain decision");
-  invariant(Number.isFinite(trace.model.confidence), "Primary inference omitted policy confidence");
-  invariant(Number.isFinite(trace.model.margin), "Primary inference omitted policy probability margin");
-  invariant(
-    trace.model.probabilities && Object.keys(trace.model.probabilities).length === 7,
-    "Primary inference omitted its seven-class probability trace",
-  );
-  invariant(Array.isArray(trace.model.top_features), "Primary inference omitted feature evidence");
 
   const verified = runBinary(
     resolvedBinary,

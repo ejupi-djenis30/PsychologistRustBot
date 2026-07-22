@@ -41,6 +41,9 @@ const MAX_RAW_CROSS_FAMILY_JACCARD: f64 = 0.30;
 const MAX_RESIDUAL_CROSS_FAMILY_JACCARD: f64 = 0.25;
 const MAX_SIMILARITY_CANDIDATE_PAIRS: usize = 500_000;
 const MAX_SIMILARITY_PAIR_INSERT_ATTEMPTS: usize = 5_000_000;
+const METRIC_REPORTING_SCALE: f64 = 1_000_000_000.0;
+const METRIC_REPORTING_UNIT: f64 = 1.0 / METRIC_REPORTING_SCALE;
+const METRIC_COMPARISON_TOLERANCE: f64 = 2.0 * METRIC_REPORTING_UNIT;
 static BUNDLE_TEMP_SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(Debug, Clone, Copy)]
@@ -3554,7 +3557,10 @@ pub fn write_bundle(
     let directory = directory.as_ref();
     validate_bundle_destination(directory)?;
     let payloads = BTreeMap::from([
-        ("metrics.json".to_string(), canonical_json(&result.metrics)?),
+        (
+            "metrics.json".to_string(),
+            canonical_metrics_json(&result.metrics)?,
+        ),
         ("model.json".to_string(), canonical_json(&result.model)?),
         ("policy.json".to_string(), canonical_json(&result.policy)?),
         (
@@ -4318,7 +4324,7 @@ fn validate_metrics_contract(
                 .probabilities
                 .values()
                 .any(|value| !valid_unit_interval(*value))
-            || (probability_sum - 1.0).abs() > 1e-9
+            || (probability_sum - 1.0).abs() > model.labels.len() as f64 * METRIC_REPORTING_UNIT
             || !approximately_equal(
                 prediction.confidence,
                 prediction.probabilities[&prediction.predicted_label],
@@ -4361,7 +4367,7 @@ fn validate_metrics_contract(
         || !approximately_equal(metrics.id_test.macro_f1, reproduced_id.macro_f1)
         || metrics.id_test.labels != reproduced_id.labels
         || metrics.id_test.confusion_matrix != reproduced_id.confusion_matrix
-        || metrics.id_test.per_class != reproduced_id.per_class
+        || !semantic_json_equal(&metrics.id_test.per_class, &reproduced_id.per_class)?
         || !approximately_equal(metrics.id_test.coverage, reproduced_id.coverage)
         || !optional_metric_matches(
             metrics.id_test.selective_accuracy,
@@ -4696,7 +4702,7 @@ fn valid_unit_interval(value: f64) -> bool {
 }
 
 fn approximately_equal(left: f64, right: f64) -> bool {
-    (left - right).abs() <= 1e-12
+    (left - right).abs() <= METRIC_COMPARISON_TOLERANCE
 }
 
 fn optional_metric_matches(left: Option<f64>, right: Option<f64>) -> bool {
@@ -4744,7 +4750,7 @@ pub fn reproduce_bundle(
         resamples,
     )?;
     let expected_payloads = BTreeMap::from([
-        ("metrics.json", canonical_json(&reproduced.metrics)?),
+        ("metrics.json", canonical_metrics_json(&reproduced.metrics)?),
         ("model.json", canonical_json(&reproduced.model)?),
         ("policy.json", canonical_json(&reproduced.policy)?),
         ("split-plan.json", canonical_json(&reproduced.split_plan)?),
@@ -5151,6 +5157,38 @@ fn valid_sha256(value: &str) -> bool {
 
 fn canonical_json<T: Serialize>(value: &T) -> Result<Vec<u8>, MlError> {
     Ok(format!("{}\n", serde_json::to_string_pretty(value)?).into_bytes())
+}
+
+fn canonical_metrics_json(metrics: &OpenSetMetricsV3) -> Result<Vec<u8>, MlError> {
+    fn quantize_floats(value: &mut serde_json::Value) -> Result<(), MlError> {
+        match value {
+            serde_json::Value::Number(number) if number.is_f64() => {
+                let value = number.as_f64().ok_or_else(|| {
+                    MlError::InvalidModel("a metric is not representable as f64".into())
+                })?;
+                let quantized = (value * METRIC_REPORTING_SCALE).round() / METRIC_REPORTING_SCALE;
+                *number = serde_json::Number::from_f64(quantized).ok_or_else(|| {
+                    MlError::InvalidModel("a metric is not a finite JSON number".into())
+                })?;
+            }
+            serde_json::Value::Array(values) => {
+                for value in values {
+                    quantize_floats(value)?;
+                }
+            }
+            serde_json::Value::Object(values) => {
+                for value in values.values_mut() {
+                    quantize_floats(value)?;
+                }
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+
+    let mut value = serde_json::to_value(metrics)?;
+    quantize_floats(&mut value)?;
+    canonical_json(&value)
 }
 
 fn group_split_hash(label: &str, group_id: &str, seed: u64) -> u64 {
@@ -5716,6 +5754,39 @@ mod tests {
     }
 
     #[test]
+    fn persisted_metrics_have_a_cross_platform_reporting_precision() {
+        let result = bundled_experiment(100);
+        let persisted: OpenSetMetricsV3 =
+            serde_json::from_slice(&canonical_metrics_json(&result.metrics).unwrap()).unwrap();
+        validate_metrics_contract(
+            &persisted,
+            &result.model,
+            &result.policy,
+            &result.split_plan,
+        )
+        .unwrap();
+
+        let mut metrics = result.metrics;
+        metrics.id_test.calibration.negative_log_likelihood = 0.25;
+        let baseline = canonical_metrics_json(&metrics).unwrap();
+        let mut within_tolerance = metrics.clone();
+        within_tolerance.id_test.calibration.negative_log_likelihood += 0.4e-9;
+        assert_eq!(
+            baseline,
+            canonical_metrics_json(&within_tolerance).unwrap(),
+            "sub-nanometric libm drift must not alter the persisted report"
+        );
+
+        let mut material_change = metrics;
+        material_change.id_test.calibration.negative_log_likelihood += 1.1e-9;
+        assert_ne!(
+            baseline,
+            canonical_metrics_json(&material_change).unwrap(),
+            "a change beyond the declared reporting precision must remain visible"
+        );
+    }
+
+    #[test]
     fn discrimination_metrics_handle_ties_by_score_group() {
         let metrics = discrimination_metrics(&[0.9, 0.5], &[0.5, 0.1]);
         assert!((metrics.auroc - 0.875).abs() <= 1e-12);
@@ -5897,7 +5968,7 @@ mod tests {
         metrics.id_test.predictions[0].actual_label = replacement_label;
         metrics.id_test.predictions[0].correct = metrics.id_test.predictions[0].actual_label
             == metrics.id_test.predictions[0].predicted_label;
-        let metrics_bytes = canonical_json(&metrics).unwrap();
+        let metrics_bytes = canonical_metrics_json(&metrics).unwrap();
         fs::write(&metrics_path, &metrics_bytes).unwrap();
         let ledger_manifest_path = ledger_bundle.join("manifest.json");
         let mut ledger_manifest: BundleManifestV3 =
@@ -5941,7 +6012,7 @@ mod tests {
                 .count() as f64
                 / accepted_count as f64,
         );
-        let metrics_bytes = canonical_json(&metrics).unwrap();
+        let metrics_bytes = canonical_metrics_json(&metrics).unwrap();
         fs::write(&metrics_path, &metrics_bytes).unwrap();
         let manifest_path = acceptance_bundle.join("manifest.json");
         let mut manifest: BundleManifestV3 =

@@ -14,6 +14,9 @@
 - Add SHA-256-linked v3 model, operating-policy, metrics and split-plan artifacts with verify and
   in-memory reproduce commands. Compile and index a verified model once for bounded JSONL batch
   inference.
+- Canonicalize persisted metrics to a documented nine-decimal reporting precision, pin LF bytes
+  for digest-bound files, and smoke-test both embedded and external bundles on every native release
+  target so Windows and macOS builds preserve byte-identical provenance.
 - Replace top-class-only evidence in v3 with contrastive top-versus-runner-up contributions whose
   bias and feature terms are tested against the exact logit margin. Present the wider intervals and
   weak OOD FPR on Pages instead of upgrading the project claim.

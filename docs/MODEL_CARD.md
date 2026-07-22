@@ -73,6 +73,13 @@ The checked-in `metrics.json` contains:
 - 1,000 deterministic 95% cluster-bootstrap intervals;
 - learned-minus-unigram deltas and explicit limitations.
 
+Runtime calculations use `f64`. The persisted metrics report rounds floating-point values to nine
+decimal places before canonical JSON serialization. That declared reporting precision absorbs
+sub-nanometric `exp`/`ln` differences between supported system math libraries while keeping bundle
+reproduction byte-identical. Model weights and the operating policy retain their own twelve-decimal
+training precision. Git attributes also force LF bytes for every digest-bound artifact on all
+release runners.
+
 ID bootstrap samples held-out families within labels. OOD bootstrap samples broader domains. These
 intervals describe uncertainty inside the synthetic fixtures; they do not create external validity.
 

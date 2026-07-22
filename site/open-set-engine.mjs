@@ -10,6 +10,8 @@ const MAX_EXAMPLES = 100_000;
 const MAX_CLASSES = 256;
 const MAX_PARAMETER_MAGNITUDE = 1_000_000;
 const MAX_IDF = 64;
+const METRIC_REPORTING_UNIT = 1e-9;
+const METRIC_COMPARISON_TOLERANCE = 2 * METRIC_REPORTING_UNIT;
 const JSON_SAFE_INTEGER = Number.MAX_SAFE_INTEGER;
 const PAYLOAD_NAMES = ["metrics.json", "model.json", "policy.json", "split-plan.json"];
 const ALPHANUMERIC = /[\p{Alphabetic}\p{Number}]/u;
@@ -22,7 +24,7 @@ const OOD_STRATA = ["semantic", "capability", "noise"];
 const CONTRAST_VARIANTS = ["a", "b"];
 const MIN_PARAPHRASES_PER_FAMILY = 3;
 export const EXPECTED_BUNDLE_MANIFEST_SHA256 =
-  "cad018ec176542dc9cd04e826e76dbda27bbf302847faa76e8f5800123b0c114";
+  "841c50227d9be323c278904de00a09be57396f35607561c24ec201f3bc2fbfb1";
 
 const record = (value, description) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -808,7 +810,11 @@ const validateMetricEstimate = (estimate, point, description) => {
   const value = finiteNumber(estimate.value, `${description}.value`);
   const lower = finiteNumber(estimate.lower_95, `${description}.lower_95`);
   const upper = finiteNumber(estimate.upper_95, `${description}.upper_95`);
-  if (Math.abs(value - point) > 1e-12 || lower > value || value > upper) {
+  if (
+    Math.abs(value - point) > METRIC_COMPARISON_TOLERANCE ||
+    lower > value ||
+    value > upper
+  ) {
     throw new TypeError(`${description} does not contain its point estimate`);
   }
 };
@@ -1515,7 +1521,9 @@ class VerifiedOpenSetBundle {
 }
 
 const approximatelyEqual = (left, right) =>
-  Number.isFinite(left) && Number.isFinite(right) && Math.abs(left - right) <= 1e-10;
+  Number.isFinite(left) &&
+  Number.isFinite(right) &&
+  Math.abs(left - right) <= METRIC_COMPARISON_TOLERANCE;
 
 const calibrationFromPredictions = (predictions, bins) => {
   const count = predictions.length;
