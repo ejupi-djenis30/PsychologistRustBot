@@ -58,6 +58,10 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22.23.1
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: ./node_modules/.bin/playwright install --with-deps chromium
       - run: node scripts/release-contract.mjs audit-policy
       - run: node --test site/tests/*.test.mjs
+      - run: npm run test:responsive
       - run: node site/scripts/validate-site.mjs

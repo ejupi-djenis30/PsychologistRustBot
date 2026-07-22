@@ -1168,10 +1168,16 @@ footer > a {
   .site-header nav {
     display: grid;
     grid-column: 1 / -1;
+    grid-row: 2;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.35rem;
     width: 100%;
     padding: 0.25rem 0 0.7rem;
+  }
+
+  .source-link {
+    grid-column: 2;
+    grid-row: 1;
   }
 
   .site-header nav a {
