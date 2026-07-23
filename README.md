@@ -79,6 +79,35 @@ Every v3 prediction includes calibrated probabilities and a contrastive explanat
 class against the runner-up. The explanation records its bias delta and feature sum, and tests
 verify that they reconstruct the exact top-two logit margin.
 
+Audit prediction stability locally without writing prompts or row-level results:
+
+```bash
+printf '%s\n' \
+  '{"id":"fictional-01","text":"I intend to test one concrete next step"}' \
+  '{"id":"fictional-02","text":"Today I feel calm about the outcome"}' \
+  | cargo run --locked -- robustness audit
+```
+
+The audit measures decision agreement and normalized Jensen–Shannon divergence under four
+feature-equivalent formatting changes and three controlled typographic edits. Formatting
+invariants fail closed on unrounded measurements by default; typo thresholds are opt-in because
+controlled noise is not a guaranteed paraphrase. Reports are aggregate-only and exclude IDs,
+prompts, transformed text and row-level predictions. See the
+[robustness contract](docs/ROBUSTNESS.md).
+
+Run the same aggregate regression audit over the verified bundle's frozen 70-row ID-test without
+materializing another input file:
+
+```bash
+cargo run --locked -- robustness audit --bundle-id-test \
+  > target/robustness-id-test-report.json
+node scripts/verify-robustness-report.mjs target/robustness-id-test-report.json
+```
+
+The verifier reconstructs every family aggregate and binds each dashboard value to that report,
+the checked bundle manifest and policy, and the frozen ID-test ledger. CI, Pages and release
+quality run the same check before deployment or publication.
+
 ## Install a verified build
 
 Download the archive for your system from the
@@ -100,7 +129,7 @@ gh attestation verify <downloaded-archive> --repo ejupi-djenis30/PsychologistRus
 Extract the archive and run the included `eliza-lab` executable. Open-set bundle model `3.0.0`, the
 legacy `1.0.0` compatibility artifact and synthetic fixtures are embedded, so inference,
 verification and retraining need no separate model download.
-The application version (`1.3.0`) and bundled model versions are intentionally independent.
+The application version (`1.4.0`) and bundled model versions are intentionally independent.
 
 ## Run it
 
@@ -151,6 +180,11 @@ cargo clippy --all-targets --locked -- -D warnings
 cargo test --all --locked
 cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v3
 cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v3
+printf '%s\n' '{"id":"fictional-01","text":"I intend to test one next step"}' \
+  | cargo run --locked -- robustness audit
+cargo run --locked -- robustness audit --bundle-id-test \
+  > target/robustness-id-test-report.json
+node scripts/verify-robustness-report.mjs target/robustness-id-test-report.json
 node --test site/tests/*.test.mjs
 node site/scripts/validate-site.mjs
 node --test scripts/tests/*.test.mjs
@@ -181,7 +215,7 @@ GitHub Release assembled by the workflow.
 
 A release can only be published from a `v*` tag pushed for the version in `Cargo.toml`, with a dated
 section for that version in `CHANGELOG.md` and no pending text under `Unreleased`. For example,
-version `1.3.0` accepts `v1.3.0` and rejects every other tag. The workflow assembles all four native
+version `1.4.0` accepts `v1.4.0` and rejects every other tag. The workflow assembles all four native
 archives from verified file-descriptor snapshots, creates a consolidated `SHA256SUMS` file covering
 every release asset, and adds GitHub provenance attestations. The publish job independently verifies
 each attestation against this repository, workflow, tag ref, and source commit before it can touch a
@@ -221,13 +255,14 @@ To test a proposed tag without creating one, start the **Release** workflow manu
 the tag in `release_tag`, or run:
 
 ```bash
-node scripts/release-contract.mjs verify --tag v1.3.0
+node scripts/release-contract.mjs verify --tag v1.4.0
 ```
 
 ## Architecture
 
 ```text
 src/open_set.rs             v3 data contracts, typed splits, training, evaluation, bundles, inference
+src/robustness.rs           bounded aggregate-only metamorphic robustness audit and release gates
 src/ml.rs                   explicit legacy-v1 compatibility implementation
 src/lib.rs                  hard boundaries and dialogue routing
 src/main.rs                 train / evaluate / infer / chat CLI

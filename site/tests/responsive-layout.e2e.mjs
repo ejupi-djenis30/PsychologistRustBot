@@ -108,7 +108,7 @@ try {
     if (message.type() === "error") runtimeErrors.push(`console: ${message.text()}`);
   });
   const cssResponsePromise = page.waitForResponse((response) =>
-    response.url().endsWith(`${mountPath}/styles.css?v=1.3.0-2`),
+    response.url().endsWith(`${mountPath}/styles.css?v=1.4.0`),
   );
   const navigationResponse = await page.goto(baseUrl, { waitUntil: "networkidle" });
   const cssResponse = await cssResponsePromise;

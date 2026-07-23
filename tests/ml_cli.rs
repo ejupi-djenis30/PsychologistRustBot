@@ -330,3 +330,128 @@ fn open_set_bundle_reproduces_and_serves_bounded_jsonl_predictions() {
         prediction["prediction"]["label"]
     );
 }
+
+#[test]
+fn robustness_audit_is_aggregate_local_and_deterministic() {
+    let input = concat!(
+        "{\"id\":\"audit-1\",\"text\":\"Hello, I intend to make a concrete plan\"}\n",
+        "{\"id\":\"audit-2\",\"text\":\"Today I feel uncertain about the outcome\"}\n"
+    );
+    let run = || {
+        let mut child = Command::new(binary())
+            .args(["robustness", "audit"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        child
+            .stdin
+            .take()
+            .unwrap()
+            .write_all(input.as_bytes())
+            .unwrap();
+        child.wait_with_output().unwrap()
+    };
+
+    let first = run();
+    let second = run();
+    assert!(
+        first.status.success(),
+        "{}",
+        String::from_utf8_lossy(&first.stderr)
+    );
+    assert_eq!(first.stdout, second.stdout);
+    let report: Value = serde_json::from_slice(&first.stdout).unwrap();
+    assert_eq!(report["schema_version"], 1);
+    assert_eq!(report["report_kind"], "eliza-metamorphic-robustness");
+    assert_eq!(report["suite_version"], "1.0.0");
+    assert_eq!(report["population"], "jsonl");
+    assert_eq!(report["model_version"], "3.0.0");
+    assert_eq!(report["input_count"], 2);
+    assert_eq!(report["formatting"]["decision_agreement"], 1.0);
+    assert_eq!(
+        report["formatting"]["maximum_normalized_js_divergence"],
+        0.0
+    );
+    assert_eq!(report["perturbations"].as_array().unwrap().len(), 7);
+    let serialized = String::from_utf8(first.stdout).unwrap();
+    assert!(!serialized.contains("audit-1"));
+    assert!(!serialized.contains("concrete plan"));
+}
+
+#[test]
+fn robustness_audit_rejects_invalid_policy_before_reading_input() {
+    let output = Command::new(binary())
+        .args([
+            "robustness",
+            "audit",
+            "--minimum-typographic-decision-agreement",
+            "1.01",
+        ])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("invalid robustness policy"));
+}
+
+#[test]
+fn robustness_audit_sanitizes_json_schema_failures() {
+    let input = concat!(
+        "{\"id\":\"private-id\",\"text\":\"invented private prompt\",",
+        "\"private_token\":\"secret-value\"}\n"
+    );
+    let mut child = Command::new(binary())
+        .args(["robustness", "audit"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(input.as_bytes())
+        .unwrap();
+    let output = child.wait_with_output().unwrap();
+    assert!(!output.status.success());
+    assert!(output.stdout.is_empty());
+    let error = String::from_utf8_lossy(&output.stderr);
+    assert!(error.contains("line 1 does not match the required object schema"));
+    for private_fragment in [
+        "private-id",
+        "invented private prompt",
+        "private_token",
+        "secret-value",
+        "unknown field",
+    ] {
+        assert!(
+            !error.contains(private_fragment),
+            "schema error exposed `{private_fragment}`: {error}"
+        );
+    }
+}
+
+#[test]
+fn robustness_audit_can_regress_the_verified_bundle_id_test_without_stdin() {
+    let output = Command::new(binary())
+        .args(["robustness", "audit", "--bundle-id-test"])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["input_count"], 70);
+    assert_eq!(report["population"], "bundle-id-test");
+    assert_eq!(report["baseline_accepted"], 44);
+    assert_eq!(report["evaluated_variants"], 490);
+    assert_eq!(report["formatting"]["decision_agreement"], 1.0);
+    assert_eq!(
+        report["formatting"]["maximum_normalized_js_divergence"],
+        0.0
+    );
+}

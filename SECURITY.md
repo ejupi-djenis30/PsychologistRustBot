@@ -15,11 +15,16 @@ psychologist, therapist, medical device, crisis service, or source of diagnosis.
 - Open-set batch inference reads bounded JSONL, emits one result at a time, and does not retain a
   transcript. Bundle verification rejects symlinks, oversized files and SHA-256 mismatches before
   inference.
+- Robustness auditing reads JSONL locally with limits of 100,000 rows, 100,000 physical lines,
+  18,432 bytes per line and 64 MiB in total. It validates unique IDs in bounded memory but never
+  serializes IDs, prompts, transformed text or row-level predictions. Oversized lines abort
+  immediately, and schema errors omit submitted field names, values and parser diagnostics.
 - The GitHub Pages demo downloads the versioned model as a same-origin static asset, then performs
   feature extraction and inference in the tab without submitting prompts.
 - There are no accounts, cookies, databases, API keys, or remote models.
-- Prompts are capped at 512 Unicode characters. The CLI drains oversized input lines without
-  retaining them, and the browser keeps at most 40 visible turns.
+- Prompts are capped at 512 Unicode characters. Batch inference drains oversized lines without
+  retaining them; the robustness reader stops at its per-line boundary instead of draining an
+  unbounded remainder. The browser keeps at most 40 visible turns.
 
 ## Safety boundary
 

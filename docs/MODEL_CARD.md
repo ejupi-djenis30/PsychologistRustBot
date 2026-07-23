@@ -32,6 +32,7 @@ Use this project to study or demonstrate:
 - deterministic baseline and bootstrap reconstruction;
 - cross-runtime, cryptographically linked model artifacts;
 - local explanations for a linear classifier.
+- aggregate-only metamorphic robustness auditing with fail-closed formatting invariants.
 
 The seven narrow labels are `feeling`, `goal`, `greeting`, `observation`, `ownership`, `question`
 and `reason`.
@@ -139,6 +140,9 @@ the resulting bundle.
 - The paired contrast set is small, synthetic and source-authored; it is not an external benchmark.
 - Feature contributions explain this linear model's score, not human meaning.
 - Confidence and abstention thresholds are operating rules, not guarantees.
+- Metamorphic audits measure consistency under seven generated transformations, not correctness,
+  fairness or real-world robustness. Typographic edits are controlled noise, not guaranteed
+  paraphrases.
 
 ## Prohibited uses
 

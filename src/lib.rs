@@ -5,6 +5,7 @@
 
 pub mod ml;
 pub mod open_set;
+pub mod robustness;
 
 pub const MAX_INPUT_CHARS: usize = 512;
 

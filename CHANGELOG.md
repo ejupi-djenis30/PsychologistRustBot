@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## 1.4.0 — 2026-07-23
+
+- Add a local metamorphic robustness audit for the verified open-set classifier. Measure label,
+  acceptance and routed-decision agreement together with confidence drift and normalized
+  Jensen–Shannon divergence across four formatting invariants and three controlled typo stresses.
+- Stream JSONL behind row, physical-line, per-line and total-byte caps, or consume a non-forgeable
+  verified bundle to reconstruct the frozen 70-row ID-test. Keep reports and parser failures free
+  of identifiers, prompts, transformed text, submitted fields and row-level predictions.
+- Enforce exact formatting invariants from unrounded in-process evidence by default, fail closed
+  when only a serialized report is available and let release operators opt into explicit
+  typographic thresholds without feeding post-test observations back into model selection.
+- Generate the frozen-ID robustness report in CI, Pages and release quality, reconstruct every
+  derivable family aggregate, then bind each dashboard value and graph width to the verified report
+  before deployment or publication.
+
 ## 1.3.0 — 2026-07-22
 
 - Add an experimental open-set v3 path with explicit group IDs and group-disjoint train,

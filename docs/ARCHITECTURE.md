@@ -9,14 +9,18 @@ through the explicit `--legacy-v1` compatibility flag.
 1. `src/open_set.rs` owns the v3 dataset contracts, typed partitions, model selection, training,
    calibration, abstention policy, evaluation, baselines, bootstrap, artifact verification and
    compiled inference.
-2. `src/lib.rs` owns bounded dialogue behaviour. Empty or oversized input and explicit safety-stop
+2. `src/robustness.rs` owns bounded JSONL robustness input, deterministic metamorphic
+   transformations, aggregate stability metrics and optional release gates. Caller-provided cases
+   use a compiled model; the frozen ID-test path accepts and consumes only a `VerifiedBundle`.
+   Neither path can mutate or select a model.
+3. `src/lib.rs` owns bounded dialogue behaviour. Empty or oversized input and explicit safety-stop
    phrases are handled before learned inference.
-3. `src/main.rs` exposes v3 training, verification, reproduction, batch inference and interactive
-   commands. Legacy inference must be requested explicitly.
-4. `site/open-set-engine.mjs` verifies the same five-file bundle, reproduces its prediction
+4. `src/main.rs` exposes v3 training, verification, reproduction, batch inference, aggregate
+   robustness auditing and interactive commands. Legacy inference must be requested explicitly.
+5. `site/open-set-engine.mjs` verifies the same five-file bundle, reproduces its prediction
    ledgers and runs inference in the browser. A missing trust root, digest mismatch or semantic
    mismatch disables the interface.
-5. `site/app.js` renders only a successfully verified v3 runtime. Prompts stay in the tab.
+6. `site/app.js` renders only a successfully verified v3 runtime. Prompts stay in the tab.
 
 ## Experiment flow
 
@@ -69,6 +73,29 @@ An empty feature vector always abstains. Accepted predictions expose all class p
 contrastive feature explanation. Bias difference plus every feature contribution must reconstruct
 the exact top-two logit margin.
 
+## Post-training robustness audit
+
+The robustness audit is outside the experiment-selection graph. It streams caller-provided JSONL
+through a verified compiled model, applies a fixed set of feature-equivalent formatting
+transformations and controlled single-edit typo stresses, then emits aggregate-only stability
+metrics. It does not retain input rows or add results to the signed v3 bundle.
+
+The CLI can stream caller-provided cases or reconstruct the frozen ID-test directly from a
+semantically verified bundle. `VerifiedBundle` has private fields, and the ID-test audit consumes
+that capability while compiling the runtime internally. Arbitrary parsed cases can therefore
+produce only the `provided-cases` provenance. The frozen ID-test mode is a regression diagnostic
+only; no audit result is reachable from model fitting, calibration or policy selection.
+
+Formatting transformations must reconstruct the same features, so their default release gate is
+exact on unrounded in-memory measurements. The deterministic JSON report is quantized to nine
+decimal places, but serialized reports do not carry raw gate evidence and cannot be gated after
+deserialization. Typographic thresholds are opt-in and must be declared by the caller; they cannot
+retroactively influence the frozen model or policy. Normalized Jensen–Shannon divergence measures
+probability drift, while routed-decision agreement distinguishes accepted label changes from two
+stable abstentions. CI, Pages and release quality generate a fresh frozen-ID report, reconstruct
+its family aggregates and bind the site metrics to it before deployment or publication. See
+[ROBUSTNESS.md](ROBUSTNESS.md).
+
 ## Evaluation
 
 The final ID ledger records every prediction. Metrics include accuracy, macro F1, confusion matrix,
@@ -118,5 +145,8 @@ cannot be rebuilt row by row from the frozen split plan.
   unexpected bundle files are rejected.
 - Bundle output never replaces an unrelated non-empty directory.
 - CLI and browser inference are local and do not persist prompts.
+- Robustness reports are aggregate-only and omit IDs, prompts, transformed text and row-level
+  predictions. The reader bounds row count, physical lines, per-line bytes, total bytes and
+  identifier memory, and schema failures do not expose parser details or submitted fields.
 - The safety phrase list is an exit condition, not crisis detection.
 - The classifier is not suitable for clinical, safety, employment or other decisions about people.
