@@ -12,7 +12,7 @@ on:
         required: true
         type: string
       source_run_id:
-        description: "Failed tag-push Release workflow run containing the original verified artifact"
+        description: "Failed tag-push Release run; its attestation may come from an earlier successful attempt"
         required: true
         type: string
       draft_release_id:
@@ -94,7 +94,7 @@ jobs:
           repository: ${{ github.repository }}
           run-id: ${{ inputs.source_run_id }}
 
-      - name: Verify exact source-run attestation
+      - name: Verify source-run attestation bundle
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}

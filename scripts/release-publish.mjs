@@ -369,6 +369,78 @@ function requireRunStep(job, name, conclusion) {
   return step;
 }
 
+async function readWorkflowAttemptJobs({
+  api,
+  repository,
+  sourceRunId,
+  runAttempt,
+  label,
+}) {
+  validatePositiveSafeInteger(sourceRunId, "Source workflow run ID");
+  validatePositiveSafeInteger(runAttempt, `${label} workflow run attempt`);
+  const jobsResponse = await api.request(
+    `repos/${repository}/actions/runs/${sourceRunId}/attempts/${runAttempt}/jobs?per_page=100&page=1`,
+  );
+  invariant(
+    Number.isSafeInteger(jobsResponse?.total_count)
+      && jobsResponse.total_count >= 0
+      && jobsResponse.total_count <= 100
+      && Array.isArray(jobsResponse.jobs)
+      && jobsResponse.jobs.length === jobsResponse.total_count,
+    `${label} workflow attempt returned an invalid or incomplete job listing`,
+  );
+  const jobsByName = new Map();
+  for (const job of jobsResponse.jobs) {
+    invariant(
+      typeof job?.name === "string" && !jobsByName.has(job.name),
+      `${label} workflow attempt contains duplicate or invalid job names`,
+    );
+    invariant(
+      job.run_id === sourceRunId && job.run_attempt === runAttempt,
+      `Workflow job ${job.name} belongs to the wrong run attempt`,
+    );
+    invariant(job.status === "completed", `Workflow job ${job.name} is not completed`);
+    jobsByName.set(job.name, job);
+  }
+  return jobsByName;
+}
+
+function requireRecoveryJobTopology(jobsByName, label) {
+  invariant(
+    jobsByName.size === recoveryJobContract.length,
+    `${label} workflow attempt must contain exactly ${recoveryJobContract.length} jobs`,
+  );
+  for (const expectedJob of recoveryJobContract) {
+    invariant(jobsByName.has(expectedJob.name), `${label} workflow attempt is missing job ${expectedJob.name}`);
+  }
+}
+
+function requireSuccessfulAttestationChain(jobsByName) {
+  requireRecoveryJobTopology(jobsByName, "Attestation-producing");
+
+  const assembleJob = jobsByName.get("Verify and assemble release inventory");
+  invariant(assembleJob.conclusion === "success", "Attestation-producing inventory job must conclude success");
+  const rejectModified = requireRunStep(assembleJob, "Reject incomplete or modified release assets", "success");
+  const uploadInventory = requireRunStep(assembleJob, "Upload verified release inventory", "success");
+  invariant(
+    rejectModified.number < uploadInventory.number,
+    "Attestation-producing workflow uploaded inventory before verifying it",
+  );
+
+  const candidateJob = jobsByName.get("Release candidate gate");
+  invariant(candidateJob.conclusion === "success", "Attestation-producing candidate gate must conclude success");
+  requireRunStep(candidateJob, "Require every release candidate stage to pass", "success");
+
+  const attestJob = jobsByName.get("Attest verified release inventory");
+  invariant(attestJob.conclusion === "success", "Attestation-producing job must conclude success");
+  const attestDownload = requireRunStep(attestJob, "Download verified release inventory", "success");
+  const attestStep = requireRunStep(attestJob, "Attest release assets", "success");
+  invariant(
+    attestDownload.number < attestStep.number,
+    "Attestation-producing workflow attested assets before downloading the verified inventory",
+  );
+}
+
 async function readSourceRunArtifacts(api, repository, sourceRunId) {
   const artifacts = [];
   const artifactIds = new Set();
@@ -432,28 +504,18 @@ async function verifyRecoverySourceRun({
   invariant(sourceCreatedAt <= sourceUpdatedAt, "Source workflow timestamps are inconsistent");
   invariant(sourceCreatedAt < recoveryCreatedAt, "Source release workflow is not older than the recovery workflow");
 
-  const jobsResponse = await api.request(
-    `repos/${repository}/actions/runs/${sourceRunId}/attempts/${sourceAttempt}/jobs?per_page=100&page=1`,
-  );
-  invariant(
-    jobsResponse?.total_count === recoveryJobContract.length
-      && Array.isArray(jobsResponse.jobs)
-      && jobsResponse.jobs.length === recoveryJobContract.length,
-    `Source release workflow must contain exactly ${recoveryJobContract.length} jobs`,
-  );
-  const jobsByName = new Map();
-  for (const job of jobsResponse.jobs) {
-    invariant(typeof job?.name === "string" && !jobsByName.has(job.name), "Source release workflow contains duplicate or invalid job names");
-    invariant(job.run_id === sourceRunId && job.run_attempt === sourceAttempt, `Workflow job ${job.name} belongs to the wrong run attempt`);
-    invariant(job.status === "completed", `Workflow job ${job.name} is not completed`);
-    jobsByName.set(job.name, job);
-  }
+  const jobsByName = await readWorkflowAttemptJobs({
+    api,
+    repository,
+    sourceRunId,
+    runAttempt: sourceAttempt,
+    label: "Source release",
+  });
+  requireRecoveryJobTopology(jobsByName, "Source release");
   for (const expectedJob of recoveryJobContract) {
     const job = jobsByName.get(expectedJob.name);
-    invariant(job, `Source release workflow is missing job ${expectedJob.name}`);
     invariant(job.conclusion === expectedJob.conclusion, `Workflow job ${expectedJob.name} must conclude ${expectedJob.conclusion}`);
   }
-  invariant(jobsByName.size === recoveryJobContract.length, "Source release workflow contains an unexpected job");
 
   const attestJob = jobsByName.get("Attest verified release inventory");
   const attestDownload = requireRunStep(attestJob, "Download verified release inventory", "success");
@@ -510,6 +572,29 @@ async function verifyRecoverySourceRun({
     publishStartedAt,
     runAttempt: sourceAttempt,
   });
+}
+
+async function verifyAttestationAttemptJobs({
+  api,
+  repository,
+  sourceRunId,
+  sourceAttempt,
+  attestationAttempt,
+}) {
+  validatePositiveSafeInteger(sourceAttempt, "Source workflow run attempt");
+  validatePositiveSafeInteger(attestationAttempt, "Attestation workflow run attempt");
+  invariant(
+    attestationAttempt <= sourceAttempt,
+    "Recovery attestation cannot come from a future source workflow attempt",
+  );
+  const jobsByName = await readWorkflowAttemptJobs({
+    api,
+    repository,
+    sourceRunId,
+    runAttempt: attestationAttempt,
+    label: "Attestation-producing",
+  });
+  requireSuccessfulAttestationChain(jobsByName);
 }
 
 async function verifyReleaseSourceAtDefaultTip(api, repository, tag, expectedCommit, phase) {
@@ -611,6 +696,18 @@ function decodeAttestationPayload(result) {
   }
 }
 
+function parseAttestationInvocationAttempt(value, repository, sourceRunId, label) {
+  const invocationPrefix = `https://github.com/${repository}/actions/runs/${sourceRunId}/attempts/`;
+  invariant(
+    typeof value === "string" && value.startsWith(invocationPrefix),
+    `${label} does not identify the exact source workflow run`,
+  );
+  return parsePositiveSafeInteger(
+    value.slice(invocationPrefix.length),
+    `${label} attempt`,
+  );
+}
+
 function verifyRecoveryAttestation({
   attestationPath,
   repository,
@@ -621,6 +718,8 @@ function verifyRecoveryAttestation({
   sourceRunAttempt,
   localInventory,
 }) {
+  validatePositiveSafeInteger(sourceRunId, "Source workflow run ID");
+  validatePositiveSafeInteger(sourceRunAttempt, "Source workflow run attempt");
   const result = readAttestationVerification(attestationPath);
   const verification = result.verificationResult;
   invariant(
@@ -639,7 +738,6 @@ function verifyRecoveryAttestation({
   const repositoryUrl = `https://github.com/${repository}`;
   const tagRef = `refs/tags/${tag}`;
   const workflowIdentity = `${repositoryUrl}/${releaseWorkflowPath}@${tagRef}`;
-  const invocationId = `${repositoryUrl}/actions/runs/${sourceRunId}/attempts/${sourceRunAttempt}`;
   const certificate = verification?.signature?.certificate;
   invariant(certificate?.issuer === githubActionsOidcIssuer, "Recovery attestation certificate has an unexpected OIDC issuer");
   invariant(certificate.subjectAlternativeName === workflowIdentity, "Recovery attestation certificate has an unexpected workflow identity");
@@ -663,7 +761,6 @@ function verifyRecoveryAttestation({
       && certificate.sourceRepositoryIdentifier === String(repositoryId),
     "Recovery attestation source identity does not match the protected repository",
   );
-  invariant(certificate.runInvocationURI === invocationId, "Recovery attestation certificate belongs to a different workflow run");
   invariant(certificate.sourceRepositoryVisibilityAtSigning === "public", "Recovery attestation was not signed for the public source repository");
 
   const statement = verification.statement;
@@ -724,11 +821,33 @@ function verifyRecoveryAttestation({
     ),
     "Recovery attestation resolved source does not match the signed release tag",
   );
+  const certificateAttempt = parseAttestationInvocationAttempt(
+    certificate.runInvocationURI,
+    repository,
+    sourceRunId,
+    "Recovery attestation certificate invocation",
+  );
+  const statementInvocationId = statement?.predicate?.runDetails?.metadata?.invocationId;
+  const statementAttempt = parseAttestationInvocationAttempt(
+    statementInvocationId,
+    repository,
+    sourceRunId,
+    "Recovery attestation DSSE invocation",
+  );
+  invariant(
+    certificate.runInvocationURI === statementInvocationId && certificateAttempt === statementAttempt,
+    "Recovery attestation certificate and signed DSSE identify different workflow attempts",
+  );
+  invariant(
+    certificateAttempt <= sourceRunAttempt,
+    "Recovery attestation cannot come from a future source workflow attempt",
+  );
   invariant(
     statement?.predicate?.runDetails?.builder?.id === workflowIdentity
-      && statement.predicate.runDetails.metadata?.invocationId === invocationId,
-    "Recovery attestation run details do not match the exact source workflow attempt",
+      && statement.predicate.runDetails.metadata?.invocationId === certificate.runInvocationURI,
+    "Recovery attestation run details do not match the attestation-producing workflow attempt",
   );
+  return certificateAttempt;
 }
 
 function validateReleaseMetadata(release, tag, expectedCommit) {
@@ -1206,7 +1325,7 @@ export async function recoverEmptyDraftRelease({
     sourceRunId,
     recoveryCreatedAt: execution.createdAt,
   });
-  verifyRecoveryAttestation({
+  const attestationAttempt = verifyRecoveryAttestation({
     attestationPath,
     repository,
     repositoryId: execution.repositoryId,
@@ -1215,6 +1334,13 @@ export async function recoverEmptyDraftRelease({
     sourceRunId,
     sourceRunAttempt: source.runAttempt,
     localInventory,
+  });
+  await verifyAttestationAttemptJobs({
+    api,
+    repository,
+    sourceRunId,
+    sourceAttempt: source.runAttempt,
+    attestationAttempt,
   });
 
   const signedTag = await resolveVerifiedTagCommit(api, repository, tag, expectedCommit);
@@ -1324,6 +1450,8 @@ export async function recoverEmptyDraftRelease({
   return Object.freeze({
     releaseId: published.id,
     sourceRunId,
+    sourceAttempt: source.runAttempt,
+    attestationAttempt,
     sourceArtifactId: source.artifactId,
     tag: contract.expectedTag,
     commit: expectedCommit,
@@ -1410,7 +1538,7 @@ async function runCli() {
     publicationPolicyPath: options.policy,
   });
   console.log(
-    `Recovered draft ${result.releaseId} for ${result.tag} from source run ${result.sourceRunId} artifact ${result.sourceArtifactId}; published ${result.assetCount} verified assets: ${result.htmlUrl}`,
+    `Recovered draft ${result.releaseId} for ${result.tag} from source run ${result.sourceRunId} attempt ${result.sourceAttempt}, attestation attempt ${result.attestationAttempt}, artifact ${result.sourceArtifactId}; published ${result.assetCount} verified assets: ${result.htmlUrl}`,
   );
 }
 

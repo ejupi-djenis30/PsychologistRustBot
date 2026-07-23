@@ -280,6 +280,13 @@ function sourceRunJobs(runAttempt = 1) {
     { number: 2, name: "Download verified release inventory", status: "completed", conclusion: "success" },
     { number: 3, name: "Attest release assets", status: "completed", conclusion: "success" },
   ];
+  jobs.find((job) => job.name === "Verify and assemble release inventory").steps = [
+    { number: 6, name: "Reject incomplete or modified release assets", status: "completed", conclusion: "success" },
+    { number: 7, name: "Upload verified release inventory", status: "completed", conclusion: "success" },
+  ];
+  jobs.find((job) => job.name === "Release candidate gate").steps = [
+    { number: 2, name: "Require every release candidate stage to pass", status: "completed", conclusion: "success" },
+  ];
   jobs.find((job) => job.name === "Publish GitHub Release").steps = [
     { number: 2, name: "Check out source", status: "completed", conclusion: "success" },
     { number: 3, name: "Install Node.js 22.23.1", status: "completed", conclusion: "success" },
@@ -297,7 +304,8 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
   constructor({
     listDraft = false,
     listedConflict,
-    sourceRunAttempt = 1,
+    sourceRunAttempt = 2,
+    attestationAttempt = 1,
   } = {}) {
     super({
       releaseState: "draft",
@@ -340,7 +348,11 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
       repository: { id: repositoryId, full_name: repository },
       created_at: "2026-07-23T12:00:00Z",
     };
+    this.attestationAttempt = attestationAttempt;
     this.jobs = sourceRunJobs(sourceRunAttempt);
+    this.attestationJobs = attestationAttempt === sourceRunAttempt
+      ? this.jobs
+      : sourceRunJobs(attestationAttempt);
     this.aggregatedJobs = [...sourceRunJobs(1), ...sourceRunJobs(2)];
     this.artifact = {
       id: 3_003,
@@ -368,12 +380,22 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
       record();
       return structuredClone(this.sourceRun);
     }
-    if (
-      endpoint
-      === `repos/${repository}/actions/runs/${sourceRunId}/attempts/${this.sourceRun.run_attempt}/jobs?per_page=100&page=1`
-    ) {
+    const attemptJobs = endpoint.match(
+      new RegExp(`^repos/${repository}/actions/runs/${sourceRunId}/attempts/([1-9][0-9]*)/jobs\\?per_page=100&page=1$`, "u"),
+    );
+    if (attemptJobs) {
       record();
-      return { total_count: this.jobs.length, jobs: structuredClone(this.jobs) };
+      const attempt = Number(attemptJobs[1]);
+      if (attempt === this.sourceRun.run_attempt) {
+        return { total_count: this.jobs.length, jobs: structuredClone(this.jobs) };
+      }
+      if (attempt === this.attestationAttempt) {
+        return {
+          total_count: this.attestationJobs.length,
+          jobs: structuredClone(this.attestationJobs),
+        };
+      }
+      return { total_count: 0, jobs: [] };
     }
     if (endpoint === `repos/${repository}/actions/runs/${sourceRunId}/jobs?filter=all&per_page=100&page=1`) {
       record();
@@ -415,12 +437,12 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
   }
 }
 
-function createRecoveryAttestation(assetDirectory, mutate, sourceRunAttempt = 1) {
+function createRecoveryAttestation(assetDirectory, mutate, attestationAttempt = 1) {
   const inventory = buildLocalInventory(assetDirectory, authorizedRepository.manifestPath);
   const repositoryUrl = `https://github.com/${repository}`;
   const tagRef = `refs/tags/${tag}`;
   const workflowIdentity = `${repositoryUrl}/.github/workflows/release.yml@${tagRef}`;
-  const invocationId = `${repositoryUrl}/actions/runs/${sourceRunId}/attempts/${sourceRunAttempt}`;
+  const invocationId = `${repositoryUrl}/actions/runs/${sourceRunId}/attempts/${attestationAttempt}`;
   const statement = {
     _type: "https://in-toto.io/Statement/v1",
     subject: inventory.map(({ name, sha256: digest }) => ({ name, digest: { sha256: digest } })),
@@ -508,7 +530,7 @@ function createRecoveryAttestation(assetDirectory, mutate, sourceRunAttempt = 1)
 
 function recoverWith(api, assetDirectory = createReleaseAssets(), overrides = {}) {
   const attestationPath = overrides.attestationPath
-    || createRecoveryAttestation(assetDirectory, undefined, api.sourceRun.run_attempt);
+    || createRecoveryAttestation(assetDirectory, undefined, api.attestationAttempt);
   return recoverEmptyDraftRelease({
     api,
     repository,
@@ -898,6 +920,8 @@ test("recovers an exact REST-invisible empty draft from the original run artifac
 
   assert.equal(result.releaseId, 7);
   assert.equal(result.sourceRunId, sourceRunId);
+  assert.equal(result.sourceAttempt, 2);
+  assert.equal(result.attestationAttempt, 1);
   assert.equal(result.sourceArtifactId, api.artifact.id);
   assert.equal(result.assetCount, expectedReleaseFileNames().length);
   assert.equal(api.release.draft, false);
@@ -1033,21 +1057,44 @@ test("recovery refuses every non-exact remote subset before mutation", async () 
   }
 });
 
-test("recovery validates only the exact source attempt instead of 18 aggregated jobs", async () => {
-  const api = new RecoveryFakeGitHubApi({ sourceRunAttempt: 2 });
+test("recovery validates current source attempt 2 and attestation-producing attempt 1 separately", async () => {
+  const api = new RecoveryFakeGitHubApi({ sourceRunAttempt: 2, attestationAttempt: 1 });
   assert.equal(api.aggregatedJobs.length, 18);
 
-  await recoverWith(api);
+  const result = await recoverWith(api);
 
-  const exactEndpoint =
+  const sourceEndpoint =
     `repos/${repository}/actions/runs/${sourceRunId}/attempts/2/jobs?per_page=100&page=1`;
-  assert.ok(api.calls.some((call) => call.endpoint === exactEndpoint));
+  const attestationEndpoint =
+    `repos/${repository}/actions/runs/${sourceRunId}/attempts/1/jobs?per_page=100&page=1`;
+  assert.equal(result.sourceAttempt, 2);
+  assert.equal(result.attestationAttempt, 1);
+  assert.ok(api.calls.some((call) => call.endpoint === sourceEndpoint));
+  assert.ok(api.calls.some((call) => call.endpoint === attestationEndpoint));
   assert.ok(api.calls.every((call) => !call.endpoint.includes("/jobs?filter=all")));
+});
+
+test("recovery accepts an attestation produced by the current source attempt", async () => {
+  const api = new RecoveryFakeGitHubApi({ sourceRunAttempt: 1, attestationAttempt: 1 });
+
+  const result = await recoverWith(api);
+
+  assert.equal(result.sourceAttempt, 1);
+  assert.equal(result.attestationAttempt, 1);
 });
 
 test("recovery rejects jobs returned for a different source attempt before mutation", async () => {
   const api = new RecoveryFakeGitHubApi({ sourceRunAttempt: 2 });
   api.jobs = sourceRunJobs(1);
+
+  await assert.rejects(recoverWith(api), /belongs to the wrong run attempt/u);
+  assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)));
+  assert.ok(api.calls.every((call) => !call.endpoint.startsWith("https://uploads.github.test/")));
+});
+
+test("recovery rejects jobs returned for a different attestation attempt before mutation", async () => {
+  const api = new RecoveryFakeGitHubApi({ sourceRunAttempt: 2, attestationAttempt: 1 });
+  api.attestationJobs = sourceRunJobs(2);
 
   await assert.rejects(recoverWith(api), /belongs to the wrong run attempt/u);
   assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)));
@@ -1060,6 +1107,36 @@ test("recovery refuses any failed prerequisite job in the source run before rele
   await assert.rejects(recoverWith(api), /Quality and supply-chain gates must conclude success/u);
   assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)));
   assert.ok(api.calls.every((call) => !call.endpoint.startsWith("https://uploads.github.test/")));
+});
+
+test("recovery requires the current source attempt to end only in publication failure", async () => {
+  const api = new RecoveryFakeGitHubApi();
+  api.jobs.find((job) => job.name === "Publish GitHub Release").conclusion = "success";
+
+  await assert.rejects(
+    recoverWith(api),
+    /Publish GitHub Release must conclude failure/u,
+  );
+  assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)));
+  assert.ok(api.calls.every((call) => !call.endpoint.startsWith("https://uploads.github.test/")));
+});
+
+test("recovery requires the attestation-producing inventory, candidate, and attestation jobs to succeed", async () => {
+  for (const [jobName, expected] of [
+    ["Verify and assemble release inventory", /inventory job must conclude success/u],
+    ["Release candidate gate", /candidate gate must conclude success/u],
+    ["Attest verified release inventory", /Attestation-producing job must conclude success/u],
+  ]) {
+    const api = new RecoveryFakeGitHubApi({ sourceRunAttempt: 2, attestationAttempt: 1 });
+    api.attestationJobs.find((job) => job.name === jobName).conclusion = "failure";
+
+    await assert.rejects(recoverWith(api), expected, jobName);
+    assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)), jobName);
+    assert.ok(
+      api.calls.every((call) => !call.endpoint.startsWith("https://uploads.github.test/")),
+      jobName,
+    );
+  }
 });
 
 test("recovery refuses an expired or mismatched original artifact before release mutation", async () => {
@@ -1075,28 +1152,127 @@ test("recovery refuses an expired or mismatched original artifact before release
   }
 });
 
-test("recovery binds attestation subjects and invocation to the exact source run", async () => {
+test("recovery rejects wrong, future, missing, or cross-run attestation attempts", async () => {
   const assetDirectory = createReleaseAssets();
-  for (const [mutate, expected] of [
-    [
-      (result) => {
+  const invocation = (runId, attempt) =>
+    `https://github.com/${repository}/actions/runs/${runId}/attempts/${attempt}`;
+  const setBothInvocations = (result, value) => {
+    result.verificationResult.signature.certificate.runInvocationURI = value;
+    result.verificationResult.statement.predicate.runDetails.metadata.invocationId = value;
+  };
+  const cases = [
+    {
+      label: "other run",
+      mutate: (result) => setBothInvocations(result, invocation(999, 1)),
+      expected: /does not identify the exact source workflow run/u,
+    },
+    {
+      label: "future attempt",
+      mutate: (result) => setBothInvocations(result, invocation(sourceRunId, 3)),
+      expected: /cannot come from a future source workflow attempt/u,
+    },
+    {
+      label: "missing attempt",
+      mutate: (result) => setBothInvocations(
+        result,
+        `https://github.com/${repository}/actions/runs/${sourceRunId}/attempts/`,
+      ),
+      expected: /attempt must be a canonical positive integer/u,
+    },
+    {
+      label: "certificate and DSSE disagree",
+      mutate: (result) => {
         result.verificationResult.statement.predicate.runDetails.metadata.invocationId =
-          `https://github.com/${repository}/actions/runs/999/attempts/1`;
+          invocation(sourceRunId, 2);
       },
-      /run details do not match/u,
-    ],
-    [
-      (result) => {
+      expected: /identify different workflow attempts/u,
+    },
+  ];
+  for (const scenario of cases) {
+    const api = new RecoveryFakeGitHubApi();
+    const attestationPath = createRecoveryAttestation(assetDirectory, scenario.mutate, 1);
+    await assert.rejects(
+      recoverWith(api, assetDirectory, { attestationPath }),
+      scenario.expected,
+      scenario.label,
+    );
+    assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)), scenario.label);
+    assert.ok(
+      api.calls.every((call) => !call.endpoint.startsWith("https://uploads.github.test/")),
+      scenario.label,
+    );
+  }
+});
+
+test("recovery binds attestation repository, ref, SHA, and artifact subjects", async () => {
+  const assetDirectory = createReleaseAssets();
+  const cases = [
+    {
+      label: "other repository",
+      mutate: (result) => {
+        result.verificationResult.signature.certificate.githubWorkflowRepository = "other/repository";
+      },
+      expected: /unexpected workflow repository/u,
+    },
+    {
+      label: "other ref",
+      mutate: (result) => {
+        result.verificationResult.signature.certificate.githubWorkflowRef = "refs/tags/v9.9.9";
+      },
+      expected: /unexpected workflow ref/u,
+    },
+    {
+      label: "other SHA",
+      mutate: (result) => {
+        result.verificationResult.signature.certificate.githubWorkflowSHA = "f".repeat(40);
+      },
+      expected: /workflow SHA does not match/u,
+    },
+    {
+      label: "other signed repository",
+      mutate: (result) => {
+        result.verificationResult.statement.predicate.buildDefinition
+          .externalParameters.workflow.repository = "https://github.com/other/repository";
+      },
+      expected: /external workflow identity does not match/u,
+    },
+    {
+      label: "other signed ref",
+      mutate: (result) => {
+        result.verificationResult.statement.predicate.buildDefinition
+          .externalParameters.workflow.ref = "refs/tags/v9.9.9";
+      },
+      expected: /external workflow identity does not match/u,
+    },
+    {
+      label: "other signed SHA",
+      mutate: (result) => {
+        result.verificationResult.statement.predicate.buildDefinition
+          .resolvedDependencies[0].digest.gitCommit = "f".repeat(40);
+      },
+      expected: /resolved source does not match/u,
+    },
+    {
+      label: "other artifact content",
+      mutate: (result) => {
         result.verificationResult.statement.subject[0].digest.sha256 = "f".repeat(64);
       },
-      /subjects do not exactly match/u,
-    ],
-  ]) {
+      expected: /subjects do not exactly match/u,
+    },
+  ];
+  for (const scenario of cases) {
     const api = new RecoveryFakeGitHubApi();
-    const attestationPath = createRecoveryAttestation(assetDirectory, mutate);
-    await assert.rejects(recoverWith(api, assetDirectory, { attestationPath }), expected);
-    assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)));
-    assert.ok(api.calls.every((call) => !call.endpoint.startsWith("https://uploads.github.test/")));
+    const attestationPath = createRecoveryAttestation(assetDirectory, scenario.mutate, 1);
+    await assert.rejects(
+      recoverWith(api, assetDirectory, { attestationPath }),
+      scenario.expected,
+      scenario.label,
+    );
+    assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)), scenario.label);
+    assert.ok(
+      api.calls.every((call) => !call.endpoint.startsWith("https://uploads.github.test/")),
+      scenario.label,
+    );
   }
 });
 
