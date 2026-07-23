@@ -47,6 +47,15 @@ test("the v3 protocol bundle keeps fit, calibration, threshold selection and tes
   assert.match(html, /Contrast pair accuracy/i);
   assert.match(html, /not a production-language claim/i);
   assert.doesNotMatch(html, /production[- ]grade (?:model|classifier)/iu);
+  assert.doesNotMatch(
+    html,
+    /<dl class="metric-panel">[\s\S]*?<div>[\s\S]*?<\/dd>\s*<small/iu,
+    "metric context must remain inside its definition",
+  );
+  assert.match(
+    html,
+    /<dd><span data-v3-metric="accuracy">—<\/span><small data-v3-interval="accuracy">/u,
+  );
 });
 
 test("the v3 report exposes deterministic uncertainty intervals around point estimates", async () => {
