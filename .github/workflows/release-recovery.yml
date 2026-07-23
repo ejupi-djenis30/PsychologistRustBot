@@ -12,11 +12,11 @@ on:
         required: true
         type: string
       source_run_id:
-        description: "Failed tag-push Release run; its attestation may come from an earlier successful attempt"
+        description: "Failed tag-push Release run whose exact Publish job log identifies the draft"
         required: true
         type: string
       draft_release_id:
-        description: "Exact GitHub draft release ID originally created empty by the failed source run"
+        description: "Exact empty draft ID recorded by the failed source Publish job"
         required: true
         type: string
 
@@ -37,6 +37,7 @@ jobs:
     # re-proved immediately before writes. Splitting jobs would make the writer trust
     # unsigned job outputs or a newly uploaded intermediary instead of the source artifact.
     permissions:
+      # actions:read retrieves the exact validated Publish job log and the original inventory.
       actions: read
       attestations: read
       contents: write

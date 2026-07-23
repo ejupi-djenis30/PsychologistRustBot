@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { isDeepStrictEqual } from "node:util";
+import { isDeepStrictEqual, TextDecoder } from "node:util";
 
 import {
   buildReleaseContract,
@@ -20,6 +20,10 @@ const releaseWorkflowPath = ".github/workflows/release.yml";
 const recoveryWorkflowPath = ".github/workflows/release-recovery.yml";
 const githubActionsOidcIssuer = "https://token.actions.githubusercontent.com";
 const slsaProvenancePredicate = "https://slsa.dev/provenance/v1";
+const maximumSourceJobLogBytes = 2 * 1024 * 1024;
+const maximumSourceJobLogLines = 4_096;
+const maximumSourceJobLogLineBytes = 16 * 1024;
+const sourceJobLogHostPattern = /^productionresultssa[0-9]+\.blob\.core\.windows\.net$/u;
 const recoveryJobContract = Object.freeze([
   Object.freeze({ name: "Quality and supply-chain gates", conclusion: "success" }),
   Object.freeze({ name: "Build Linux x64", conclusion: "success" }),
@@ -103,13 +107,52 @@ export class GitHubApiError extends Error {
   }
 }
 
+async function readBoundedResponseBytes(response, maximumBytes, label) {
+  const declaredLength = response.headers.get("content-length");
+  let expectedLength;
+  if (declaredLength !== null) {
+    invariant(/^(?:0|[1-9][0-9]*)$/u.test(declaredLength), `${label} has an invalid Content-Length`);
+    expectedLength = Number(declaredLength);
+    invariant(
+      Number.isSafeInteger(expectedLength) && expectedLength <= maximumBytes,
+      `${label} exceeds the ${maximumBytes}-byte limit`,
+    );
+  }
+  invariant(response.body && typeof response.body.getReader === "function", `${label} has no readable body`);
+
+  const reader = response.body.getReader();
+  const chunks = [];
+  let byteCount = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    invariant(value instanceof Uint8Array && value.byteLength > 0, `${label} returned an invalid body chunk`);
+    byteCount += value.byteLength;
+    if (byteCount > maximumBytes || chunks.length >= 4_096) {
+      await reader.cancel();
+      throw new Error(`${label} exceeds its bounded download contract`);
+    }
+    chunks.push(Buffer.from(value));
+  }
+  if (expectedLength !== undefined) {
+    invariant(byteCount === expectedLength, `${label} body length does not match Content-Length`);
+  }
+  return Buffer.concat(chunks, byteCount);
+}
+
 export class GitHubApiClient {
-  constructor({ token, apiBase = "https://api.github.com" }) {
+  constructor({
+    token,
+    apiBase = "https://api.github.com",
+    fetchImplementation = globalThis.fetch,
+  }) {
     invariant(token, "GITHUB_TOKEN is required");
+    invariant(typeof fetchImplementation === "function", "GitHub API fetch implementation is required");
     const baseUrl = new URL(apiBase);
     invariant(baseUrl.protocol === "https:" && baseUrl.hostname === "api.github.com" && baseUrl.pathname === "/", "GitHub API base must be https://api.github.com");
     this.token = token;
     this.apiBase = baseUrl.origin;
+    this.fetch = fetchImplementation;
   }
 
   assertUploadUrl(rawUrl, repository, releaseId) {
@@ -138,7 +181,7 @@ export class GitHubApiClient {
       requestBody = JSON.stringify(json);
     }
 
-    const response = await fetch(url, { method, headers, body: requestBody, redirect: "error" });
+    const response = await this.fetch(url, { method, headers, body: requestBody, redirect: "error" });
     if (!response.ok) {
       let message = response.statusText;
       try {
@@ -155,6 +198,71 @@ export class GitHubApiClient {
       return Buffer.from(await response.arrayBuffer());
     }
     return response.json();
+  }
+
+  async downloadWorkflowJobLog(repository, jobId) {
+    validateRepository(repository);
+    validatePositiveSafeInteger(jobId, "Source publication job ID");
+    const endpoint = `repos/${repository}/actions/jobs/${jobId}/logs`;
+    const headers = {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${this.token}`,
+      "User-Agent": "ELIZA-Lab-release-publisher",
+      "X-GitHub-Api-Version": githubApiVersion,
+    };
+    const redirectResponse = await this.fetch(
+      `${this.apiBase}/${endpoint}`,
+      { headers, redirect: "manual" },
+    );
+    if (!redirectResponse.ok && redirectResponse.status !== 302) {
+      let message = redirectResponse.statusText;
+      try {
+        message = (await redirectResponse.json()).message || message;
+      } catch {
+        // Keep the HTTP status text when GitHub did not return JSON.
+      }
+      throw new GitHubApiError(redirectResponse.status, message);
+    }
+    invariant(redirectResponse.status === 302, "Source publication job log did not return the expected redirect");
+
+    const location = redirectResponse.headers.get("location");
+    invariant(typeof location === "string" && location.length > 0, "Source publication job log redirect is missing");
+    const logUrl = new URL(location);
+    invariant(
+      logUrl.protocol === "https:"
+        && sourceJobLogHostPattern.test(logUrl.hostname)
+        && logUrl.port === ""
+        && logUrl.pathname.startsWith("/actions-results/")
+        && logUrl.search.length > 1
+        && logUrl.username === ""
+        && logUrl.password === ""
+        && logUrl.hash === "",
+      "Source publication job log redirect has an unexpected identity",
+    );
+
+    // Authorization is deliberately not forwarded to the bounded, host-pinned signed log URL.
+    const logResponse = await this.fetch(logUrl, {
+      headers: {
+        Accept: "text/plain",
+        "User-Agent": "ELIZA-Lab-release-publisher",
+      },
+      redirect: "error",
+    });
+    invariant(logResponse.ok && logResponse.status === 200, "Source publication job log download failed");
+    invariant(
+      logResponse.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase() === "text/plain",
+      "Source publication job log has an unexpected content type",
+    );
+    const contentEncoding = logResponse.headers.get("content-encoding");
+    invariant(
+      contentEncoding === null || contentEncoding.toLowerCase() === "identity",
+      "Source publication job log has an unexpected content encoding",
+    );
+    return readBoundedResponseBytes(
+      logResponse,
+      maximumSourceJobLogBytes,
+      "Source publication job log",
+    );
   }
 
   async uploadReleaseAsset(rawUrl, repository, releaseId, asset) {
@@ -177,7 +285,7 @@ export class GitHubApiClient {
 
     // This is the intended release boundary: only the exact checksummed inventory is sent to GitHub's pinned upload host.
     // codeql[js/file-access-to-http]
-    const response = await fetch(uploadUrl, { method: "POST", headers, body: asset.bytes, redirect: "error" });
+    const response = await this.fetch(uploadUrl, { method: "POST", headers, body: asset.bytes, redirect: "error" });
     if (!response.ok) {
       let message = response.statusText;
       try {
@@ -390,11 +498,15 @@ async function readWorkflowAttemptJobs({
     `${label} workflow attempt returned an invalid or incomplete job listing`,
   );
   const jobsByName = new Map();
+  const jobIds = new Set();
   for (const job of jobsResponse.jobs) {
     invariant(
       typeof job?.name === "string" && !jobsByName.has(job.name),
       `${label} workflow attempt contains duplicate or invalid job names`,
     );
+    validatePositiveSafeInteger(job.id, `Workflow job ${job.name} ID`);
+    invariant(!jobIds.has(job.id), `${label} workflow attempt contains duplicate job ID ${job.id}`);
+    jobIds.add(job.id);
     invariant(
       job.run_id === sourceRunId && job.run_attempt === runAttempt,
       `Workflow job ${job.name} belongs to the wrong run attempt`,
@@ -476,6 +588,76 @@ async function readSourceRunArtifacts(api, repository, sourceRunId) {
   throw new Error(`Source workflow artifact listing exceeded ${maximumPages * pageSize} entries`);
 }
 
+async function verifySourcePublicationReceipt({
+  api,
+  repository,
+  publishJobId,
+  releaseId,
+}) {
+  validatePositiveSafeInteger(publishJobId, "Source publication job ID");
+  validatePositiveSafeInteger(releaseId, "Recovery release ID");
+  invariant(
+    typeof api.downloadWorkflowJobLog === "function",
+    "GitHub API client cannot retrieve source publication job logs",
+  );
+  const bytes = await api.downloadWorkflowJobLog(repository, publishJobId);
+  invariant(
+    Buffer.isBuffer(bytes) && bytes.length > 0 && bytes.length <= maximumSourceJobLogBytes,
+    "Source publication job log has an invalid bounded byte length",
+  );
+  const hasUtf8Bom = bytes.length >= 3
+    && bytes[0] === 0xef
+    && bytes[1] === 0xbb
+    && bytes[2] === 0xbf;
+  const payload = hasUtf8Bom ? bytes.subarray(3) : bytes;
+  invariant(payload.length > 0 && payload.at(-1) === 0x0a, "Source publication job log is empty or truncated");
+
+  let log;
+  try {
+    log = new TextDecoder("utf-8", { fatal: true }).decode(payload);
+  } catch (error) {
+    throw new Error(`Source publication job log is not valid UTF-8: ${error.message}`);
+  }
+  const normalizedLog = log.replaceAll("\r\n", "\n");
+  invariant(
+    !normalizedLog.includes("\0")
+      && !normalizedLog.includes("\uFEFF")
+      && !normalizedLog.includes("\r"),
+    "Source publication job log contains an invalid text encoding",
+  );
+  const lines = normalizedLog.split("\n");
+  invariant(
+    lines.length <= maximumSourceJobLogLines,
+    `Source publication job log exceeds the ${maximumSourceJobLogLines}-line limit`,
+  );
+  invariant(
+    lines.every((line) => Buffer.byteLength(line, "utf8") <= maximumSourceJobLogLineBytes),
+    `Source publication job log contains a line over ${maximumSourceJobLogLineBytes} bytes`,
+  );
+
+  const receiptSuffix = "could not be uniquely rediscovered before asset mutation";
+  const receiptLines = lines.filter(
+    (line) => line.includes(receiptSuffix) || line.includes("release-publish: New draft "),
+  );
+  invariant(
+    receiptLines.length === 1,
+    "Source publication job log must contain exactly one draft-causality receipt",
+  );
+  const receiptMatch = receiptLines[0].match(
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z release-publish: New draft ([1-9][0-9]*) could not be uniquely rediscovered before asset mutation$/u,
+  );
+  invariant(
+    receiptMatch !== null,
+    "Source publication job log contains a malformed or ambiguous draft-causality receipt",
+  );
+  const loggedReleaseId = Number(receiptMatch[1]);
+  validatePositiveSafeInteger(loggedReleaseId, "Source publication receipt draft ID");
+  invariant(
+    loggedReleaseId === releaseId,
+    `Source publication job log identifies draft ${loggedReleaseId}, not recovery draft ${releaseId}`,
+  );
+}
+
 async function verifyRecoverySourceRun({
   api,
   repository,
@@ -483,6 +665,7 @@ async function verifyRecoverySourceRun({
   tag,
   expectedCommit,
   sourceRunId,
+  releaseId,
   recoveryCreatedAt,
 }) {
   validatePositiveSafeInteger(sourceRunId, "Source workflow run ID");
@@ -547,6 +730,12 @@ async function verifyRecoverySourceRun({
       && publishCompletedAt <= sourceUpdatedAt,
     "Source publication job timestamps fall outside the source workflow",
   );
+  await verifySourcePublicationReceipt({
+    api,
+    repository,
+    publishJobId: publishJob.id,
+    releaseId,
+  });
 
   const artifacts = await readSourceRunArtifacts(api, repository, sourceRunId);
   const verifiedArtifacts = artifacts.filter((artifact) => artifact?.name === "verified-release-assets");
@@ -568,8 +757,7 @@ async function verifyRecoverySourceRun({
 
   return Object.freeze({
     artifactId: artifact.id,
-    publishCompletedAt,
-    publishStartedAt,
+    publishJobId: publishJob.id,
     runAttempt: sourceAttempt,
   });
 }
@@ -869,7 +1057,7 @@ function validateDraft(release, tag, expectedCommit) {
   invariant(typeof release.upload_url === "string", "GitHub draft is missing its upload URL");
 }
 
-function validateRecoveryDraftIdentity(release, tag, expectedCommit, releaseId, sourcePublication) {
+function validateRecoveryDraftIdentity(release, tag, expectedCommit, releaseId) {
   validateDraft(release, tag, expectedCommit);
   invariant(release.id === releaseId, `Recovery draft ID does not match ${releaseId}`);
   invariant(release.immutable === false, `Recovery draft ${tag} is unexpectedly immutable`);
@@ -880,13 +1068,8 @@ function validateRecoveryDraftIdentity(release, tag, expectedCommit, releaseId, 
       && release.author.type === "Bot",
     `Recovery draft ${tag} was not created by GitHub Actions`,
   );
-  const createdAt = validateIsoTimestamp(release.created_at, `Recovery draft ${tag} creation time`);
-  const updatedAt = validateIsoTimestamp(release.updated_at, `Recovery draft ${tag} update time`);
-  invariant(
-    createdAt >= sourcePublication.publishStartedAt && createdAt <= sourcePublication.publishCompletedAt,
-    `Recovery draft ${tag} was not created by the exact failed source publication job`,
-  );
-  invariant(updatedAt >= createdAt, `Recovery draft ${tag} has inconsistent timestamps`);
+  validateIsoTimestamp(release.created_at, `Recovery draft ${tag} tag-or-commit time`);
+  validateIsoTimestamp(release.updated_at, `Recovery draft ${tag} update time`);
 }
 
 async function verifyRemoteRecoverySubset({
@@ -896,10 +1079,9 @@ async function verifyRemoteRecoverySubset({
   tag,
   expectedCommit,
   releaseId,
-  sourcePublication,
   localInventory,
 }) {
-  validateRecoveryDraftIdentity(release, tag, expectedCommit, releaseId, sourcePublication);
+  validateRecoveryDraftIdentity(release, tag, expectedCommit, releaseId);
   const expectedByName = new Map(localInventory.map((asset) => [asset.name, asset]));
   invariant(expectedByName.size === localInventory.length, "Verified local recovery inventory contains duplicate names");
   const remoteNames = new Set();
@@ -1323,6 +1505,7 @@ export async function recoverEmptyDraftRelease({
     tag,
     expectedCommit,
     sourceRunId,
+    releaseId,
     recoveryCreatedAt: execution.createdAt,
   });
   const attestationAttempt = verifyRecoveryAttestation({
@@ -1361,7 +1544,6 @@ export async function recoverEmptyDraftRelease({
     tag,
     expectedCommit,
     releaseId,
-    sourcePublication: source,
     localInventory,
   });
   const listedRelease = await findReleaseForTag(api, repository, tag);
@@ -1377,7 +1559,6 @@ export async function recoverEmptyDraftRelease({
       tag,
       expectedCommit,
       releaseId,
-      sourcePublication: source,
       localInventory,
     });
   }
@@ -1406,7 +1587,6 @@ export async function recoverEmptyDraftRelease({
     tag,
     expectedCommit,
     releaseId,
-    sourcePublication: source,
     localInventory,
   });
 
@@ -1453,6 +1633,7 @@ export async function recoverEmptyDraftRelease({
     sourceAttempt: source.runAttempt,
     attestationAttempt,
     sourceArtifactId: source.artifactId,
+    sourcePublishJobId: source.publishJobId,
     tag: contract.expectedTag,
     commit: expectedCommit,
     assetCount: localInventory.length,
@@ -1538,7 +1719,7 @@ async function runCli() {
     publicationPolicyPath: options.policy,
   });
   console.log(
-    `Recovered draft ${result.releaseId} for ${result.tag} from source run ${result.sourceRunId} attempt ${result.sourceAttempt}, attestation attempt ${result.attestationAttempt}, artifact ${result.sourceArtifactId}; published ${result.assetCount} verified assets: ${result.htmlUrl}`,
+    `Recovered draft ${result.releaseId} for ${result.tag} from source run ${result.sourceRunId} attempt ${result.sourceAttempt}, publish job ${result.sourcePublishJobId}, attestation attempt ${result.attestationAttempt}, artifact ${result.sourceArtifactId}; published ${result.assetCount} verified assets: ${result.htmlUrl}`,
   );
 }
 

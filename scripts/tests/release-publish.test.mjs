@@ -26,6 +26,10 @@ const recoveryRunId = 202;
 const repositoryId = 594_442_371;
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
+function sourceReceiptLine(releaseId, timestamp = "2026-07-23T09:19:28.0000000Z") {
+  return `${timestamp} release-publish: New draft ${releaseId} could not be uniquely rediscovered before asset mutation`;
+}
+
 function createAuthorizedRepositoryFixture() {
   const directory = mkdtempSync(path.join(tmpdir(), "eliza-authorized-release-"));
   const manifestPath = path.join(directory, "Cargo.toml");
@@ -295,8 +299,17 @@ function sourceRunJobs(runAttempt = 1) {
     { number: 6, name: "Verify release attestations before publication", status: "completed", conclusion: "success" },
     { number: 7, name: "Publish only an exact verified remote inventory", status: "completed", conclusion: "failure" },
   ];
-  jobs.find((job) => job.name === "Publish GitHub Release").started_at = "2026-07-23T08:33:07Z";
-  jobs.find((job) => job.name === "Publish GitHub Release").completed_at = "2026-07-23T08:35:06Z";
+  const publishWindow = runAttempt === 1
+    ? {
+      startedAt: "2026-07-23T08:33:07Z",
+      completedAt: "2026-07-23T08:35:06Z",
+    }
+    : {
+      startedAt: "2026-07-23T09:18:02Z",
+      completedAt: "2026-07-23T09:19:28Z",
+    };
+  jobs.find((job) => job.name === "Publish GitHub Release").started_at = publishWindow.startedAt;
+  jobs.find((job) => job.name === "Publish GitHub Release").completed_at = publishWindow.completedAt;
   return jobs;
 }
 
@@ -317,8 +330,10 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
     this.release.assets = [];
     this.release.immutable = false;
     this.release.published_at = null;
-    this.release.created_at = "2026-07-23T08:34:24Z";
-    this.release.updated_at = "2026-07-23T08:34:24Z";
+    this.release.created_at = "2026-07-23T08:05:46Z";
+    this.release.updated_at = sourceRunAttempt === 1
+      ? "2026-07-23T08:34:24Z"
+      : "2026-07-23T09:18:24Z";
     this.release.author = { login: "github-actions[bot]", id: 41_898_282, type: "Bot" };
     this.sourceRun = {
       id: sourceRunId,
@@ -333,7 +348,9 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
       repository: { id: repositoryId, full_name: repository },
       head_repository: { id: repositoryId, full_name: repository },
       created_at: "2026-07-23T08:18:10Z",
-      updated_at: "2026-07-23T08:35:07Z",
+      updated_at: sourceRunAttempt === 1
+        ? "2026-07-23T08:35:07Z"
+        : "2026-07-23T09:19:29Z",
     };
     this.recoveryRun = {
       id: recoveryRunId,
@@ -353,6 +370,13 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
     this.attestationJobs = attestationAttempt === sourceRunAttempt
       ? this.jobs
       : sourceRunJobs(attestationAttempt);
+    const receiptTimestamp = sourceRunAttempt === 1
+      ? "2026-07-23T08:35:05.2005075Z"
+      : "2026-07-23T09:19:27.2005075Z";
+    this.jobLog = Buffer.from(
+      `\uFEFF${sourceReceiptLine(7, receiptTimestamp)}\n`,
+      "utf8",
+    );
     this.aggregatedJobs = [...sourceRunJobs(1), ...sourceRunJobs(2)];
     this.artifact = {
       id: 3_003,
@@ -434,6 +458,17 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
       return this.listDraft ? [structuredClone(this.release)] : [];
     }
     return super.request(endpoint, options);
+  }
+
+  async downloadWorkflowJobLog(suppliedRepository, jobId) {
+    assert.equal(suppliedRepository, repository);
+    const endpoint = `repos/${repository}/actions/jobs/${jobId}/logs`;
+    this.calls.push({ endpoint, method: "GET" });
+    const publishJob = this.jobs.find((job) => job.name === "Publish GitHub Release");
+    if (jobId !== publishJob.id || this.jobLog === null) {
+      throw new GitHubApiError(404, "Job logs not found");
+    }
+    return Buffer.from(this.jobLog);
   }
 }
 
@@ -593,6 +628,125 @@ test("pins the API and release upload hosts", async () => {
     ),
     /upload host/u,
   );
+});
+
+test("downloads source job logs only through the bounded GitHub Actions result host", async () => {
+  const log = Buffer.from(
+    `\uFEFF${sourceReceiptLine(7, "2026-07-23T09:19:28Z")}\n`,
+    "utf8",
+  );
+  const calls = [];
+  const fetchImplementation = async (url, options) => {
+    calls.push({ url: String(url), options });
+    if (calls.length === 1) {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          location: "https://productionresultssa10.blob.core.windows.net/actions-results/job/log.txt?sig=test",
+        },
+      });
+    }
+    return new Response(log, {
+      status: 200,
+      headers: {
+        "content-length": String(log.length),
+        "content-type": "text/plain",
+      },
+    });
+  };
+  const client = new GitHubApiClient({ token: "test-token", fetchImplementation });
+
+  const downloaded = await client.downloadWorkflowJobLog(repository, 2_008);
+
+  assert.deepEqual(downloaded, log);
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0].options.redirect, "manual");
+  assert.equal(calls[0].options.headers.Authorization, "Bearer test-token");
+  assert.equal(calls[1].options.redirect, "error");
+  assert.equal(Object.hasOwn(calls[1].options.headers, "Authorization"), false);
+});
+
+test("rejects an untrusted or oversized source job log redirect before parsing", async () => {
+  for (const scenario of [
+    {
+      label: "untrusted redirect",
+      fetchImplementation: async () => new Response(null, {
+        status: 302,
+        headers: { location: "https://example.test/actions-results/job/log.txt?sig=test" },
+      }),
+      expected: /redirect has an unexpected identity/u,
+    },
+    {
+      label: "non-default redirect port",
+      fetchImplementation: async () => new Response(null, {
+        status: 302,
+        headers: {
+          location: "https://productionresultssa10.blob.core.windows.net:444/actions-results/job/log.txt?sig=test",
+        },
+      }),
+      expected: /redirect has an unexpected identity/u,
+    },
+    {
+      label: "oversized body",
+      fetchImplementation: (() => {
+        let callCount = 0;
+        return async () => {
+          callCount += 1;
+          if (callCount === 1) {
+            return new Response(null, {
+              status: 302,
+              headers: {
+                location: "https://productionresultssa10.blob.core.windows.net/actions-results/job/log.txt?sig=test",
+              },
+            });
+          }
+          return new Response("x", {
+            status: 200,
+            headers: {
+              "content-length": String((2 * 1024 * 1024) + 1),
+              "content-type": "text/plain",
+            },
+          });
+        };
+      })(),
+      expected: /exceeds the 2097152-byte limit/u,
+    },
+    {
+      label: "encoded body",
+      fetchImplementation: (() => {
+        let callCount = 0;
+        return async () => {
+          callCount += 1;
+          if (callCount === 1) {
+            return new Response(null, {
+              status: 302,
+              headers: {
+                location: "https://productionresultssa10.blob.core.windows.net/actions-results/job/log.txt?sig=test",
+              },
+            });
+          }
+          return new Response("compressed", {
+            status: 200,
+            headers: {
+              "content-encoding": "gzip",
+              "content-type": "text/plain",
+            },
+          });
+        };
+      })(),
+      expected: /unexpected content encoding/u,
+    },
+  ]) {
+    const client = new GitHubApiClient({
+      token: "test-token",
+      fetchImplementation: scenario.fetchImplementation,
+    });
+    await assert.rejects(
+      client.downloadWorkflowJobLog(repository, 2_008),
+      scenario.expected,
+      scenario.label,
+    );
+  }
 });
 
 test("refuses workflow_dispatch even when it targets a tag ref", async () => {
@@ -923,11 +1077,19 @@ test("recovers an exact REST-invisible empty draft from the original run artifac
   assert.equal(result.sourceAttempt, 2);
   assert.equal(result.attestationAttempt, 1);
   assert.equal(result.sourceArtifactId, api.artifact.id);
+  assert.equal(
+    result.sourcePublishJobId,
+    api.jobs.find((job) => job.name === "Publish GitHub Release").id,
+  );
   assert.equal(result.assetCount, expectedReleaseFileNames().length);
   assert.equal(api.release.draft, false);
   assert.equal(api.release.immutable, true);
   assert.deepEqual(api.release.assets.map((asset) => asset.name).sort(), expectedReleaseFileNames());
   assert.ok(api.calls.some((call) => call.endpoint.includes(`/actions/runs/${sourceRunId}/artifacts`)));
+  assert.ok(api.calls.some(
+    (call) => call.endpoint
+      === `repos/${repository}/actions/jobs/${result.sourcePublishJobId}/logs`,
+  ));
   assert.ok(api.calls.some((call) => call.endpoint === `repos/${repository}/releases/7`));
   assert.equal(api.calls.filter((call) => call.method === "DELETE").length, 0);
   assert.equal(
@@ -948,16 +1110,141 @@ test("recovery refuses non-dispatch execution before reading GitHub state", asyn
   assert.equal(api.calls.length, 0);
 });
 
-test("recovery binds draft creation to the failed publication job", async () => {
-  for (const mutate of [
-    (release) => { release.created_at = "2026-07-23T08:35:07Z"; },
-    (release) => { release.updated_at = "2026-07-23T08:34:23Z"; },
-  ]) {
+test("recovery treats release.created_at as tag metadata instead of draft causality", async () => {
+  const api = new RecoveryFakeGitHubApi();
+  assert.equal(api.release.created_at, "2026-07-23T08:05:46Z");
+  assert.ok(
+    Date.parse(api.release.created_at)
+      < Date.parse(api.jobs.find((job) => job.name === "Publish GitHub Release").started_at),
+  );
+
+  await recoverWith(api);
+});
+
+test("recovery validates release timestamps only as metadata", async () => {
+  for (const field of ["created_at", "updated_at"]) {
     const api = new RecoveryFakeGitHubApi();
-    mutate(api.release);
-    await assert.rejects(recoverWith(api), /(?:was not created by|inconsistent timestamps)/u);
+    api.release[field] = "not-an-iso-timestamp";
+    await assert.rejects(recoverWith(api), /must be an ISO timestamp/u);
     assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)));
     assert.ok(api.calls.every((call) => !call.endpoint.startsWith("https://uploads.github.test/")));
+  }
+});
+
+test("recovery requires one exact draft-causality receipt from the source publish job", async () => {
+  const cases = [
+    {
+      label: "missing log",
+      mutate: (api) => { api.jobLog = null; },
+      expected: /GitHub API 404: Job logs not found/u,
+    },
+    {
+      label: "missing receipt",
+      mutate: (api) => {
+        api.jobLog = Buffer.from("\uFEFF2026-07-23T09:19:28Z publisher failed\n", "utf8");
+      },
+      expected: /exactly one draft-causality receipt/u,
+    },
+    {
+      label: "wrong draft ID",
+      mutate: (api) => {
+        api.jobLog = Buffer.from(
+          `\uFEFF${sourceReceiptLine(8, "2026-07-23T09:19:28Z")}\n`,
+          "utf8",
+        );
+      },
+      expected: /identifies draft 8, not recovery draft 7/u,
+    },
+    {
+      label: "multiple draft IDs",
+      mutate: (api) => {
+        api.jobLog = Buffer.from(
+          [
+            `\uFEFF${sourceReceiptLine(7, "2026-07-23T09:19:28Z")}`,
+            sourceReceiptLine(8, "2026-07-23T09:19:29Z"),
+            "",
+          ].join("\n"),
+          "utf8",
+        );
+      },
+      expected: /exactly one draft-causality receipt/u,
+    },
+    {
+      label: "duplicate receipt",
+      mutate: (api) => {
+        api.jobLog = Buffer.from(
+          [
+            `\uFEFF${sourceReceiptLine(7, "2026-07-23T09:19:28Z")}`,
+            sourceReceiptLine(7, "2026-07-23T09:19:29Z"),
+            "",
+          ].join("\n"),
+          "utf8",
+        );
+      },
+      expected: /exactly one draft-causality receipt/u,
+    },
+    {
+      label: "receipt with unexpected logger prefix",
+      mutate: (api) => {
+        api.jobLog = Buffer.from(
+          "\uFEFF2026-07-23T09:19:28Z wrapper: New draft 7 could not be uniquely rediscovered before asset mutation\n",
+          "utf8",
+        );
+      },
+      expected: /malformed or ambiguous draft-causality receipt/u,
+    },
+    {
+      label: "receipt with trailing text",
+      mutate: (api) => {
+        api.jobLog = Buffer.from(`\uFEFF${sourceReceiptLine(7)} unexpectedly continued\n`, "utf8");
+      },
+      expected: /malformed or ambiguous draft-causality receipt/u,
+    },
+    {
+      label: "truncated log",
+      mutate: (api) => {
+        api.jobLog = Buffer.from(
+          `\uFEFF${sourceReceiptLine(7, "2026-07-23T09:19:28Z")}`,
+          "utf8",
+        );
+      },
+      expected: /empty or truncated/u,
+    },
+    {
+      label: "invalid UTF-8",
+      mutate: (api) => { api.jobLog = Buffer.from([0xff, 0xfe, 0x0a]); },
+      expected: /not valid UTF-8/u,
+    },
+    {
+      label: "too many lines",
+      mutate: (api) => { api.jobLog = Buffer.from("x\n".repeat(4_096), "utf8"); },
+      expected: /exceeds the 4096-line limit/u,
+    },
+    {
+      label: "oversized line",
+      mutate: (api) => {
+        api.jobLog = Buffer.from(`${"x".repeat((16 * 1024) + 1)}\n`, "utf8");
+      },
+      expected: /contains a line over 16384 bytes/u,
+    },
+    {
+      label: "oversized log",
+      mutate: (api) => {
+        api.jobLog = Buffer.alloc((2 * 1024 * 1024) + 1, 0x61);
+      },
+      expected: /invalid bounded byte length/u,
+    },
+  ];
+
+  for (const scenario of cases) {
+    const api = new RecoveryFakeGitHubApi();
+    scenario.mutate(api);
+    await assert.rejects(recoverWith(api), scenario.expected, scenario.label);
+    assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)), scenario.label);
+    assert.ok(
+      api.calls.every((call) => !call.endpoint.startsWith("https://uploads.github.test/")),
+      scenario.label,
+    );
   }
 });
 

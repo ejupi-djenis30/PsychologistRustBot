@@ -131,9 +131,14 @@ test("release recovery is an explicit least-privilege default-branch operation o
   );
   assert.equal(parsed.jobs.recovery["runs-on"], "ubuntu-22.04");
   assert.equal(parsed.jobs.recovery["timeout-minutes"], "10");
+  assert.equal(parsed.jobs.recovery.permissions.actions, "read");
   assert.match(
     recoveryWorkflow,
     /Authorization and mutation intentionally share one job[\s\S]*unsigned job outputs or a newly uploaded intermediary/u,
+  );
+  assert.match(
+    recoveryWorkflow,
+    /actions:read retrieves the exact validated Publish job log and the original inventory/u,
   );
 
   assert.match(recoveryWorkflow, /name: Download original verified release inventory/u);

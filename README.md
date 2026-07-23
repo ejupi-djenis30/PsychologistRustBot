@@ -15,7 +15,8 @@ accounts, prompt submission, transcript storage, diagnosis, or therapeutic claim
 
 [Open the interactive demo](https://ejupi-djenis30.github.io/PsychologistRustBot/) ·
 [Model card](docs/MODEL_CARD.md) · [Dataset contract](docs/DATASET.md) ·
-[Architecture](docs/ARCHITECTURE.md) · [Safety model](SECURITY.md)
+[Architecture](docs/ARCHITECTURE.md) · [Release recovery](docs/RELEASE_RECOVERY.md) ·
+[Safety model](SECURITY.md)
 
 ## What makes it useful
 
@@ -229,6 +230,10 @@ rebuilding or guessing which commit it represents. Duplicate drafts or foreign c
 stop the run before mutation. Recovery and immutable reruns use GitHub's compare API to prove that the
 exact release commit is still identical to or an ancestor of the current default branch; a divergent
 commit is rejected without touching the draft. The release `target_commitish` must be that exact commit.
+The manual recovery path also binds the draft ID to one exact receipt in the exact failed publish
+job's GitHub Actions log. It does not infer draft causality from `release.created_at`, which is
+tag-or-commit metadata rather than draft-creation time. See the
+[release recovery contract](docs/RELEASE_RECOVERY.md).
 The publisher rechecks the protected tag, branch ancestry, draft contract, and complete remote name,
 size, and SHA-256 inventory before promotion. Publication is the irreversible boundary: GitHub must
 report the result as both immutable and latest. A rerun only verifies an already-published release and
