@@ -8,11 +8,13 @@ import {
   assertPinnedActionReferences,
   assertReleaseCandidateGate,
   assertReleasePermissions,
+  assertReleaseRecoveryPermissions,
   parseWorkflowYaml,
 } from "../workflow-policy.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const workflow = readFileSync(path.join(repositoryRoot, ".github", "workflows", "release.yml"), "utf8");
+const recoveryWorkflow = readFileSync(path.join(repositoryRoot, ".github", "workflows", "release-recovery.yml"), "utf8");
 const continuousIntegration = readFileSync(path.join(repositoryRoot, ".github", "workflows", "ci.yml"), "utf8");
 const pages = readFileSync(path.join(repositoryRoot, ".github", "workflows", "pages.yml"), "utf8");
 const gitAttributes = readFileSync(path.join(repositoryRoot, ".gitattributes"), "utf8");
@@ -107,6 +109,56 @@ test("release tooling and permissions stay pinned and least-privilege", () => {
   assert.match(publish, /GH_CLI_VERSION: "2\.94\.0"/u);
   assert.match(publish, /GH_CLI_SHA256: "a757f1ba6db18f4de8cbadb244843a5f89bc75b5e7c6fc127d2bd77fbd12ed62"/u);
   assert.match(publish, /sha256sum --check --strict/u);
+});
+
+test("release recovery is an explicit least-privilege default-branch operation over the original artifact", () => {
+  const parsed = assertReleaseRecoveryPermissions(recoveryWorkflow, "release recovery workflow");
+  assertPinnedActionReferences(recoveryWorkflow, "release recovery workflow");
+  assert.deepEqual(Object.keys(parsed.on), ["workflow_dispatch"]);
+  assert.deepEqual(
+    Object.keys(parsed.on.workflow_dispatch.inputs),
+    ["release_tag", "release_commit", "source_run_id", "draft_release_id"],
+  );
+  for (const input of Object.values(parsed.on.workflow_dispatch.inputs)) {
+    assert.equal(input.required, "true");
+    assert.equal(input.type, "string");
+  }
+  assert.equal(parsed.concurrency.group, "eliza-release-publication");
+  assert.equal(parsed.concurrency["cancel-in-progress"], "false");
+  assert.equal(
+    parsed.jobs.recovery.if,
+    "github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
+  );
+  assert.equal(parsed.jobs.recovery["runs-on"], "ubuntu-22.04");
+  assert.equal(parsed.jobs.recovery["timeout-minutes"], "10");
+
+  assert.match(recoveryWorkflow, /name: Download original verified release inventory/u);
+  assert.match(recoveryWorkflow, /git -C release-source rev-parse 'HEAD\^\{commit\}'/u);
+  assert.match(recoveryWorkflow, /name: verified-release-assets/u);
+  assert.match(recoveryWorkflow, /run-id: \$\{\{ inputs\.source_run_id \}\}/u);
+  assert.match(recoveryWorkflow, /github-token: \$\{\{ github\.token \}\}/u);
+  assert.match(recoveryWorkflow, /--signer-digest "\$\{RECOVERY_COMMIT\}"/u);
+  assert.match(recoveryWorkflow, /--source-digest "\$\{RECOVERY_COMMIT\}"/u);
+  assert.match(recoveryWorkflow, /--source-ref "refs\/tags\/\$\{RECOVERY_TAG\}"/u);
+  assert.match(recoveryWorkflow, /--deny-self-hosted-runners/u);
+  assert.match(recoveryWorkflow, /--format json > recovery-attestation\.json/u);
+  assert.match(recoveryWorkflow, /release-publish\.mjs recover-empty-draft/u);
+  assert.match(recoveryWorkflow, /--manifest release-source\/Cargo\.toml/u);
+  assert.match(recoveryWorkflow, /--policy release-source\/\.github\/release-policy\.json/u);
+  assert.doesNotMatch(recoveryWorkflow, /cargo build|verify-assets|actions\/upload-artifact|gh release upload/u);
+  assert.match(recoveryWorkflow, /GH_CLI_VERSION: "2\.94\.0"/u);
+  assert.match(recoveryWorkflow, /GH_CLI_SHA256: "a757f1ba6db18f4de8cbadb244843a5f89bc75b5e7c6fc127d2bd77fbd12ed62"/u);
+});
+
+test("ordinary release workflow_dispatch remains unable to attest or publish", () => {
+  const parsed = parseWorkflowYaml(workflow, "release workflow");
+  assert.ok(parsed.on.workflow_dispatch);
+  for (const job of ["attest", "publish"]) {
+    assert.equal(parsed.jobs[job].if, trustedTagCondition);
+  }
+  assert.doesNotMatch(jobBlock("quality"), /contents: write|attestations: write/u);
+  assert.doesNotMatch(jobBlock("build"), /contents: write|attestations: write/u);
+  assert.doesNotMatch(jobBlock("assemble"), /contents: write|attestations: write/u);
 });
 
 test("every native release binary proves the V3 model contract before packaging", () => {

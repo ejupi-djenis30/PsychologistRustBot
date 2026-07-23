@@ -377,6 +377,20 @@ export function assertReleasePermissions(source, label = "release workflow") {
   return workflow;
 }
 
+export function assertReleaseRecoveryPermissions(source, label = "release recovery workflow") {
+  const workflow = assertWorkflowStructure(parseWorkflowYaml(source, label), label);
+  assertExactMapping(workflow.permissions, { contents: "read" }, `${label} top-level permissions`);
+  assertExactKeys(workflow.jobs, ["recovery"], `${label} jobs`);
+  const recovery = workflow.jobs.recovery;
+  invariant(isMapping(recovery), `${label} is missing the recovery job`);
+  assertExactMapping(
+    recovery.permissions,
+    { actions: "read", attestations: "read", contents: "write" },
+    `${label} recovery permissions`,
+  );
+  return workflow;
+}
+
 const releaseCandidateGateRunLines = Object.freeze([
   "set -euo pipefail",
   '[[ "$QUALITY_RESULT" == "success" ]]',
