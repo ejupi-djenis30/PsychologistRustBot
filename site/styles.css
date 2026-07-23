@@ -742,7 +742,7 @@ h1 em {
 }
 
 .inspector dt {
-  color: rgba(242, 236, 223, 0.5);
+  color: rgba(242, 236, 223, 0.58);
   font-size: 0.7rem;
   text-transform: uppercase;
 }
@@ -946,7 +946,12 @@ h1 em {
 }
 
 .metric-panel dd {
+  display: grid;
+  gap: 0.35rem;
   margin: 1.5rem 0 0.35rem;
+}
+
+.metric-panel dd > span {
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(2rem, 3vw, 3.2rem);
   line-height: 1;
