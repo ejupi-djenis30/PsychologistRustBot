@@ -14,6 +14,7 @@ on:
       - "Cargo.lock"
       - "package.json"
       - "package-lock.json"
+      - "scripts/verify-robustness-report.mjs"
       - ".github/workflows/pages.yml"
   push:
     branches: [master]
@@ -28,6 +29,7 @@ on:
       - "Cargo.lock"
       - "package.json"
       - "package-lock.json"
+      - "scripts/verify-robustness-report.mjs"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -70,6 +72,10 @@ jobs:
           diff --recursive --brief artifacts/eliza-open-set-v3 target/pages-open-set-v3
           cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v3
           cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v3
+          cargo run --locked -- robustness audit --bundle-id-test \
+            > target/pages-robustness-id-test-report.json
+          node scripts/verify-robustness-report.mjs \
+            target/pages-robustness-id-test-report.json
       - name: Stage the site with the verified v3 bundle
         shell: bash
         run: |

@@ -3537,14 +3537,34 @@ pub struct BundleManifestV3 {
 
 #[derive(Debug, Clone)]
 pub struct VerifiedBundle {
-    pub manifest: BundleManifestV3,
-    pub model: OpenSetModelV3,
-    pub policy: OpenSetPolicyV3,
-    pub metrics: OpenSetMetricsV3,
-    pub split_plan: SplitPlanManifest,
+    manifest: BundleManifestV3,
+    model: OpenSetModelV3,
+    policy: OpenSetPolicyV3,
+    metrics: OpenSetMetricsV3,
+    split_plan: SplitPlanManifest,
 }
 
 impl VerifiedBundle {
+    pub fn manifest(&self) -> &BundleManifestV3 {
+        &self.manifest
+    }
+
+    pub fn model(&self) -> &OpenSetModelV3 {
+        &self.model
+    }
+
+    pub fn policy(&self) -> &OpenSetPolicyV3 {
+        &self.policy
+    }
+
+    pub fn metrics(&self) -> &OpenSetMetricsV3 {
+        &self.metrics
+    }
+
+    pub fn split_plan(&self) -> &SplitPlanManifest {
+        &self.split_plan
+    }
+
     pub fn compile(self) -> Result<CompiledModel, MlError> {
         CompiledModel::new(self.model, self.policy)
     }

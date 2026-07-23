@@ -32,7 +32,7 @@
     <meta name="twitter:image:alt" content="ELIZA Lab showing a local intent prediction and its inspectable feature trace." />
     <link rel="canonical" href="https://ejupi-djenis30.github.io/PsychologistRustBot/" />
     <link rel="icon" href="assets/eliza-lab-mark.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css?v=1.3.0-2" />
+    <link rel="stylesheet" href="styles.css?v=1.4.0" />
     <title>ELIZA Lab — Train it. Inspect it.</title>
   </head>
   <body id="top">
@@ -64,8 +64,8 @@
           </p>
           <div class="hero-actions">
             <a class="button button-primary" href="#experiment">Inspect a prediction</a>
-            <a class="button button-release" href="https://github.com/ejupi-djenis30/PsychologistRustBot/releases/tag/v1.3.0">
-              Get the v1.3.0 release <span aria-hidden="true">↗</span>
+            <a class="button button-release" href="https://github.com/ejupi-djenis30/PsychologistRustBot/releases/latest">
+              Get the latest release <span aria-hidden="true">↗</span>
             </a>
             <a class="button button-quiet" href="#method">Open the pipeline</a>
           </div>
@@ -266,9 +266,66 @@
         </div>
       </section>
 
+      <section class="robustness section" id="robustness" aria-labelledby="robustness-title">
+        <div class="section-heading compact">
+          <p class="eyebrow"><span>05</span> Post-training robustness</p>
+          <h2 id="robustness-title">Stable under format.<br />Measured under noise.</h2>
+          <p>
+            A fixed metamorphic suite now probes the verified model after every training and
+            policy choice is frozen. It checks exact preprocessing invariants separately from
+            controlled typo stress, then reports only aggregate drift.
+          </p>
+        </div>
+
+        <div class="robustness-dashboard">
+          <div class="robustness-metrics" aria-label="Frozen ID-test robustness results">
+            <article>
+              <span>Formatting decision agreement</span>
+              <strong data-robustness-metric="formatting-decision-agreement">100%</strong>
+              <small data-robustness-metric="formatting-variant-count">280 variants across four invariants</small>
+              <i class="robustness-bar robustness-bar--format" aria-hidden="true"></i>
+            </article>
+            <article>
+              <span>Typographic label agreement</span>
+              <strong data-robustness-metric="typographic-label-agreement">97.619%</strong>
+              <small data-robustness-metric="typographic-variant-count">210 single-edit typo variants</small>
+              <i class="robustness-bar robustness-bar--typo-label" aria-hidden="true"></i>
+            </article>
+            <article>
+              <span>Typographic decision agreement</span>
+              <strong data-robustness-metric="typographic-decision-agreement">95.714%</strong>
+              <small>accepted label or stable abstention</small>
+              <i class="robustness-bar robustness-bar--typo-decision" aria-hidden="true"></i>
+            </article>
+            <article>
+              <span>Maximum normalized JS drift</span>
+              <strong data-robustness-metric="maximum-js-divergence">0.073315</strong>
+              <small>bounded probability-distribution change</small>
+              <i class="robustness-bar robustness-bar--drift" aria-hidden="true"></i>
+            </article>
+          </div>
+          <aside class="robustness-boundary">
+            <p class="report-kicker" data-robustness-metric="audit-population-summary">70 FROZEN INPUTS / 490 DETERMINISTIC VARIANTS</p>
+            <h3>Consistency is not correctness.</h3>
+            <p>
+              Formatting changes must preserve the exact routed decision. Typographic edits are
+              diagnostic only: they receive no universal pass threshold and never feed back into
+              fitting, calibration or selection.
+            </p>
+            <p>
+              The audit runs locally over bounded JSONL or the verified bundle’s frozen ID-test.
+              Reports omit IDs, prompts, transformed text and row-level predictions.
+            </p>
+            <a href="https://github.com/ejupi-djenis30/PsychologistRustBot/blob/master/docs/ROBUSTNESS.md">
+              Read the robustness contract <span aria-hidden="true">↗</span>
+            </a>
+          </aside>
+        </div>
+      </section>
+
       <section class="safety section" id="safety" aria-labelledby="safety-title">
         <div>
-          <p class="eyebrow"><span>05</span> A hard boundary</p>
+          <p class="eyebrow"><span>06</span> A hard boundary</p>
           <h2 id="safety-title">A classifier is not a clinician.</h2>
         </div>
         <div class="safety-copy">
@@ -287,7 +344,7 @@
       </section>
 
       <section class="provenance section" aria-labelledby="provenance-title">
-        <p class="eyebrow"><span>06</span> Refactored with intent</p>
+        <p class="eyebrow"><span>07</span> Refactored with intent</p>
         <h2 id="provenance-title">The useful question survived.<br />The unsafe product did not.</h2>
         <p>
           The original 2023 Telegram prototype stored conversations and implied therapeutic use.

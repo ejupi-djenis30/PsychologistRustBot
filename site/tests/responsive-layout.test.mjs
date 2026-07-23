@@ -5,12 +5,12 @@ import test from "node:test";
 const siteRoot = new URL("../", import.meta.url);
 const read = (relative) => readFile(new URL(relative, siteRoot), "utf8");
 
-test("the hero links directly to the published v1.3.0 release", async () => {
+test("the hero links to the latest immutable release", async () => {
   const html = await read("index.html");
 
   assert.match(
     html,
-    /<a class="button button-release" href="https:\/\/github\.com\/ejupi-djenis30\/PsychologistRustBot\/releases\/tag\/v1\.3\.0">\s*Get the v1\.3\.0 release/s,
+    /<a class="button button-release" href="https:\/\/github\.com\/ejupi-djenis30\/PsychologistRustBot\/releases\/latest">\s*Get the latest release/s,
   );
 });
 
@@ -57,4 +57,24 @@ test("the complete four-step protocol uses a shared mobile card floor at 320px",
     styles,
     /@media \(max-width: 620px\)[\s\S]*?\.v3-protocol article\s*\{\s*min-block-size:\s*9\.5rem;/,
   );
+});
+
+test("the robustness section reports the frozen audit without upgrading its claim", async () => {
+  const html = await read("index.html");
+
+  for (const evidence of [
+    "70 FROZEN INPUTS / 490 DETERMINISTIC VARIANTS",
+    "Formatting decision agreement",
+    "100%",
+    "Typographic label agreement",
+    "97.619%",
+    "Typographic decision agreement",
+    "95.714%",
+    "0.073315",
+    "Consistency is not correctness.",
+  ]) {
+    assert.ok(html.includes(evidence), `missing robustness evidence: ${evidence}`);
+  }
+  assert.match(html, /never feed back into\s+fitting, calibration or selection/);
+  assert.match(html, /Reports omit IDs, prompts, transformed text and row-level predictions/);
 });

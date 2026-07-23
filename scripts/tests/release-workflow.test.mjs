@@ -138,6 +138,31 @@ test("every native release binary proves the V3 model contract before packaging"
   assert.doesNotMatch(releaseContract, /rule=feeling-reflection/u);
 });
 
+test("release quality regenerates and verifies the robustness report before publication", () => {
+  const quality = jobBlock("quality");
+  const reproduction = quality.indexOf("name: Reproduce every embedded ML artifact");
+  const audit = quality.indexOf(
+    "cargo run --locked -- robustness audit --bundle-id-test",
+    reproduction,
+  );
+  const reportPath = "target/release-robustness-id-test-report.json";
+  const output = quality.indexOf(reportPath, audit);
+  const verifier = quality.indexOf("node scripts/verify-robustness-report.mjs", output);
+  const verifiedInput = quality.indexOf(reportPath, verifier);
+  const nextGate = quality.indexOf(
+    "name: Audit locked Rust dependencies against pinned RustSec data",
+    verifier,
+  );
+
+  assert.ok(reproduction >= 0, "release quality must reproduce the ML artifacts");
+  assert.ok(audit > reproduction, "release quality must generate the robustness report");
+  assert.ok(output > audit, "release quality must write the generated report");
+  assert.ok(verifier > output, "release quality must verify after generation");
+  assert.ok(verifiedInput > verifier, "release quality must verify the generated report path");
+  assert.ok(nextGate > verifiedInput, "robustness verification must remain inside the quality gate");
+  assert.match(jobBlock("build"), /^    needs: quality\r?$/mu);
+});
+
 test("digest-bound fixtures keep LF bytes on every release runner", () => {
   for (const pattern of [
     "/artifacts/eliza-open-set-v3/*.json text eol=lf",

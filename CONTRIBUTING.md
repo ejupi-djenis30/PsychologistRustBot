@@ -34,6 +34,11 @@ cargo run --locked -- train-v3 --output target/open-set-v3
 diff -r artifacts/eliza-open-set-v3 target/open-set-v3
 cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v3
 cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v3
+printf '%s\n' '{"id":"fictional-01","text":"I intend to test one next step"}' \
+  | cargo run --locked -- robustness audit
+cargo run --locked -- robustness audit --bundle-id-test \
+  > target/robustness-id-test-report.json
+node scripts/verify-robustness-report.mjs target/robustness-id-test-report.json
 node --test site/tests/*.test.mjs
 node site/scripts/validate-site.mjs
 cargo audit
@@ -58,6 +63,10 @@ If you edit a workflow, run [`actionlint`](https://github.com/rhysd/actionlint) 
   their metrics into a production-language claim.
 - Keep the 512-code-point input limit, bounded CLI reader, saturating turn count, and 40-turn browser
   transcript unless the PR explains and tests a safer replacement.
+- Keep robustness reports aggregate-only. Tests may use invented prompts, but production code must
+  not serialize audit IDs, raw prompts, transformations or per-row decisions. Preserve the
+  verified-bundle provenance boundary, evaluate gates from raw in-process evidence and keep the
+  site metrics checked against a freshly generated frozen-ID report.
 - Describe safety phrase matching as a narrow exit condition. Do not call it detection, assessment,
   prevention, care, or clinical advice.
 - Keep the browser demo local-only: no analytics, accounts, transcript storage, remote models, or

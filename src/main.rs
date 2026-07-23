@@ -7,6 +7,7 @@ use eliza_lab::open_set::{
     write_bundle, CompiledModel, GroupedDataset, OpenSetContrastDataset, OpenSetOodDataset,
     OpenSetTrainingConfig, DEFAULT_BOOTSTRAP_RESAMPLES,
 };
+use eliza_lab::robustness::{audit_bundle_id_test, audit_jsonl, RobustnessGate};
 use eliza_lab::{ElizaEngine, Reply, MAX_INPUT_CHARS};
 use serde::Serialize;
 use std::env;
@@ -90,6 +91,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         Some("infer") => infer_command(&arguments[1..]),
         Some("infer-batch") => infer_batch_command(&arguments[1..]),
         Some("bundle") => bundle_command(&arguments[1..]),
+        Some("robustness") => robustness_command(&arguments[1..]),
         Some("chat") => chat_command(&arguments[1..]),
         Some("dataset") => dataset_command(&arguments[1..]),
         Some("--once") => legacy_once(&arguments[1..]),
@@ -269,11 +271,11 @@ fn bundle_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
         "verify" => {
             let verified = verify_bundle(&bundle_path)?;
             println!("semantically verified {}", bundle_path.display());
-            println!("model        {}", verified.model.model_version);
-            println!("dataset      {}", verified.manifest.dataset_sha256);
+            println!("model        {}", verified.model().model_version);
+            println!("dataset      {}", verified.manifest().dataset_sha256);
             println!(
                 "payloads     {} (plus manifest)",
-                verified.manifest.files.len()
+                verified.manifest().files.len()
             );
         }
         "reproduce" => {
@@ -335,6 +337,98 @@ fn infer_batch_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
     eprintln!(
         "processed {count} rows with model {}",
         runtime.model().model_version
+    );
+    Ok(())
+}
+
+fn robustness_command(arguments: &[String]) -> Result<(), Box<dyn Error>> {
+    let operation = arguments
+        .first()
+        .map(String::as_str)
+        .ok_or_else(|| CliError("robustness requires `audit`".into()))?;
+    if matches!(operation, "--help" | "-h" | "help") {
+        print_robustness_help();
+        return Ok(());
+    }
+    if operation != "audit" {
+        return Err(CliError(format!(
+            "unknown robustness operation `{operation}`; expected `audit`"
+        ))
+        .into());
+    }
+
+    let mut bundle_path = None;
+    let mut bundle_id_test = false;
+    let mut gate = RobustnessGate::default();
+    let mut index = 1;
+    while index < arguments.len() {
+        match arguments[index].as_str() {
+            "--bundle" => bundle_path = Some(PathBuf::from(option_value(arguments, &mut index)?)),
+            "--bundle-id-test" => bundle_id_test = true,
+            "--minimum-formatting-label-agreement" => {
+                gate.minimum_formatting_label_agreement =
+                    parse_option(arguments, &mut index, "formatting label agreement")?
+            }
+            "--minimum-formatting-decision-agreement" => {
+                gate.minimum_formatting_decision_agreement =
+                    parse_option(arguments, &mut index, "formatting decision agreement")?
+            }
+            "--maximum-formatting-js-divergence" => {
+                gate.maximum_formatting_js_divergence =
+                    parse_option(arguments, &mut index, "formatting JS divergence")?
+            }
+            "--minimum-typographic-label-agreement" => {
+                gate.minimum_typographic_label_agreement = Some(parse_option(
+                    arguments,
+                    &mut index,
+                    "typographic label agreement",
+                )?)
+            }
+            "--minimum-typographic-decision-agreement" => {
+                gate.minimum_typographic_decision_agreement = Some(parse_option(
+                    arguments,
+                    &mut index,
+                    "typographic decision agreement",
+                )?)
+            }
+            "--maximum-typographic-js-divergence" => {
+                gate.maximum_typographic_js_divergence = Some(parse_option(
+                    arguments,
+                    &mut index,
+                    "typographic JS divergence",
+                )?)
+            }
+            "--help" | "-h" => {
+                print_robustness_help();
+                return Ok(());
+            }
+            option => {
+                return Err(CliError(format!("unknown robustness audit option `{option}`")).into())
+            }
+        }
+        index += 1;
+    }
+    gate.validate()?;
+
+    let verified = match bundle_path.as_deref() {
+        Some(path) => verify_bundle(path)?,
+        None => embedded_bundle()?,
+    };
+    let report = if bundle_id_test {
+        audit_bundle_id_test(verified)?
+    } else {
+        let runtime = verified.compile()?;
+        {
+            let stdin = io::stdin();
+            audit_jsonl(&runtime, &mut stdin.lock())?
+        }
+    };
+    println!("{}", serde_json::to_string_pretty(&report)?);
+    io::stdout().flush()?;
+    gate.enforce(&report)?;
+    eprintln!(
+        "audited {} inputs and {} deterministic variants with model {}",
+        report.input_count, report.evaluated_variants, report.model_version
     );
     Ok(())
 }
@@ -921,6 +1015,7 @@ fn print_help() {
            eliza-lab infer [options] <fictional prompt>\n\
            eliza-lab infer-batch [--bundle PATH] < input.jsonl\n\
            eliza-lab bundle <verify|reproduce> [options]\n\
+           eliza-lab robustness audit [options] [< input.jsonl]\n\
            eliza-lab chat [--bundle PATH]\n\
            eliza-lab dataset check [--dataset PATH]\n\
            eliza-lab --once <prompt>       Legacy rule-only response\n\n\
@@ -956,6 +1051,22 @@ fn print_bundle_help() {
          --contrast-test PATH        Contrast-test data used only by reproduce\n\
          verify recomputes the experiment from the plan embedded in the bundle.\n\
          reproduce requires the source fixtures and proves byte-identical output."
+    );
+}
+
+fn print_robustness_help() {
+    println!(
+        "Usage: eliza-lab robustness audit [options] [< input.jsonl]\n\
+         Reads bounded JSONL objects with `id` and `text`; emits aggregate metrics without prompts or identifiers.\n\
+         --bundle PATH                                  Verified v3 bundle (default embedded bundle)\n\
+         --bundle-id-test                               Audit the verified bundle's frozen ID-test instead of stdin\n\
+         --minimum-formatting-label-agreement FLOAT    Default 1.0; top labels must remain invariant\n\
+         --minimum-formatting-decision-agreement FLOAT Default 1.0; formatting is a preprocessing invariant\n\
+         --maximum-formatting-js-divergence FLOAT      Default 0.0; normalized Jensen-Shannon divergence\n\
+         --minimum-typographic-label-agreement FLOAT   Optional release threshold for typo stress tests\n\
+         --minimum-typographic-decision-agreement FLOAT Optional release threshold for typo stress tests\n\
+         --maximum-typographic-js-divergence FLOAT      Optional release threshold for typo stress tests\n\
+         The report is written before a selected gate failure so CI can retain the evidence."
     );
 }
 
