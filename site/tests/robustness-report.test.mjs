@@ -83,6 +83,17 @@ test("the verifier rejects stale visible values and graph widths", () => {
   );
 });
 
+test("metric bindings reject nested markup instead of trying to sanitize it", () => {
+  const injected = html.replace(
+    ">100%</strong>",
+    '><script type="text/plain">ignored</script>100%</strong>',
+  );
+  assert.throws(
+    () => verify({ html: injected }),
+    /must contain plain text only/u,
+  );
+});
+
 test("CI and Pages verify the site against reports generated in the same job", async () => {
   const [ci, pages] = await Promise.all([
     read("../../.github/workflows/ci.yml"),

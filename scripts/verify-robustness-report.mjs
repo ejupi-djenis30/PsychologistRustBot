@@ -118,7 +118,12 @@ const elementText = (html, key) => {
   );
   const match = expression.exec(html);
   invariant(match, `site is missing robustness metric binding ${key}`);
-  return match[2].replace(/<[^>]+>/gu, "").replace(/\s+/gu, " ").trim();
+  const rawText = match[2];
+  invariant(
+    !/[<>]/u.test(rawText),
+    `robustness metric binding ${key} must contain plain text only`,
+  );
+  return rawText.replace(/\s+/gu, " ").trim();
 };
 
 const cssWidth = (styles, className) => {
