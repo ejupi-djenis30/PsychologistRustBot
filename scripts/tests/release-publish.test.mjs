@@ -256,7 +256,7 @@ class FakeGitHubApi {
   }
 }
 
-function sourceRunJobs() {
+function sourceRunJobs(runAttempt = 1) {
   const jobs = [
     ["Quality and supply-chain gates", "success"],
     ["Build Linux x64", "success"],
@@ -268,9 +268,9 @@ function sourceRunJobs() {
     ["Attest verified release inventory", "success"],
     ["Publish GitHub Release", "failure"],
   ].map(([name, conclusion], index) => ({
-    id: 1_000 + index,
+    id: (runAttempt * 1_000) + index,
     run_id: sourceRunId,
-    run_attempt: 1,
+    run_attempt: runAttempt,
     name,
     status: "completed",
     conclusion,
@@ -297,6 +297,7 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
   constructor({
     listDraft = false,
     listedConflict,
+    sourceRunAttempt = 1,
   } = {}) {
     super({
       releaseState: "draft",
@@ -308,6 +309,7 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
     this.release.assets = [];
     this.release.immutable = false;
     this.release.published_at = null;
+    this.release.created_at = "2026-07-23T08:34:24Z";
     this.release.updated_at = "2026-07-23T08:34:24Z";
     this.release.author = { login: "github-actions[bot]", id: 41_898_282, type: "Bot" };
     this.sourceRun = {
@@ -319,7 +321,7 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
       conclusion: "failure",
       head_branch: tag,
       head_sha: expectedCommit,
-      run_attempt: 1,
+      run_attempt: sourceRunAttempt,
       repository: { id: repositoryId, full_name: repository },
       head_repository: { id: repositoryId, full_name: repository },
       created_at: "2026-07-23T08:18:10Z",
@@ -338,7 +340,8 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
       repository: { id: repositoryId, full_name: repository },
       created_at: "2026-07-23T12:00:00Z",
     };
-    this.jobs = sourceRunJobs();
+    this.jobs = sourceRunJobs(sourceRunAttempt);
+    this.aggregatedJobs = [...sourceRunJobs(1), ...sourceRunJobs(2)];
     this.artifact = {
       id: 3_003,
       name: "verified-release-assets",
@@ -365,9 +368,16 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
       record();
       return structuredClone(this.sourceRun);
     }
-    if (endpoint === `repos/${repository}/actions/runs/${sourceRunId}/jobs?filter=all&per_page=100&page=1`) {
+    if (
+      endpoint
+      === `repos/${repository}/actions/runs/${sourceRunId}/attempts/${this.sourceRun.run_attempt}/jobs?per_page=100&page=1`
+    ) {
       record();
       return { total_count: this.jobs.length, jobs: structuredClone(this.jobs) };
+    }
+    if (endpoint === `repos/${repository}/actions/runs/${sourceRunId}/jobs?filter=all&per_page=100&page=1`) {
+      record();
+      return { total_count: this.aggregatedJobs.length, jobs: structuredClone(this.aggregatedJobs) };
     }
     if (endpoint === `repos/${repository}/actions/runs/${sourceRunId}/artifacts?per_page=100&page=1`) {
       record();
@@ -405,12 +415,12 @@ class RecoveryFakeGitHubApi extends FakeGitHubApi {
   }
 }
 
-function createRecoveryAttestation(assetDirectory, mutate) {
+function createRecoveryAttestation(assetDirectory, mutate, sourceRunAttempt = 1) {
   const inventory = buildLocalInventory(assetDirectory, authorizedRepository.manifestPath);
   const repositoryUrl = `https://github.com/${repository}`;
   const tagRef = `refs/tags/${tag}`;
   const workflowIdentity = `${repositoryUrl}/.github/workflows/release.yml@${tagRef}`;
-  const invocationId = `${repositoryUrl}/actions/runs/${sourceRunId}/attempts/1`;
+  const invocationId = `${repositoryUrl}/actions/runs/${sourceRunId}/attempts/${sourceRunAttempt}`;
   const statement = {
     _type: "https://in-toto.io/Statement/v1",
     subject: inventory.map(({ name, sha256: digest }) => ({ name, digest: { sha256: digest } })),
@@ -497,7 +507,8 @@ function createRecoveryAttestation(assetDirectory, mutate) {
 }
 
 function recoverWith(api, assetDirectory = createReleaseAssets(), overrides = {}) {
-  const attestationPath = overrides.attestationPath || createRecoveryAttestation(assetDirectory);
+  const attestationPath = overrides.attestationPath
+    || createRecoveryAttestation(assetDirectory, undefined, api.sourceRun.run_attempt);
   return recoverEmptyDraftRelease({
     api,
     repository,
@@ -517,6 +528,16 @@ function recoverWith(api, assetDirectory = createReleaseAssets(), overrides = {}
     pause: async () => {},
     ...overrides,
   });
+}
+
+function recoveryAsset(asset, id) {
+  return {
+    id,
+    name: asset.name,
+    size: asset.size,
+    state: "uploaded",
+    digest: `sha256:${asset.sha256}`,
+  };
 }
 
 function publishWith(api, assetDirectory = createReleaseAssets(), overrides = {}) {
@@ -903,17 +924,133 @@ test("recovery refuses non-dispatch execution before reading GitHub state", asyn
   assert.equal(api.calls.length, 0);
 });
 
-test("recovery refuses a dirty exact draft without deleting or uploading anything", async () => {
+test("recovery binds draft creation to the failed publication job", async () => {
+  for (const mutate of [
+    (release) => { release.created_at = "2026-07-23T08:35:07Z"; },
+    (release) => { release.updated_at = "2026-07-23T08:34:23Z"; },
+  ]) {
+    const api = new RecoveryFakeGitHubApi();
+    mutate(api.release);
+    await assert.rejects(recoverWith(api), /(?:was not created by|inconsistent timestamps)/u);
+    assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)));
+    assert.ok(api.calls.every((call) => !call.endpoint.startsWith("https://uploads.github.test/")));
+  }
+});
+
+test("recovery resumes an interrupted upload without deleting or uploading an asset twice", async () => {
   const api = new RecoveryFakeGitHubApi();
-  api.release.assets.push({
-    id: 99,
-    name: "partial.txt",
-    size: 1,
-    state: "uploaded",
-    digest: `sha256:${"f".repeat(64)}`,
-  });
-  await assert.rejects(recoverWith(api), /must be exactly empty/u);
-  assert.ok(api.calls.every((call) => call.method !== "PATCH" && call.method !== "DELETE"));
+  const assetDirectory = createReleaseAssets();
+  const originalUpload = api.uploadReleaseAsset.bind(api);
+  let uploadCount = 0;
+  let interrupt = true;
+  api.uploadReleaseAsset = async (...argumentsList) => {
+    const uploaded = await originalUpload(...argumentsList);
+    uploadCount += 1;
+    if (uploadCount === 3 && interrupt) {
+      interrupt = false;
+      throw new Error("simulated ambiguous upload response");
+    }
+    return uploaded;
+  };
+
+  await assert.rejects(recoverWith(api, assetDirectory), /simulated ambiguous upload response/u);
+  assert.equal(api.release.draft, true);
+  assert.equal(api.release.assets.length, 3);
+  assert.equal(new Set(api.release.assets.map((asset) => asset.name)).size, 3);
+
+  const result = await recoverWith(api, assetDirectory);
+  assert.equal(result.assetCount, expectedReleaseFileNames().length);
+  assert.equal(api.release.draft, false);
+  assert.equal(uploadCount, expectedReleaseFileNames().length);
+  assert.equal(new Set(api.release.assets.map((asset) => asset.name)).size, expectedReleaseFileNames().length);
+  assert.deepEqual(api.release.assets.map((asset) => asset.name).sort(), expectedReleaseFileNames());
+  assert.equal(api.calls.filter((call) => call.method === "DELETE").length, 0);
+});
+
+test("recovery refuses every non-exact remote subset before mutation", async () => {
+  const assetDirectory = createReleaseAssets();
+  const inventory = buildLocalInventory(assetDirectory, authorizedRepository.manifestPath);
+  const cases = [
+    {
+      label: "extra asset",
+      mutate: (api) => {
+        api.release.assets = [{
+          id: 90,
+          name: "unexpected.txt",
+          size: 1,
+          state: "uploaded",
+          digest: `sha256:${"f".repeat(64)}`,
+        }];
+      },
+      expected: /unexpected asset/u,
+    },
+    {
+      label: "duplicate name",
+      mutate: (api) => {
+        api.release.assets = [recoveryAsset(inventory[0], 91), recoveryAsset(inventory[0], 92)];
+      },
+      expected: /duplicate asset name/u,
+    },
+    {
+      label: "duplicate ID",
+      mutate: (api) => {
+        api.release.assets = [recoveryAsset(inventory[0], 93), recoveryAsset(inventory[1], 93)];
+      },
+      expected: /duplicate asset ID/u,
+    },
+    {
+      label: "incomplete state",
+      mutate: (api) => {
+        api.release.assets = [{ ...recoveryAsset(inventory[0], 94), state: "new" }];
+      },
+      expected: /not fully uploaded/u,
+    },
+    {
+      label: "wrong size",
+      mutate: (api) => {
+        api.release.assets = [{ ...recoveryAsset(inventory[0], 95), size: inventory[0].size + 1 }];
+      },
+      expected: /unexpected size/u,
+    },
+    {
+      label: "wrong digest",
+      mutate: (api) => {
+        api.release.assets = [{ ...recoveryAsset(inventory[0], 96), digest: `sha256:${"f".repeat(64)}` }];
+      },
+      expected: /unexpected digest/u,
+    },
+  ];
+
+  for (const scenario of cases) {
+    const api = new RecoveryFakeGitHubApi();
+    scenario.mutate(api);
+    await assert.rejects(recoverWith(api, assetDirectory), scenario.expected, scenario.label);
+    assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)), scenario.label);
+    assert.ok(
+      api.calls.every((call) => !call.endpoint.startsWith("https://uploads.github.test/")),
+      scenario.label,
+    );
+  }
+});
+
+test("recovery validates only the exact source attempt instead of 18 aggregated jobs", async () => {
+  const api = new RecoveryFakeGitHubApi({ sourceRunAttempt: 2 });
+  assert.equal(api.aggregatedJobs.length, 18);
+
+  await recoverWith(api);
+
+  const exactEndpoint =
+    `repos/${repository}/actions/runs/${sourceRunId}/attempts/2/jobs?per_page=100&page=1`;
+  assert.ok(api.calls.some((call) => call.endpoint === exactEndpoint));
+  assert.ok(api.calls.every((call) => !call.endpoint.includes("/jobs?filter=all")));
+});
+
+test("recovery rejects jobs returned for a different source attempt before mutation", async () => {
+  const api = new RecoveryFakeGitHubApi({ sourceRunAttempt: 2 });
+  api.jobs = sourceRunJobs(1);
+
+  await assert.rejects(recoverWith(api), /belongs to the wrong run attempt/u);
+  assert.ok(api.calls.every((call) => !["PATCH", "DELETE"].includes(call.method)));
   assert.ok(api.calls.every((call) => !call.endpoint.startsWith("https://uploads.github.test/")));
 });
 

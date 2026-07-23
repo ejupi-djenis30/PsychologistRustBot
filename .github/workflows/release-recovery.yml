@@ -16,7 +16,7 @@ on:
         required: true
         type: string
       draft_release_id:
-        description: "Exact empty GitHub draft release ID created by the failed source run"
+        description: "Exact GitHub draft release ID originally created empty by the failed source run"
         required: true
         type: string
 
@@ -29,10 +29,13 @@ concurrency:
 
 jobs:
   recovery:
-    name: Recover exact empty release draft
+    name: Recover exact release draft
     if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-22.04
     timeout-minutes: 10
+    # Authorization and mutation intentionally share one job so every remote fact can be
+    # re-proved immediately before writes. Splitting jobs would make the writer trust
+    # unsigned job outputs or a newly uploaded intermediary instead of the source artifact.
     permissions:
       actions: read
       attestations: read
@@ -110,7 +113,7 @@ jobs:
             --deny-self-hosted-runners \
             --format json > recovery-attestation.json
 
-      - name: Recover only the exact empty contract draft
+      - name: Recover only the exact contract draft
         env:
           GITHUB_TOKEN: ${{ github.token }}
           RECOVERY_COMMIT: ${{ inputs.release_commit }}

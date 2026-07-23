@@ -433,7 +433,7 @@ async function verifyRecoverySourceRun({
   invariant(sourceCreatedAt < recoveryCreatedAt, "Source release workflow is not older than the recovery workflow");
 
   const jobsResponse = await api.request(
-    `repos/${repository}/actions/runs/${sourceRunId}/jobs?filter=all&per_page=100&page=1`,
+    `repos/${repository}/actions/runs/${sourceRunId}/attempts/${sourceAttempt}/jobs?per_page=100&page=1`,
   );
   invariant(
     jobsResponse?.total_count === recoveryJobContract.length
@@ -750,7 +750,7 @@ function validateDraft(release, tag, expectedCommit) {
   invariant(typeof release.upload_url === "string", "GitHub draft is missing its upload URL");
 }
 
-function validateEmptyRecoveryDraft(release, tag, expectedCommit, releaseId, sourcePublication) {
+function validateRecoveryDraftIdentity(release, tag, expectedCommit, releaseId, sourcePublication) {
   validateDraft(release, tag, expectedCommit);
   invariant(release.id === releaseId, `Recovery draft ID does not match ${releaseId}`);
   invariant(release.immutable === false, `Recovery draft ${tag} is unexpectedly immutable`);
@@ -761,12 +761,49 @@ function validateEmptyRecoveryDraft(release, tag, expectedCommit, releaseId, sou
       && release.author.type === "Bot",
     `Recovery draft ${tag} was not created by GitHub Actions`,
   );
-  invariant(release.assets.length === 0, `Recovery draft ${tag} must be exactly empty`);
+  const createdAt = validateIsoTimestamp(release.created_at, `Recovery draft ${tag} creation time`);
   const updatedAt = validateIsoTimestamp(release.updated_at, `Recovery draft ${tag} update time`);
   invariant(
-    updatedAt >= sourcePublication.publishStartedAt && updatedAt <= sourcePublication.publishCompletedAt,
-    `Recovery draft ${tag} was not created or last updated by the exact failed source publication job`,
+    createdAt >= sourcePublication.publishStartedAt && createdAt <= sourcePublication.publishCompletedAt,
+    `Recovery draft ${tag} was not created by the exact failed source publication job`,
   );
+  invariant(updatedAt >= createdAt, `Recovery draft ${tag} has inconsistent timestamps`);
+}
+
+async function verifyRemoteRecoverySubset({
+  api,
+  repository,
+  release,
+  tag,
+  expectedCommit,
+  releaseId,
+  sourcePublication,
+  localInventory,
+}) {
+  validateRecoveryDraftIdentity(release, tag, expectedCommit, releaseId, sourcePublication);
+  const expectedByName = new Map(localInventory.map((asset) => [asset.name, asset]));
+  invariant(expectedByName.size === localInventory.length, "Verified local recovery inventory contains duplicate names");
+  const remoteNames = new Set();
+  const remoteIds = new Set();
+
+  for (const asset of release.assets) {
+    invariant(Number.isSafeInteger(asset?.id) && asset.id > 0, "Recovery draft contains an asset with an invalid ID");
+    invariant(!remoteIds.has(asset.id), `Recovery draft contains duplicate asset ID ${asset.id}`);
+    remoteIds.add(asset.id);
+    invariant(typeof asset.name === "string" && asset.name.length > 0, "Recovery draft contains an asset with an invalid name");
+    invariant(!remoteNames.has(asset.name), `Recovery draft contains duplicate asset name ${asset.name}`);
+    remoteNames.add(asset.name);
+    const expected = expectedByName.get(asset.name);
+    invariant(expected, `Recovery draft contains unexpected asset ${asset.name}`);
+    invariant(asset.state === "uploaded", `Recovery draft asset is not fully uploaded: ${asset.name}`);
+    invariant(asset.size === expected.size, `Recovery draft asset has an unexpected size: ${asset.name}`);
+    invariant(
+      await remoteAssetDigest(api, repository, asset) === expected.sha256,
+      `Recovery draft asset has an unexpected digest: ${asset.name}`,
+    );
+  }
+
+  return localInventory.filter((asset) => !remoteNames.has(asset.name));
 }
 
 function validatePublishedRelease(release, tag, expectedCommit) {
@@ -931,13 +968,19 @@ async function uploadAndPublishVerifiedRelease({
   tag,
   expectedCommit,
   localInventory,
+  assetsToUpload = localInventory,
   verifyBeforePublication,
   verifyImmediatelyBeforePublication,
   verifyPublishedSource,
   pause,
 }) {
   invariant(typeof api.uploadReleaseAsset === "function", "GitHub API client cannot upload verified release assets");
-  for (const asset of localInventory) {
+  invariant(
+    assetsToUpload.every((asset) => localInventory.includes(asset))
+      && new Set(assetsToUpload.map((asset) => asset.name)).size === assetsToUpload.length,
+    "Release upload selection is not a unique subset of the verified local inventory",
+  );
+  for (const asset of assetsToUpload) {
     await api.uploadReleaseAsset(release.upload_url, repository, release.id, asset);
   }
 
@@ -1185,14 +1228,32 @@ export async function recoverEmptyDraftRelease({
   );
 
   const selectedDraft = await readReleaseById(api, repository, releaseId);
-  validateEmptyRecoveryDraft(selectedDraft, tag, expectedCommit, releaseId, source);
+  await verifyRemoteRecoverySubset({
+    api,
+    repository,
+    release: selectedDraft,
+    tag,
+    expectedCommit,
+    releaseId,
+    sourcePublication: source,
+    localInventory,
+  });
   const listedRelease = await findReleaseForTag(api, repository, tag);
   if (listedRelease) {
     invariant(
       listedRelease.id === releaseId,
       `GitHub release listing identifies release ${listedRelease.id}, not exact recovery draft ${releaseId}`,
     );
-    validateEmptyRecoveryDraft(listedRelease, tag, expectedCommit, releaseId, source);
+    await verifyRemoteRecoverySubset({
+      api,
+      repository,
+      release: listedRelease,
+      tag,
+      expectedCommit,
+      releaseId,
+      sourcePublication: source,
+      localInventory,
+    });
   }
 
   // Re-prove trusted execution and the immutable source immediately before the first release mutation.
@@ -1211,8 +1272,17 @@ export async function recoverEmptyDraftRelease({
     signedTag.tagObjectSha,
     "final recovery authorization",
   );
-  const emptyDraft = await readReleaseById(api, repository, releaseId);
-  validateEmptyRecoveryDraft(emptyDraft, tag, expectedCommit, releaseId, source);
+  const resumableDraft = await readReleaseById(api, repository, releaseId);
+  const missingAssets = await verifyRemoteRecoverySubset({
+    api,
+    repository,
+    release: resumableDraft,
+    tag,
+    expectedCommit,
+    releaseId,
+    sourcePublication: source,
+    localInventory,
+  });
 
   const verifyExactSignedSource = (phase) => verifySignedReleaseSourceContainedInDefaultBranch(
     api,
@@ -1225,10 +1295,11 @@ export async function recoverEmptyDraftRelease({
   const published = await uploadAndPublishVerifiedRelease({
     api,
     repository,
-    release: emptyDraft,
+    release: resumableDraft,
     tag,
     expectedCommit,
     localInventory,
+    assetsToUpload: missingAssets,
     verifyBeforePublication: () => resolveVerifiedTagCommit(
       api,
       repository,
