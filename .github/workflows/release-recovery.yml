@@ -1,0 +1,140 @@
+name: Recover release draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Exact signed release tag to recover (for example v1.4.0)"
+        required: true
+        type: string
+      release_commit:
+        description: "Exact 40-character commit referenced by the signed tag"
+        required: true
+        type: string
+      source_run_id:
+        description: "Failed tag-push Release run whose exact Publish job log identifies the draft"
+        required: true
+        type: string
+      draft_release_id:
+        description: "Exact empty draft ID recorded by the failed source Publish job"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eliza-release-publication
+  cancel-in-progress: false
+
+jobs:
+  recovery:
+    name: Recover exact release draft
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    # Authorization and mutation intentionally share one job so every remote fact can be
+    # re-proved immediately before writes. Splitting jobs would make the writer trust
+    # unsigned job outputs or a newly uploaded intermediary instead of the source artifact.
+    permissions:
+      # actions:read retrieves the exact validated Publish job log and the original inventory.
+      actions: read
+      attestations: read
+      contents: write
+    steps:
+      - name: Check out trusted recovery code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.workflow_sha }}
+
+      - name: Check out exact release source contract
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.release_commit }}
+          path: release-source
+
+      - name: Verify exact release source checkout
+        shell: bash
+        env:
+          RECOVERY_COMMIT: ${{ inputs.release_commit }}
+        run: |
+          set -euo pipefail
+          [[ "${RECOVERY_COMMIT}" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$(git -C release-source rev-parse 'HEAD^{commit}')" == "${RECOVERY_COMMIT}" ]]
+
+      - name: Install Node.js 22.23.1
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.23.1
+
+      - name: Install verified GitHub CLI
+        shell: bash
+        env:
+          GH_CLI_VERSION: "2.94.0"
+          GH_CLI_SHA256: "a757f1ba6db18f4de8cbadb244843a5f89bc75b5e7c6fc127d2bd77fbd12ed62"
+        run: |
+          set -euo pipefail
+          archive="${RUNNER_TEMP}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz"
+          curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
+            "https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz" \
+            --output "${archive}"
+          printf '%s  %s\n' "${GH_CLI_SHA256}" "${archive}" | sha256sum --check --strict
+          tar --extract --gzip --file "${archive}" --directory "${RUNNER_TEMP}"
+          gh_directory="${RUNNER_TEMP}/gh_${GH_CLI_VERSION}_linux_amd64/bin"
+          [[ "$("${gh_directory}/gh" --version | head -n 1)" == "gh version ${GH_CLI_VERSION} (2026-06-10)" ]]
+          printf '%s\n' "${gh_directory}" >> "${GITHUB_PATH}"
+
+      - name: Download original verified release inventory
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: verified-release-assets
+          path: release-assets
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run_id }}
+
+      - name: Verify source-run attestation bundle
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RECOVERY_COMMIT: ${{ inputs.release_commit }}
+          RECOVERY_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          gh attestation verify release-assets/SHA256SUMS \
+            --repo "${GITHUB_REPOSITORY}" \
+            --signer-workflow "${GITHUB_REPOSITORY}/.github/workflows/release.yml" \
+            --signer-digest "${RECOVERY_COMMIT}" \
+            --source-digest "${RECOVERY_COMMIT}" \
+            --source-ref "refs/tags/${RECOVERY_TAG}" \
+            --predicate-type "https://slsa.dev/provenance/v1" \
+            --cert-oidc-issuer "https://token.actions.githubusercontent.com" \
+            --deny-self-hosted-runners \
+            --format json > recovery-attestation.json
+
+      - name: Recover only the exact contract draft
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RECOVERY_COMMIT: ${{ inputs.release_commit }}
+          RECOVERY_DRAFT_ID: ${{ inputs.draft_release_id }}
+          RECOVERY_RUN_ID: ${{ github.run_id }}
+          RECOVERY_SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          RECOVERY_TAG: ${{ inputs.release_tag }}
+          RECOVERY_WORKFLOW_COMMIT: ${{ github.workflow_sha }}
+          RECOVERY_WORKFLOW_REF: ${{ github.ref_name }}
+        run: >-
+          node scripts/release-publish.mjs recover-empty-draft
+          --repo "$GITHUB_REPOSITORY"
+          --tag "$RECOVERY_TAG"
+          --commit "$RECOVERY_COMMIT"
+          --assets release-assets
+          --release-id "$RECOVERY_DRAFT_ID"
+          --source-run-id "$RECOVERY_SOURCE_RUN_ID"
+          --recovery-run-id "$RECOVERY_RUN_ID"
+          --workflow-commit "$RECOVERY_WORKFLOW_COMMIT"
+          --workflow-ref "$RECOVERY_WORKFLOW_REF"
+          --attestation recovery-attestation.json
+          --manifest release-source/Cargo.toml
+          --policy release-source/.github/release-policy.json

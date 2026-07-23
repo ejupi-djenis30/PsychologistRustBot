@@ -1,0 +1,180 @@
+{
+  "report_kind": "eliza-metamorphic-robustness",
+  "schema_version": 1,
+  "suite_version": "1.0.0",
+  "population": "bundle-id-test",
+  "model_version": "3.0.0",
+  "model_dataset_sha256": "efc3d4a3f38d8bf3f81026b72bbd5394de779e654d793bae638fed48485f269c",
+  "split_plan_sha256": "94b02ab4dcc7b8ec34ed7e1c6b9c2aef4b67801d5b2389d7ba54551d5362c333",
+  "temperature": 0.184848849699,
+  "minimum_confidence": 0.7,
+  "minimum_probability_margin": 0.4,
+  "input_count": 70,
+  "baseline_accepted": 44,
+  "evaluated_variants": 490,
+  "formatting": {
+    "evaluated_variants": 280,
+    "skipped_applications": 0,
+    "label_agreement": 1.0,
+    "acceptance_agreement": 1.0,
+    "decision_agreement": 1.0,
+    "label_flips": 0,
+    "acceptance_flips": 0,
+    "accepted_to_abstained": 0,
+    "abstained_to_accepted": 0,
+    "mean_normalized_js_divergence": 0.0,
+    "maximum_normalized_js_divergence": 0.0,
+    "mean_absolute_confidence_delta": 0.0,
+    "maximum_absolute_confidence_delta": 0.0
+  },
+  "typographic": {
+    "evaluated_variants": 210,
+    "skipped_applications": 0,
+    "label_agreement": 0.976190476,
+    "acceptance_agreement": 0.957142857,
+    "decision_agreement": 0.957142857,
+    "label_flips": 5,
+    "acceptance_flips": 9,
+    "accepted_to_abstained": 1,
+    "abstained_to_accepted": 8,
+    "mean_normalized_js_divergence": 0.004237123,
+    "maximum_normalized_js_divergence": 0.073315097,
+    "mean_absolute_confidence_delta": 0.020850897,
+    "maximum_absolute_confidence_delta": 0.148091916
+  },
+  "perturbations": [
+    {
+      "name": "ascii-letter-case",
+      "family": "formatting",
+      "metrics": {
+        "evaluated_variants": 70,
+        "skipped_applications": 0,
+        "label_agreement": 1.0,
+        "acceptance_agreement": 1.0,
+        "decision_agreement": 1.0,
+        "label_flips": 0,
+        "acceptance_flips": 0,
+        "accepted_to_abstained": 0,
+        "abstained_to_accepted": 0,
+        "mean_normalized_js_divergence": 0.0,
+        "maximum_normalized_js_divergence": 0.0,
+        "mean_absolute_confidence_delta": 0.0,
+        "maximum_absolute_confidence_delta": 0.0
+      }
+    },
+    {
+      "name": "horizontal-whitespace",
+      "family": "formatting",
+      "metrics": {
+        "evaluated_variants": 70,
+        "skipped_applications": 0,
+        "label_agreement": 1.0,
+        "acceptance_agreement": 1.0,
+        "decision_agreement": 1.0,
+        "label_flips": 0,
+        "acceptance_flips": 0,
+        "accepted_to_abstained": 0,
+        "abstained_to_accepted": 0,
+        "mean_normalized_js_divergence": 0.0,
+        "maximum_normalized_js_divergence": 0.0,
+        "mean_absolute_confidence_delta": 0.0,
+        "maximum_absolute_confidence_delta": 0.0
+      }
+    },
+    {
+      "name": "unicode-compatibility-width",
+      "family": "formatting",
+      "metrics": {
+        "evaluated_variants": 70,
+        "skipped_applications": 0,
+        "label_agreement": 1.0,
+        "acceptance_agreement": 1.0,
+        "decision_agreement": 1.0,
+        "label_flips": 0,
+        "acceptance_flips": 0,
+        "accepted_to_abstained": 0,
+        "abstained_to_accepted": 0,
+        "mean_normalized_js_divergence": 0.0,
+        "maximum_normalized_js_divergence": 0.0,
+        "mean_absolute_confidence_delta": 0.0,
+        "maximum_absolute_confidence_delta": 0.0
+      }
+    },
+    {
+      "name": "terminal-punctuation",
+      "family": "formatting",
+      "metrics": {
+        "evaluated_variants": 70,
+        "skipped_applications": 0,
+        "label_agreement": 1.0,
+        "acceptance_agreement": 1.0,
+        "decision_agreement": 1.0,
+        "label_flips": 0,
+        "acceptance_flips": 0,
+        "accepted_to_abstained": 0,
+        "abstained_to_accepted": 0,
+        "mean_normalized_js_divergence": 0.0,
+        "maximum_normalized_js_divergence": 0.0,
+        "mean_absolute_confidence_delta": 0.0,
+        "maximum_absolute_confidence_delta": 0.0
+      }
+    },
+    {
+      "name": "single-character-deletion",
+      "family": "typographic",
+      "metrics": {
+        "evaluated_variants": 70,
+        "skipped_applications": 0,
+        "label_agreement": 0.971428571,
+        "acceptance_agreement": 0.957142857,
+        "decision_agreement": 0.957142857,
+        "label_flips": 2,
+        "acceptance_flips": 3,
+        "accepted_to_abstained": 0,
+        "abstained_to_accepted": 3,
+        "mean_normalized_js_divergence": 0.004545155,
+        "maximum_normalized_js_divergence": 0.058797541,
+        "mean_absolute_confidence_delta": 0.023473745,
+        "maximum_absolute_confidence_delta": 0.129735405
+      }
+    },
+    {
+      "name": "adjacent-character-transposition",
+      "family": "typographic",
+      "metrics": {
+        "evaluated_variants": 70,
+        "skipped_applications": 0,
+        "label_agreement": 0.971428571,
+        "acceptance_agreement": 0.928571429,
+        "decision_agreement": 0.928571429,
+        "label_flips": 2,
+        "acceptance_flips": 5,
+        "accepted_to_abstained": 1,
+        "abstained_to_accepted": 4,
+        "mean_normalized_js_divergence": 0.006848152,
+        "maximum_normalized_js_divergence": 0.073315097,
+        "mean_absolute_confidence_delta": 0.031063374,
+        "maximum_absolute_confidence_delta": 0.148091916
+      }
+    },
+    {
+      "name": "single-character-duplication",
+      "family": "typographic",
+      "metrics": {
+        "evaluated_variants": 70,
+        "skipped_applications": 0,
+        "label_agreement": 0.985714286,
+        "acceptance_agreement": 0.985714286,
+        "decision_agreement": 0.985714286,
+        "label_flips": 1,
+        "acceptance_flips": 1,
+        "accepted_to_abstained": 0,
+        "abstained_to_accepted": 1,
+        "mean_normalized_js_divergence": 0.001318063,
+        "maximum_normalized_js_divergence": 0.030084367,
+        "mean_absolute_confidence_delta": 0.008015571,
+        "maximum_absolute_confidence_delta": 0.120467866
+      }
+    }
+  ]
+}

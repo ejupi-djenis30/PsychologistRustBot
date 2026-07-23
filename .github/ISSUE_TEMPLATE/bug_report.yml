@@ -1,0 +1,82 @@
+name: Bug report
+description: Report a reproducible engine, CLI, or browser-demo problem using fictional input.
+title: "[Bug] "
+labels: []
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use a short invented prompt. Do not attach real conversations, health details, names,
+        contact information, or other personal data. Report vulnerabilities through the
+        [security policy](https://github.com/ejupi-djenis30/PsychologistRustBot/security/policy).
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Rust ML pipeline or model
+        - Command-line interface
+        - Browser learned inference
+        - Browser interface or accessibility
+        - Shared parity fixture
+        - Documentation or automation
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Paste the release number or commit SHA you tested.
+      placeholder: "1.4.0 or a full commit SHA"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Include OS, Rust version, Node.js version, terminal or browser when relevant.
+      placeholder: "Ubuntu 24.04, rustc 1.81, Node.js 22, Firefox"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction with fictional input
+      description: Give the smallest invented prompt and exact steps that trigger the problem.
+      placeholder: |
+        1. Run ...
+        2. Enter the fictional prompt "..."
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      placeholder: Include the expected response and trace when relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      placeholder: Include the actual response, trace, or safe error text.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized evidence
+      description: Optional logs or screenshots made only with fictional input and stripped of personal data.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Final checks
+      options:
+        - label: I searched the open issues for the same problem.
+          required: true
+        - label: This report contains no real conversation or personal, health, account, or contact data.
+          required: true
+        - label: This is not a vulnerability report.
+          required: true

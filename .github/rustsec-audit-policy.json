@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "tool": {
+    "name": "cargo-audit",
+    "version": "0.22.2",
+    "rustVersion": "1.88.0"
+  },
+  "database": {
+    "url": "https://github.com/RustSec/advisory-db.git",
+    "commit": "b5fc89b8be99e96f79194d8a6f11e9b4143b99f0",
+    "commitEpoch": 1784303558,
+    "maximumAgeDays": 14
+  },
+  "deny": [
+    "warnings"
+  ],
+  "ignoredAdvisories": [],
+  "allowStaleDatabase": false
+}

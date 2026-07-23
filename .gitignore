@@ -1,0 +1,5 @@
+/target
+/target-codex-eliza/
+/node_modules/
+*.log
+.DS_Store

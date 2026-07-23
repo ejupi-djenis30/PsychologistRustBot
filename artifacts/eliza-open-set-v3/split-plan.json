@@ -1,0 +1,4389 @@
+{
+  "schema_version": 3,
+  "strategy": "group-stratified-scaled-four-way-v3",
+  "seed": 4043100207104787,
+  "dataset_sha256": "efc3d4a3f38d8bf3f81026b72bbd5394de779e654d793bae638fed48485f269c",
+  "assignments": [
+    {
+      "id": "feeling-001",
+      "group_id": "feeling-family-01",
+      "label": "feeling",
+      "text": "I feel uncertain about the decision ahead",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-002",
+      "group_id": "feeling-family-01",
+      "label": "feeling",
+      "text": "The next decision leaves me unsure",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-003",
+      "group_id": "feeling-family-02",
+      "label": "feeling",
+      "text": "The repeated delay is frustrating me",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-004",
+      "group_id": "feeling-family-02",
+      "label": "feeling",
+      "text": "I am irritated that progress keeps slipping",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-005",
+      "group_id": "feeling-family-03",
+      "label": "feeling",
+      "text": "Today I feel calm and settled",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-006",
+      "group_id": "feeling-family-03",
+      "label": "feeling",
+      "text": "There is a quiet sense of ease in me today",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-007",
+      "group_id": "feeling-family-04",
+      "label": "feeling",
+      "text": "That unexpected result has me worried",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-008",
+      "group_id": "feeling-family-04",
+      "label": "feeling",
+      "text": "I am anxious about what the result means",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-009",
+      "group_id": "feeling-family-05",
+      "label": "feeling",
+      "text": "The prototype has me genuinely excited",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-010",
+      "group_id": "feeling-family-05",
+      "label": "feeling",
+      "text": "I feel enthusiastic about testing the prototype",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-011",
+      "group_id": "feeling-family-06",
+      "label": "feeling",
+      "text": "The approaching deadline makes me nervous",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-012",
+      "group_id": "feeling-family-06",
+      "label": "feeling",
+      "text": "I feel tense whenever I think about the deadline",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-013",
+      "group_id": "feeling-family-07",
+      "label": "feeling",
+      "text": "I am disappointed by how the review ended",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-014",
+      "group_id": "feeling-family-07",
+      "label": "feeling",
+      "text": "The review outcome left me discouraged",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-015",
+      "group_id": "feeling-family-08",
+      "label": "feeling",
+      "text": "I am proud of the progress we made",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-016",
+      "group_id": "feeling-family-08",
+      "label": "feeling",
+      "text": "The progress fills me with a sense of pride",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-017",
+      "group_id": "feeling-family-01",
+      "label": "feeling",
+      "text": "I am uneasy about choosing the next direction",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-018",
+      "group_id": "feeling-family-02",
+      "label": "feeling",
+      "text": "The lack of movement leaves me frustrated",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-019",
+      "group_id": "feeling-family-03",
+      "label": "feeling",
+      "text": "I am feeling peaceful and composed today",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-020",
+      "group_id": "feeling-family-04",
+      "label": "feeling",
+      "text": "The surprising outcome makes me feel concerned",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-021",
+      "group_id": "feeling-family-05",
+      "label": "feeling",
+      "text": "I am thrilled to try the new prototype",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-022",
+      "group_id": "feeling-family-06",
+      "label": "feeling",
+      "text": "The deadline brings out a lot of anxiety in me",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-023",
+      "group_id": "feeling-family-07",
+      "label": "feeling",
+      "text": "I feel let down by the final review",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-024",
+      "group_id": "feeling-family-08",
+      "label": "feeling",
+      "text": "What we achieved makes me feel proud",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-025",
+      "group_id": "feeling-family-09",
+      "label": "feeling",
+      "text": "I feel relieved now that the checks pass",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-026",
+      "group_id": "feeling-family-09",
+      "label": "feeling",
+      "text": "Passing every check has lifted a weight from me",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-027",
+      "group_id": "feeling-family-09",
+      "label": "feeling",
+      "text": "I am relieved that the verification succeeded",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-028",
+      "group_id": "feeling-family-10",
+      "label": "feeling",
+      "text": "I am curious about the unexpected pattern",
+      "partition": "calibration"
+    },
+    {
+      "id": "feeling-029",
+      "group_id": "feeling-family-10",
+      "label": "feeling",
+      "text": "The unusual pattern has sparked my curiosity",
+      "partition": "calibration"
+    },
+    {
+      "id": "feeling-030",
+      "group_id": "feeling-family-10",
+      "label": "feeling",
+      "text": "I feel intrigued by what the data is showing",
+      "partition": "calibration"
+    },
+    {
+      "id": "feeling-031",
+      "group_id": "feeling-family-11",
+      "label": "feeling",
+      "text": "Too many open tasks leave me overwhelmed",
+      "partition": "calibration"
+    },
+    {
+      "id": "feeling-032",
+      "group_id": "feeling-family-11",
+      "label": "feeling",
+      "text": "I feel overloaded by the unfinished work",
+      "partition": "calibration"
+    },
+    {
+      "id": "feeling-033",
+      "group_id": "feeling-family-11",
+      "label": "feeling",
+      "text": "The backlog is making me feel overwhelmed",
+      "partition": "calibration"
+    },
+    {
+      "id": "feeling-034",
+      "group_id": "feeling-family-12",
+      "label": "feeling",
+      "text": "I am hopeful that the next run will improve",
+      "partition": "id-test"
+    },
+    {
+      "id": "feeling-035",
+      "group_id": "feeling-family-12",
+      "label": "feeling",
+      "text": "The early signs leave me feeling optimistic",
+      "partition": "id-test"
+    },
+    {
+      "id": "feeling-036",
+      "group_id": "feeling-family-12",
+      "label": "feeling",
+      "text": "I feel hopeful after seeing the first results",
+      "partition": "id-test"
+    },
+    {
+      "id": "feeling-037",
+      "group_id": "feeling-family-13",
+      "label": "feeling",
+      "text": "I am annoyed by the repeated interruption",
+      "partition": "id-test"
+    },
+    {
+      "id": "feeling-038",
+      "group_id": "feeling-family-13",
+      "label": "feeling",
+      "text": "The constant interruption is really bothering me",
+      "partition": "id-test"
+    },
+    {
+      "id": "feeling-039",
+      "group_id": "feeling-family-13",
+      "label": "feeling",
+      "text": "I feel irritated each time the process stops",
+      "partition": "id-test"
+    },
+    {
+      "id": "feeling-040",
+      "group_id": "feeling-family-14",
+      "label": "feeling",
+      "text": "I am satisfied with the clean final output",
+      "partition": "development"
+    },
+    {
+      "id": "feeling-041",
+      "group_id": "feeling-family-14",
+      "label": "feeling",
+      "text": "The finished result gives me a sense of satisfaction",
+      "partition": "development"
+    },
+    {
+      "id": "feeling-042",
+      "group_id": "feeling-family-14",
+      "label": "feeling",
+      "text": "I feel content with how the output turned out",
+      "partition": "development"
+    },
+    {
+      "id": "feeling-043",
+      "group_id": "feeling-family-15",
+      "label": "feeling",
+      "text": "I feel confused by these conflicting messages",
+      "partition": "development"
+    },
+    {
+      "id": "feeling-044",
+      "group_id": "feeling-family-15",
+      "label": "feeling",
+      "text": "The contradictory messages have left me puzzled",
+      "partition": "development"
+    },
+    {
+      "id": "feeling-045",
+      "group_id": "feeling-family-15",
+      "label": "feeling",
+      "text": "I am confused about which message to trust",
+      "partition": "development"
+    },
+    {
+      "id": "feeling-046",
+      "group_id": "feeling-family-03",
+      "label": "feeling",
+      "text": "The quiet morning makes me feel relaxed",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-047",
+      "group_id": "feeling-family-03",
+      "label": "feeling",
+      "text": "I am at ease after a calm start to the day",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-048",
+      "group_id": "feeling-family-08",
+      "label": "feeling",
+      "text": "I feel proud when I look at our progress",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-049",
+      "group_id": "feeling-family-08",
+      "label": "feeling",
+      "text": "What we accomplished leaves me feeling pleased",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-050",
+      "group_id": "feeling-family-09",
+      "label": "feeling",
+      "text": "I am feeling relieved after the successful checks",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-051",
+      "group_id": "feeling-family-09",
+      "label": "feeling",
+      "text": "The passing result makes me feel much less tense",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-052",
+      "group_id": "feeling-family-10",
+      "label": "feeling",
+      "text": "I feel curious whenever that odd pattern appears",
+      "partition": "calibration"
+    },
+    {
+      "id": "feeling-053",
+      "group_id": "feeling-family-10",
+      "label": "feeling",
+      "text": "The pattern leaves me feeling genuinely intrigued",
+      "partition": "calibration"
+    },
+    {
+      "id": "feeling-054",
+      "group_id": "feeling-family-11",
+      "label": "feeling",
+      "text": "I am feeling overwhelmed by the size of the backlog",
+      "partition": "calibration"
+    },
+    {
+      "id": "feeling-055",
+      "group_id": "feeling-family-11",
+      "label": "feeling",
+      "text": "All these unfinished tasks make me feel overloaded",
+      "partition": "calibration"
+    },
+    {
+      "id": "feeling-056",
+      "group_id": "feeling-family-12",
+      "label": "feeling",
+      "text": "The promising signs make me feel hopeful",
+      "partition": "id-test"
+    },
+    {
+      "id": "feeling-057",
+      "group_id": "feeling-family-12",
+      "label": "feeling",
+      "text": "I am optimistic about what the next run may bring",
+      "partition": "id-test"
+    },
+    {
+      "id": "feeling-058",
+      "group_id": "feeling-family-13",
+      "label": "feeling",
+      "text": "I feel annoyed when the interruption happens again",
+      "partition": "id-test"
+    },
+    {
+      "id": "feeling-059",
+      "group_id": "feeling-family-13",
+      "label": "feeling",
+      "text": "The repeated stop makes me increasingly irritated",
+      "partition": "id-test"
+    },
+    {
+      "id": "feeling-060",
+      "group_id": "feeling-family-14",
+      "label": "feeling",
+      "text": "The polished result leaves me feeling satisfied",
+      "partition": "development"
+    },
+    {
+      "id": "feeling-061",
+      "group_id": "feeling-family-14",
+      "label": "feeling",
+      "text": "I am content with the quality of the final output",
+      "partition": "development"
+    },
+    {
+      "id": "feeling-062",
+      "group_id": "feeling-family-15",
+      "label": "feeling",
+      "text": "The two different messages make me feel uncertain",
+      "partition": "development"
+    },
+    {
+      "id": "feeling-063",
+      "group_id": "feeling-family-15",
+      "label": "feeling",
+      "text": "I am puzzled and confused by the conflicting advice",
+      "partition": "development"
+    },
+    {
+      "id": "feeling-064",
+      "group_id": "feeling-family-01",
+      "label": "feeling",
+      "text": "I keep wavering when I think about which option to take",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-065",
+      "group_id": "feeling-family-01",
+      "label": "feeling",
+      "text": "Choosing a direction leaves me feeling unsure",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-066",
+      "group_id": "feeling-family-02",
+      "label": "feeling",
+      "text": "Watching the work slip again is getting under my skin",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-067",
+      "group_id": "feeling-family-02",
+      "label": "feeling",
+      "text": "Each new postponement makes me more impatient",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-068",
+      "group_id": "feeling-family-04",
+      "label": "feeling",
+      "text": "I cannot shake my concern about that surprising result",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-069",
+      "group_id": "feeling-family-04",
+      "label": "feeling",
+      "text": "The outcome caught me off guard and now I feel apprehensive",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-070",
+      "group_id": "feeling-family-05",
+      "label": "feeling",
+      "text": "Trying this prototype gives me a real burst of anticipation",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-071",
+      "group_id": "feeling-family-05",
+      "label": "feeling",
+      "text": "I can hardly wait to put the prototype through its first test",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-072",
+      "group_id": "feeling-family-06",
+      "label": "feeling",
+      "text": "As the due date gets closer, I notice myself becoming tense",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-073",
+      "group_id": "feeling-family-06",
+      "label": "feeling",
+      "text": "Thinking about how little time remains fills me with dread",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-074",
+      "group_id": "feeling-family-07",
+      "label": "feeling",
+      "text": "I had hoped for a different review decision and feel deflated",
+      "partition": "train"
+    },
+    {
+      "id": "feeling-075",
+      "group_id": "feeling-family-07",
+      "label": "feeling",
+      "text": "How the assessment concluded left me deeply disheartened",
+      "partition": "train"
+    },
+    {
+      "id": "goal-001",
+      "group_id": "goal-family-01",
+      "label": "goal",
+      "text": "The prototype needs to be ready before this week closes",
+      "partition": "train"
+    },
+    {
+      "id": "goal-002",
+      "group_id": "goal-family-01",
+      "label": "goal",
+      "text": "I want the prototype completed before the week ends",
+      "partition": "train"
+    },
+    {
+      "id": "goal-003",
+      "group_id": "goal-family-02",
+      "label": "goal",
+      "text": "My next step is writing the evaluation tests",
+      "partition": "train"
+    },
+    {
+      "id": "goal-004",
+      "group_id": "goal-family-02",
+      "label": "goal",
+      "text": "The evaluation tests are the next step I will take",
+      "partition": "train"
+    },
+    {
+      "id": "goal-005",
+      "group_id": "goal-family-03",
+      "label": "goal",
+      "text": "I plan to simplify the command line interface",
+      "partition": "train"
+    },
+    {
+      "id": "goal-006",
+      "group_id": "goal-family-03",
+      "label": "goal",
+      "text": "My plan is to make the command line simpler",
+      "partition": "train"
+    },
+    {
+      "id": "goal-007",
+      "group_id": "goal-family-04",
+      "label": "goal",
+      "text": "I would like to publish a reproducible benchmark",
+      "partition": "train"
+    },
+    {
+      "id": "goal-008",
+      "group_id": "goal-family-04",
+      "label": "goal",
+      "text": "Publishing a reproducible benchmark is what I would like",
+      "partition": "train"
+    },
+    {
+      "id": "goal-009",
+      "group_id": "goal-family-05",
+      "label": "goal",
+      "text": "The goal is to remove the network dependency",
+      "partition": "train"
+    },
+    {
+      "id": "goal-010",
+      "group_id": "goal-family-05",
+      "label": "goal",
+      "text": "Removing the network dependency is my goal",
+      "partition": "train"
+    },
+    {
+      "id": "goal-011",
+      "group_id": "goal-family-06",
+      "label": "goal",
+      "text": "I aim to make every error message clearer",
+      "partition": "train"
+    },
+    {
+      "id": "goal-012",
+      "group_id": "goal-family-06",
+      "label": "goal",
+      "text": "Clearer error messages are what I am aiming for",
+      "partition": "train"
+    },
+    {
+      "id": "goal-013",
+      "group_id": "goal-family-07",
+      "label": "goal",
+      "text": "I need to validate the model artifact",
+      "partition": "train"
+    },
+    {
+      "id": "goal-014",
+      "group_id": "goal-family-07",
+      "label": "goal",
+      "text": "Validating the model artifact is something I need to do",
+      "partition": "train"
+    },
+    {
+      "id": "goal-015",
+      "group_id": "goal-family-08",
+      "label": "goal",
+      "text": "I intend to keep inference entirely local",
+      "partition": "train"
+    },
+    {
+      "id": "goal-016",
+      "group_id": "goal-family-08",
+      "label": "goal",
+      "text": "Keeping all inference local is my intention",
+      "partition": "train"
+    },
+    {
+      "id": "goal-017",
+      "group_id": "goal-family-01",
+      "label": "goal",
+      "text": "Completing the prototype by Friday is what I want",
+      "partition": "train"
+    },
+    {
+      "id": "goal-018",
+      "group_id": "goal-family-02",
+      "label": "goal",
+      "text": "I will write the evaluation tests next",
+      "partition": "train"
+    },
+    {
+      "id": "goal-019",
+      "group_id": "goal-family-03",
+      "label": "goal",
+      "text": "A simpler command line is what I plan to deliver",
+      "partition": "train"
+    },
+    {
+      "id": "goal-020",
+      "group_id": "goal-family-04",
+      "label": "goal",
+      "text": "My desired outcome is a benchmark others can reproduce",
+      "partition": "train"
+    },
+    {
+      "id": "goal-021",
+      "group_id": "goal-family-05",
+      "label": "goal",
+      "text": "I am working toward removing every network dependency",
+      "partition": "train"
+    },
+    {
+      "id": "goal-022",
+      "group_id": "goal-family-06",
+      "label": "goal",
+      "text": "My aim is clearer feedback for every error",
+      "partition": "train"
+    },
+    {
+      "id": "goal-023",
+      "group_id": "goal-family-07",
+      "label": "goal",
+      "text": "I want the model artifact fully validated",
+      "partition": "train"
+    },
+    {
+      "id": "goal-024",
+      "group_id": "goal-family-08",
+      "label": "goal",
+      "text": "My intention is to run inference without remote services",
+      "partition": "train"
+    },
+    {
+      "id": "goal-025",
+      "group_id": "goal-family-09",
+      "label": "goal",
+      "text": "I hope to publish the first stable release next month",
+      "partition": "train"
+    },
+    {
+      "id": "goal-026",
+      "group_id": "goal-family-09",
+      "label": "goal",
+      "text": "Releasing a stable version next month is my hope",
+      "partition": "train"
+    },
+    {
+      "id": "goal-027",
+      "group_id": "goal-family-09",
+      "label": "goal",
+      "text": "My desired result is a stable release by next month",
+      "partition": "train"
+    },
+    {
+      "id": "goal-028",
+      "group_id": "goal-family-10",
+      "label": "goal",
+      "text": "The objective is to reduce startup time by half",
+      "partition": "calibration"
+    },
+    {
+      "id": "goal-029",
+      "group_id": "goal-family-10",
+      "label": "goal",
+      "text": "I aim to cut the startup delay in half",
+      "partition": "calibration"
+    },
+    {
+      "id": "goal-030",
+      "group_id": "goal-family-10",
+      "label": "goal",
+      "text": "Halving the startup time is the outcome I want",
+      "partition": "calibration"
+    },
+    {
+      "id": "goal-031",
+      "group_id": "goal-family-11",
+      "label": "goal",
+      "text": "I plan to document every public command",
+      "partition": "calibration"
+    },
+    {
+      "id": "goal-032",
+      "group_id": "goal-family-11",
+      "label": "goal",
+      "text": "My next goal is complete documentation for each command",
+      "partition": "calibration"
+    },
+    {
+      "id": "goal-033",
+      "group_id": "goal-family-11",
+      "label": "goal",
+      "text": "I intend to give every public command clear documentation",
+      "partition": "calibration"
+    },
+    {
+      "id": "goal-034",
+      "group_id": "goal-family-12",
+      "label": "goal",
+      "text": "I want to make installation work on all three platforms",
+      "partition": "id-test"
+    },
+    {
+      "id": "goal-035",
+      "group_id": "goal-family-12",
+      "label": "goal",
+      "text": "Cross-platform installation is the target I am pursuing",
+      "partition": "id-test"
+    },
+    {
+      "id": "goal-036",
+      "group_id": "goal-family-12",
+      "label": "goal",
+      "text": "My aim is an installer for each supported platform",
+      "partition": "id-test"
+    },
+    {
+      "id": "goal-037",
+      "group_id": "goal-family-13",
+      "label": "goal",
+      "text": "I would like to shorten the feedback cycle",
+      "partition": "id-test"
+    },
+    {
+      "id": "goal-038",
+      "group_id": "goal-family-13",
+      "label": "goal",
+      "text": "A faster feedback loop is what I hope to achieve",
+      "partition": "id-test"
+    },
+    {
+      "id": "goal-039",
+      "group_id": "goal-family-13",
+      "label": "goal",
+      "text": "My objective is to receive test feedback sooner",
+      "partition": "id-test"
+    },
+    {
+      "id": "goal-040",
+      "group_id": "goal-family-14",
+      "label": "goal",
+      "text": "My priority is to remove the last flaky test",
+      "partition": "development"
+    },
+    {
+      "id": "goal-041",
+      "group_id": "goal-family-14",
+      "label": "goal",
+      "text": "I intend to eliminate the remaining test instability",
+      "partition": "development"
+    },
+    {
+      "id": "goal-042",
+      "group_id": "goal-family-14",
+      "label": "goal",
+      "text": "A consistently reliable test suite is my current goal",
+      "partition": "development"
+    },
+    {
+      "id": "goal-043",
+      "group_id": "goal-family-15",
+      "label": "goal",
+      "text": "I want to finish the migration without downtime",
+      "partition": "development"
+    },
+    {
+      "id": "goal-044",
+      "group_id": "goal-family-15",
+      "label": "goal",
+      "text": "Completing a zero-downtime migration is my target",
+      "partition": "development"
+    },
+    {
+      "id": "goal-045",
+      "group_id": "goal-family-15",
+      "label": "goal",
+      "text": "I plan to migrate the service while it remains available",
+      "partition": "development"
+    },
+    {
+      "id": "goal-046",
+      "group_id": "goal-family-07",
+      "label": "goal",
+      "text": "My goal is to verify every part of the model bundle",
+      "partition": "train"
+    },
+    {
+      "id": "goal-047",
+      "group_id": "goal-family-07",
+      "label": "goal",
+      "text": "I aim to complete a full validation of the artifact",
+      "partition": "train"
+    },
+    {
+      "id": "goal-048",
+      "group_id": "goal-family-08",
+      "label": "goal",
+      "text": "I want all inference to stay on this computer",
+      "partition": "train"
+    },
+    {
+      "id": "goal-049",
+      "group_id": "goal-family-08",
+      "label": "goal",
+      "text": "My objective is a classifier that never needs the network",
+      "partition": "train"
+    },
+    {
+      "id": "goal-050",
+      "group_id": "goal-family-09",
+      "label": "goal",
+      "text": "I plan to ship a stable version during the coming month",
+      "partition": "train"
+    },
+    {
+      "id": "goal-051",
+      "group_id": "goal-family-09",
+      "label": "goal",
+      "text": "Publishing the stable release next month is my objective",
+      "partition": "train"
+    },
+    {
+      "id": "goal-052",
+      "group_id": "goal-family-10",
+      "label": "goal",
+      "text": "My goal is to make startup twice as fast",
+      "partition": "calibration"
+    },
+    {
+      "id": "goal-053",
+      "group_id": "goal-family-10",
+      "label": "goal",
+      "text": "I want to reduce the time spent waiting for startup",
+      "partition": "calibration"
+    },
+    {
+      "id": "goal-054",
+      "group_id": "goal-family-11",
+      "label": "goal",
+      "text": "Complete command documentation is the outcome I intend to deliver",
+      "partition": "calibration"
+    },
+    {
+      "id": "goal-055",
+      "group_id": "goal-family-11",
+      "label": "goal",
+      "text": "I aim to document the behavior of each public command",
+      "partition": "calibration"
+    },
+    {
+      "id": "goal-056",
+      "group_id": "goal-family-12",
+      "label": "goal",
+      "text": "My objective is to support installation on every target platform",
+      "partition": "id-test"
+    },
+    {
+      "id": "goal-057",
+      "group_id": "goal-family-12",
+      "label": "goal",
+      "text": "I plan to provide a working installer for all supported systems",
+      "partition": "id-test"
+    },
+    {
+      "id": "goal-058",
+      "group_id": "goal-family-13",
+      "label": "goal",
+      "text": "I want test results to arrive much sooner",
+      "partition": "id-test"
+    },
+    {
+      "id": "goal-059",
+      "group_id": "goal-family-13",
+      "label": "goal",
+      "text": "My aim is a shorter cycle between a change and its feedback",
+      "partition": "id-test"
+    },
+    {
+      "id": "goal-060",
+      "group_id": "goal-family-14",
+      "label": "goal",
+      "text": "I plan to make the full test suite reliable on every run",
+      "partition": "development"
+    },
+    {
+      "id": "goal-061",
+      "group_id": "goal-family-14",
+      "label": "goal",
+      "text": "Removing the final intermittent failure is my current objective",
+      "partition": "development"
+    },
+    {
+      "id": "goal-062",
+      "group_id": "goal-family-15",
+      "label": "goal",
+      "text": "My goal is to move the service with no interruption",
+      "partition": "development"
+    },
+    {
+      "id": "goal-063",
+      "group_id": "goal-family-15",
+      "label": "goal",
+      "text": "I intend to complete this migration while users remain online",
+      "partition": "development"
+    },
+    {
+      "id": "goal-064",
+      "group_id": "goal-family-01",
+      "label": "goal",
+      "text": "By the end of this week, the prototype needs to be complete",
+      "partition": "train"
+    },
+    {
+      "id": "goal-065",
+      "group_id": "goal-family-01",
+      "label": "goal",
+      "text": "Finishing the prototype before the weekend is my immediate target",
+      "partition": "train"
+    },
+    {
+      "id": "goal-066",
+      "group_id": "goal-family-02",
+      "label": "goal",
+      "text": "I will tackle the evaluation tests before any other task",
+      "partition": "train"
+    },
+    {
+      "id": "goal-067",
+      "group_id": "goal-family-02",
+      "label": "goal",
+      "text": "Writing coverage for the evaluation path comes next on my list",
+      "partition": "train"
+    },
+    {
+      "id": "goal-068",
+      "group_id": "goal-family-03",
+      "label": "goal",
+      "text": "My immediate objective is a command line with fewer options and clearer wording",
+      "partition": "train"
+    },
+    {
+      "id": "goal-069",
+      "group_id": "goal-family-03",
+      "label": "goal",
+      "text": "I intend to pare the CLI down to its essential actions",
+      "partition": "train"
+    },
+    {
+      "id": "goal-070",
+      "group_id": "goal-family-04",
+      "label": "goal",
+      "text": "I want other people to rerun the benchmark and obtain the same evidence",
+      "partition": "train"
+    },
+    {
+      "id": "goal-071",
+      "group_id": "goal-family-04",
+      "label": "goal",
+      "text": "The benchmark should be publishable with every reproduction step documented",
+      "partition": "train"
+    },
+    {
+      "id": "goal-072",
+      "group_id": "goal-family-05",
+      "label": "goal",
+      "text": "I am aiming for a build that never reaches out to the network",
+      "partition": "train"
+    },
+    {
+      "id": "goal-073",
+      "group_id": "goal-family-05",
+      "label": "goal",
+      "text": "Eliminating remote dependencies is the outcome I am pursuing",
+      "partition": "train"
+    },
+    {
+      "id": "goal-074",
+      "group_id": "goal-family-06",
+      "label": "goal",
+      "text": "Every failure should tell the user exactly what went wrong",
+      "partition": "train"
+    },
+    {
+      "id": "goal-075",
+      "group_id": "goal-family-06",
+      "label": "goal",
+      "text": "I plan to replace vague errors with specific, actionable feedback",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-001",
+      "group_id": "greeting-family-01",
+      "label": "greeting",
+      "text": "Hello, it is nice to meet you",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-002",
+      "group_id": "greeting-family-01",
+      "label": "greeting",
+      "text": "Hi, I am pleased to meet you",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-003",
+      "group_id": "greeting-family-02",
+      "label": "greeting",
+      "text": "Good morning, I hope your day is starting well",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-004",
+      "group_id": "greeting-family-02",
+      "label": "greeting",
+      "text": "A warm morning greeting to you",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-005",
+      "group_id": "greeting-family-03",
+      "label": "greeting",
+      "text": "Good afternoon, I have just arrived",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-006",
+      "group_id": "greeting-family-03",
+      "label": "greeting",
+      "text": "Wishing you a pleasant afternoon",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-007",
+      "group_id": "greeting-family-04",
+      "label": "greeting",
+      "text": "Good evening, thanks for making time",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-008",
+      "group_id": "greeting-family-04",
+      "label": "greeting",
+      "text": "I wanted to wish you a pleasant evening",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-009",
+      "group_id": "greeting-family-05",
+      "label": "greeting",
+      "text": "Welcome back after the break",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-010",
+      "group_id": "greeting-family-05",
+      "label": "greeting",
+      "text": "Your return is a welcome sight",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-011",
+      "group_id": "greeting-family-06",
+      "label": "greeting",
+      "text": "I am glad we can begin this conversation",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-012",
+      "group_id": "greeting-family-06",
+      "label": "greeting",
+      "text": "It is a pleasure to start our conversation",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-013",
+      "group_id": "greeting-family-07",
+      "label": "greeting",
+      "text": "Greetings from the local lab",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-014",
+      "group_id": "greeting-family-07",
+      "label": "greeting",
+      "text": "Salutations from this small experiment",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-015",
+      "group_id": "greeting-family-08",
+      "label": "greeting",
+      "text": "Hey, how have things been lately",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-016",
+      "group_id": "greeting-family-08",
+      "label": "greeting",
+      "text": "It has been ages; how are things with you?",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-017",
+      "group_id": "greeting-family-01",
+      "label": "greeting",
+      "text": "Hello, I am happy to make your acquaintance",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-018",
+      "group_id": "greeting-family-02",
+      "label": "greeting",
+      "text": "Rise and shine; sending you a morning hello",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-019",
+      "group_id": "greeting-family-03",
+      "label": "greeting",
+      "text": "Good afternoon, welcome to the session",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-020",
+      "group_id": "greeting-family-04",
+      "label": "greeting",
+      "text": "The night has arrived, so let me offer a warm hello",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-021",
+      "group_id": "greeting-family-05",
+      "label": "greeting",
+      "text": "Welcome back, it is nice to see you again",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-022",
+      "group_id": "greeting-family-06",
+      "label": "greeting",
+      "text": "Hello, I appreciate you joining this conversation",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-023",
+      "group_id": "greeting-family-07",
+      "label": "greeting",
+      "text": "A friendly greeting from our offline project",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-024",
+      "group_id": "greeting-family-08",
+      "label": "greeting",
+      "text": "Hi again, it has been a while",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-025",
+      "group_id": "greeting-family-09",
+      "label": "greeting",
+      "text": "Hello there, thanks for stopping by",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-026",
+      "group_id": "greeting-family-09",
+      "label": "greeting",
+      "text": "Hi there, thank you for visiting",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-027",
+      "group_id": "greeting-family-09",
+      "label": "greeting",
+      "text": "Hey there, thanks for coming in",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-028",
+      "group_id": "greeting-family-10",
+      "label": "greeting",
+      "text": "Welcome, this must be your first visit",
+      "partition": "calibration"
+    },
+    {
+      "id": "greeting-029",
+      "group_id": "greeting-family-10",
+      "label": "greeting",
+      "text": "A warm welcome on your first time here",
+      "partition": "calibration"
+    },
+    {
+      "id": "greeting-030",
+      "group_id": "greeting-family-10",
+      "label": "greeting",
+      "text": "We are delighted you chose us for your first visit",
+      "partition": "calibration"
+    },
+    {
+      "id": "greeting-031",
+      "group_id": "greeting-family-11",
+      "label": "greeting",
+      "text": "Good day to the whole project team",
+      "partition": "calibration"
+    },
+    {
+      "id": "greeting-032",
+      "group_id": "greeting-family-11",
+      "label": "greeting",
+      "text": "Greetings to everyone on the team",
+      "partition": "calibration"
+    },
+    {
+      "id": "greeting-033",
+      "group_id": "greeting-family-11",
+      "label": "greeting",
+      "text": "Hello to all of you working on the project",
+      "partition": "calibration"
+    },
+    {
+      "id": "greeting-034",
+      "group_id": "greeting-family-12",
+      "label": "greeting",
+      "text": "Dear colleagues, I hope this message finds you well",
+      "partition": "id-test"
+    },
+    {
+      "id": "greeting-035",
+      "group_id": "greeting-family-12",
+      "label": "greeting",
+      "text": "Hello team, thank you for reading my note",
+      "partition": "id-test"
+    },
+    {
+      "id": "greeting-036",
+      "group_id": "greeting-family-12",
+      "label": "greeting",
+      "text": "Good day, I am writing with a brief update",
+      "partition": "id-test"
+    },
+    {
+      "id": "greeting-037",
+      "group_id": "greeting-family-13",
+      "label": "greeting",
+      "text": "Hi, I wanted to say hello before we start",
+      "partition": "id-test"
+    },
+    {
+      "id": "greeting-038",
+      "group_id": "greeting-family-13",
+      "label": "greeting",
+      "text": "A quick hello before we get to work",
+      "partition": "id-test"
+    },
+    {
+      "id": "greeting-039",
+      "group_id": "greeting-family-13",
+      "label": "greeting",
+      "text": "Hey, let me greet you before we begin",
+      "partition": "id-test"
+    },
+    {
+      "id": "greeting-040",
+      "group_id": "greeting-family-14",
+      "label": "greeting",
+      "text": "Welcome aboard, we are glad you joined",
+      "partition": "development"
+    },
+    {
+      "id": "greeting-041",
+      "group_id": "greeting-family-14",
+      "label": "greeting",
+      "text": "Hello and welcome to our new participant",
+      "partition": "development"
+    },
+    {
+      "id": "greeting-042",
+      "group_id": "greeting-family-14",
+      "label": "greeting",
+      "text": "A warm welcome to the newest person here",
+      "partition": "development"
+    },
+    {
+      "id": "greeting-043",
+      "group_id": "greeting-family-15",
+      "label": "greeting",
+      "text": "Hey, I spotted you across the room",
+      "partition": "development"
+    },
+    {
+      "id": "greeting-044",
+      "group_id": "greeting-family-15",
+      "label": "greeting",
+      "text": "Hi, nice seeing you here",
+      "partition": "development"
+    },
+    {
+      "id": "greeting-045",
+      "group_id": "greeting-family-15",
+      "label": "greeting",
+      "text": "Your arrival brightened the room; hello",
+      "partition": "development"
+    },
+    {
+      "id": "greeting-046",
+      "group_id": "greeting-family-07",
+      "label": "greeting",
+      "text": "Hello from this small local demonstration",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-047",
+      "group_id": "greeting-family-07",
+      "label": "greeting",
+      "text": "Greetings from our compact offline lab",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-048",
+      "group_id": "greeting-family-08",
+      "label": "greeting",
+      "text": "Hey again, how have you been",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-049",
+      "group_id": "greeting-family-08",
+      "label": "greeting",
+      "text": "How have you been? It has been too long",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-050",
+      "group_id": "greeting-family-09",
+      "label": "greeting",
+      "text": "Hello there, I am glad you stopped by",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-051",
+      "group_id": "greeting-family-09",
+      "label": "greeting",
+      "text": "Hi there, welcome in and make yourself comfortable",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-052",
+      "group_id": "greeting-family-10",
+      "label": "greeting",
+      "text": "Welcome to the lab on your first visit",
+      "partition": "calibration"
+    },
+    {
+      "id": "greeting-053",
+      "group_id": "greeting-family-10",
+      "label": "greeting",
+      "text": "Hello, and a special welcome for joining us today",
+      "partition": "calibration"
+    },
+    {
+      "id": "greeting-054",
+      "group_id": "greeting-family-11",
+      "label": "greeting",
+      "text": "Good day, everyone on the engineering team",
+      "partition": "calibration"
+    },
+    {
+      "id": "greeting-055",
+      "group_id": "greeting-family-11",
+      "label": "greeting",
+      "text": "Hello to each member of our project group",
+      "partition": "calibration"
+    },
+    {
+      "id": "greeting-056",
+      "group_id": "greeting-family-12",
+      "label": "greeting",
+      "text": "Dear reader, I appreciate your time today",
+      "partition": "id-test"
+    },
+    {
+      "id": "greeting-057",
+      "group_id": "greeting-family-12",
+      "label": "greeting",
+      "text": "Hello from my desk; I hope all is well on your side",
+      "partition": "id-test"
+    },
+    {
+      "id": "greeting-058",
+      "group_id": "greeting-family-13",
+      "label": "greeting",
+      "text": "A quick greeting before today's work begins",
+      "partition": "id-test"
+    },
+    {
+      "id": "greeting-059",
+      "group_id": "greeting-family-13",
+      "label": "greeting",
+      "text": "Hi, let me welcome you before we get started",
+      "partition": "id-test"
+    },
+    {
+      "id": "greeting-060",
+      "group_id": "greeting-family-14",
+      "label": "greeting",
+      "text": "Welcome aboard, and hello from the whole team",
+      "partition": "development"
+    },
+    {
+      "id": "greeting-061",
+      "group_id": "greeting-family-14",
+      "label": "greeting",
+      "text": "A friendly welcome to the person who just joined",
+      "partition": "development"
+    },
+    {
+      "id": "greeting-062",
+      "group_id": "greeting-family-15",
+      "label": "greeting",
+      "text": "What a pleasant surprise to find you here",
+      "partition": "development"
+    },
+    {
+      "id": "greeting-063",
+      "group_id": "greeting-family-15",
+      "label": "greeting",
+      "text": "Hi there; your company is always welcome",
+      "partition": "development"
+    },
+    {
+      "id": "greeting-064",
+      "group_id": "greeting-family-01",
+      "label": "greeting",
+      "text": "Hello, I am glad we have been introduced",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-065",
+      "group_id": "greeting-family-01",
+      "label": "greeting",
+      "text": "Hi, it is lovely to make your acquaintance today",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-066",
+      "group_id": "greeting-family-02",
+      "label": "greeting",
+      "text": "Good morning; I hope the hours ahead treat you kindly",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-067",
+      "group_id": "greeting-family-02",
+      "label": "greeting",
+      "text": "A cheerful morning to you",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-068",
+      "group_id": "greeting-family-03",
+      "label": "greeting",
+      "text": "Hello this afternoon; thank you for welcoming me",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-069",
+      "group_id": "greeting-family-03",
+      "label": "greeting",
+      "text": "I hope you are having a good afternoon",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-070",
+      "group_id": "greeting-family-04",
+      "label": "greeting",
+      "text": "Good evening; I appreciate you being here",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-071",
+      "group_id": "greeting-family-04",
+      "label": "greeting",
+      "text": "I hope your evening has been pleasant so far",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-072",
+      "group_id": "greeting-family-05",
+      "label": "greeting",
+      "text": "It is wonderful to welcome you back after some time away",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-073",
+      "group_id": "greeting-family-05",
+      "label": "greeting",
+      "text": "Glad you have returned; we missed having you here",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-074",
+      "group_id": "greeting-family-06",
+      "label": "greeting",
+      "text": "Hello; shall we begin our discussion",
+      "partition": "train"
+    },
+    {
+      "id": "greeting-075",
+      "group_id": "greeting-family-06",
+      "label": "greeting",
+      "text": "I am happy that we can sit down and talk now",
+      "partition": "train"
+    },
+    {
+      "id": "observation-001",
+      "group_id": "observation-family-01",
+      "label": "observation",
+      "text": "The meeting ended twenty minutes early",
+      "partition": "train"
+    },
+    {
+      "id": "observation-002",
+      "group_id": "observation-family-01",
+      "label": "observation",
+      "text": "Everyone left the meeting twenty minutes ahead of schedule",
+      "partition": "train"
+    },
+    {
+      "id": "observation-003",
+      "group_id": "observation-family-02",
+      "label": "observation",
+      "text": "Three warnings appeared in the latest log",
+      "partition": "train"
+    },
+    {
+      "id": "observation-004",
+      "group_id": "observation-family-02",
+      "label": "observation",
+      "text": "The latest log shows exactly three warnings",
+      "partition": "train"
+    },
+    {
+      "id": "observation-005",
+      "group_id": "observation-family-03",
+      "label": "observation",
+      "text": "The prototype currently contains four screens",
+      "partition": "train"
+    },
+    {
+      "id": "observation-006",
+      "group_id": "observation-family-03",
+      "label": "observation",
+      "text": "There are four screens in the current prototype",
+      "partition": "train"
+    },
+    {
+      "id": "observation-007",
+      "group_id": "observation-family-04",
+      "label": "observation",
+      "text": "The model artifact carries an explicit version",
+      "partition": "train"
+    },
+    {
+      "id": "observation-008",
+      "group_id": "observation-family-04",
+      "label": "observation",
+      "text": "An explicit version is recorded inside the model artifact",
+      "partition": "train"
+    },
+    {
+      "id": "observation-009",
+      "group_id": "observation-family-05",
+      "label": "observation",
+      "text": "A fixed seed is present in the configuration",
+      "partition": "train"
+    },
+    {
+      "id": "observation-010",
+      "group_id": "observation-family-05",
+      "label": "observation",
+      "text": "The configuration contains one fixed seed",
+      "partition": "train"
+    },
+    {
+      "id": "observation-011",
+      "group_id": "observation-family-06",
+      "label": "observation",
+      "text": "The terminal printed a compact summary",
+      "partition": "train"
+    },
+    {
+      "id": "observation-012",
+      "group_id": "observation-family-06",
+      "label": "observation",
+      "text": "A concise summary appeared in the terminal",
+      "partition": "train"
+    },
+    {
+      "id": "observation-013",
+      "group_id": "observation-family-07",
+      "label": "observation",
+      "text": "The browser retained only the visible session",
+      "partition": "train"
+    },
+    {
+      "id": "observation-014",
+      "group_id": "observation-family-07",
+      "label": "observation",
+      "text": "Only the visible session remained in the browser",
+      "partition": "train"
+    },
+    {
+      "id": "observation-015",
+      "group_id": "observation-family-08",
+      "label": "observation",
+      "text": "The final report lists every class separately",
+      "partition": "train"
+    },
+    {
+      "id": "observation-016",
+      "group_id": "observation-family-08",
+      "label": "observation",
+      "text": "Each class has its own entry in the final report",
+      "partition": "train"
+    },
+    {
+      "id": "observation-017",
+      "group_id": "observation-family-01",
+      "label": "observation",
+      "text": "I noticed that the meeting finished twenty minutes early",
+      "partition": "train"
+    },
+    {
+      "id": "observation-018",
+      "group_id": "observation-family-02",
+      "label": "observation",
+      "text": "My review of the log found three warnings",
+      "partition": "train"
+    },
+    {
+      "id": "observation-019",
+      "group_id": "observation-family-03",
+      "label": "observation",
+      "text": "I counted four distinct screens in the prototype",
+      "partition": "train"
+    },
+    {
+      "id": "observation-020",
+      "group_id": "observation-family-04",
+      "label": "observation",
+      "text": "I observed a version field inside the model artifact",
+      "partition": "train"
+    },
+    {
+      "id": "observation-021",
+      "group_id": "observation-family-05",
+      "label": "observation",
+      "text": "Inspection shows a fixed seed in the configuration",
+      "partition": "train"
+    },
+    {
+      "id": "observation-022",
+      "group_id": "observation-family-06",
+      "label": "observation",
+      "text": "I saw a concise summary printed by the terminal",
+      "partition": "train"
+    },
+    {
+      "id": "observation-023",
+      "group_id": "observation-family-07",
+      "label": "observation",
+      "text": "I noticed the browser kept only the visible session",
+      "partition": "train"
+    },
+    {
+      "id": "observation-024",
+      "group_id": "observation-family-08",
+      "label": "observation",
+      "text": "The report shows one separate entry per class",
+      "partition": "train"
+    },
+    {
+      "id": "observation-025",
+      "group_id": "observation-family-09",
+      "label": "observation",
+      "text": "The latest run completed in forty-two seconds",
+      "partition": "train"
+    },
+    {
+      "id": "observation-026",
+      "group_id": "observation-family-09",
+      "label": "observation",
+      "text": "I measured a runtime of forty-two seconds for the latest run",
+      "partition": "train"
+    },
+    {
+      "id": "observation-027",
+      "group_id": "observation-family-09",
+      "label": "observation",
+      "text": "The timer showed forty-two seconds when the run ended",
+      "partition": "train"
+    },
+    {
+      "id": "observation-028",
+      "group_id": "observation-family-10",
+      "label": "observation",
+      "text": "Two files changed between the recorded builds",
+      "partition": "calibration"
+    },
+    {
+      "id": "observation-029",
+      "group_id": "observation-family-10",
+      "label": "observation",
+      "text": "The comparison found changes in exactly two files",
+      "partition": "calibration"
+    },
+    {
+      "id": "observation-030",
+      "group_id": "observation-family-10",
+      "label": "observation",
+      "text": "I observed that two files differ between these builds",
+      "partition": "calibration"
+    },
+    {
+      "id": "observation-031",
+      "group_id": "observation-family-11",
+      "label": "observation",
+      "text": "The memory graph stays flat during repeated inference",
+      "partition": "calibration"
+    },
+    {
+      "id": "observation-032",
+      "group_id": "observation-family-11",
+      "label": "observation",
+      "text": "Repeated predictions leave the memory curve unchanged",
+      "partition": "calibration"
+    },
+    {
+      "id": "observation-033",
+      "group_id": "observation-family-11",
+      "label": "observation",
+      "text": "I noticed stable memory use across multiple predictions",
+      "partition": "calibration"
+    },
+    {
+      "id": "observation-034",
+      "group_id": "observation-family-12",
+      "label": "observation",
+      "text": "The package contains binaries for three operating systems",
+      "partition": "id-test"
+    },
+    {
+      "id": "observation-035",
+      "group_id": "observation-family-12",
+      "label": "observation",
+      "text": "I counted three platform binaries inside the package",
+      "partition": "id-test"
+    },
+    {
+      "id": "observation-036",
+      "group_id": "observation-family-12",
+      "label": "observation",
+      "text": "Three different operating systems are represented in the archive",
+      "partition": "id-test"
+    },
+    {
+      "id": "observation-037",
+      "group_id": "observation-family-13",
+      "label": "observation",
+      "text": "The checksum matches the value in the manifest",
+      "partition": "id-test"
+    },
+    {
+      "id": "observation-038",
+      "group_id": "observation-family-13",
+      "label": "observation",
+      "text": "I compared the checksum and found an exact manifest match",
+      "partition": "id-test"
+    },
+    {
+      "id": "observation-039",
+      "group_id": "observation-family-13",
+      "label": "observation",
+      "text": "The observed digest is identical to the manifest entry",
+      "partition": "id-test"
+    },
+    {
+      "id": "observation-040",
+      "group_id": "observation-family-14",
+      "label": "observation",
+      "text": "The queue currently contains seven pending tasks",
+      "partition": "development"
+    },
+    {
+      "id": "observation-041",
+      "group_id": "observation-family-14",
+      "label": "observation",
+      "text": "I can see seven tasks waiting in the queue",
+      "partition": "development"
+    },
+    {
+      "id": "observation-042",
+      "group_id": "observation-family-14",
+      "label": "observation",
+      "text": "A count of the pending queue gives seven tasks",
+      "partition": "development"
+    },
+    {
+      "id": "observation-043",
+      "group_id": "observation-family-15",
+      "label": "observation",
+      "text": "The exported file is smaller than the source artifact",
+      "partition": "development"
+    },
+    {
+      "id": "observation-044",
+      "group_id": "observation-family-15",
+      "label": "observation",
+      "text": "I noticed the export uses less space than its source",
+      "partition": "development"
+    },
+    {
+      "id": "observation-045",
+      "group_id": "observation-family-15",
+      "label": "observation",
+      "text": "The source artifact is larger than the generated export",
+      "partition": "development"
+    },
+    {
+      "id": "observation-046",
+      "group_id": "observation-family-03",
+      "label": "observation",
+      "text": "I observed that the prototype currently has four screens",
+      "partition": "train"
+    },
+    {
+      "id": "observation-047",
+      "group_id": "observation-family-03",
+      "label": "observation",
+      "text": "A screen count shows four views in the current prototype",
+      "partition": "train"
+    },
+    {
+      "id": "observation-048",
+      "group_id": "observation-family-08",
+      "label": "observation",
+      "text": "I noticed a separate report entry for each class",
+      "partition": "train"
+    },
+    {
+      "id": "observation-049",
+      "group_id": "observation-family-08",
+      "label": "observation",
+      "text": "The report shows that every label has its own section",
+      "partition": "train"
+    },
+    {
+      "id": "observation-050",
+      "group_id": "observation-family-09",
+      "label": "observation",
+      "text": "I observed a forty-two-second duration in the latest run",
+      "partition": "train"
+    },
+    {
+      "id": "observation-051",
+      "group_id": "observation-family-09",
+      "label": "observation",
+      "text": "The recorded runtime for the last execution is forty-two seconds",
+      "partition": "train"
+    },
+    {
+      "id": "observation-052",
+      "group_id": "observation-family-10",
+      "label": "observation",
+      "text": "The build comparison reports exactly two modified files",
+      "partition": "calibration"
+    },
+    {
+      "id": "observation-053",
+      "group_id": "observation-family-10",
+      "label": "observation",
+      "text": "I noticed two file differences between the builds",
+      "partition": "calibration"
+    },
+    {
+      "id": "observation-054",
+      "group_id": "observation-family-11",
+      "label": "observation",
+      "text": "Monitoring shows constant memory use during repeated predictions",
+      "partition": "calibration"
+    },
+    {
+      "id": "observation-055",
+      "group_id": "observation-family-11",
+      "label": "observation",
+      "text": "I observed no growth in memory across the inference loop",
+      "partition": "calibration"
+    },
+    {
+      "id": "observation-056",
+      "group_id": "observation-family-12",
+      "label": "observation",
+      "text": "The archive listing shows binaries for three platforms",
+      "partition": "id-test"
+    },
+    {
+      "id": "observation-057",
+      "group_id": "observation-family-12",
+      "label": "observation",
+      "text": "I found three operating-system builds in the package",
+      "partition": "id-test"
+    },
+    {
+      "id": "observation-058",
+      "group_id": "observation-family-13",
+      "label": "observation",
+      "text": "The digest comparison shows an exact checksum match",
+      "partition": "id-test"
+    },
+    {
+      "id": "observation-059",
+      "group_id": "observation-family-13",
+      "label": "observation",
+      "text": "I observed that the manifest and file checksums are identical",
+      "partition": "id-test"
+    },
+    {
+      "id": "observation-060",
+      "group_id": "observation-family-14",
+      "label": "observation",
+      "text": "The current queue count is seven waiting tasks",
+      "partition": "development"
+    },
+    {
+      "id": "observation-061",
+      "group_id": "observation-family-14",
+      "label": "observation",
+      "text": "I noticed seven pending items in the task queue",
+      "partition": "development"
+    },
+    {
+      "id": "observation-062",
+      "group_id": "observation-family-15",
+      "label": "observation",
+      "text": "The size report shows a smaller export than source",
+      "partition": "development"
+    },
+    {
+      "id": "observation-063",
+      "group_id": "observation-family-15",
+      "label": "observation",
+      "text": "I observed that the generated file occupies less space",
+      "partition": "development"
+    },
+    {
+      "id": "observation-064",
+      "group_id": "observation-family-01",
+      "label": "observation",
+      "text": "The clock showed that we wrapped up with twenty minutes remaining",
+      "partition": "train"
+    },
+    {
+      "id": "observation-065",
+      "group_id": "observation-family-01",
+      "label": "observation",
+      "text": "We adjourned at 10:40 even though the calendar held the room until 11:00",
+      "partition": "train"
+    },
+    {
+      "id": "observation-066",
+      "group_id": "observation-family-02",
+      "label": "observation",
+      "text": "I found three warning entries while reading the newest log",
+      "partition": "train"
+    },
+    {
+      "id": "observation-067",
+      "group_id": "observation-family-02",
+      "label": "observation",
+      "text": "The most recent log contains a trio of warning lines",
+      "partition": "train"
+    },
+    {
+      "id": "observation-068",
+      "group_id": "observation-family-04",
+      "label": "observation",
+      "text": "The artifact metadata includes a declared model version",
+      "partition": "train"
+    },
+    {
+      "id": "observation-069",
+      "group_id": "observation-family-04",
+      "label": "observation",
+      "text": "A version identifier is stored with the serialized model",
+      "partition": "train"
+    },
+    {
+      "id": "observation-070",
+      "group_id": "observation-family-05",
+      "label": "observation",
+      "text": "Configuration review revealed a deterministic seed value",
+      "partition": "train"
+    },
+    {
+      "id": "observation-071",
+      "group_id": "observation-family-05",
+      "label": "observation",
+      "text": "One seed value is pinned in the settings file",
+      "partition": "train"
+    },
+    {
+      "id": "observation-072",
+      "group_id": "observation-family-06",
+      "label": "observation",
+      "text": "At completion, the terminal displayed a short result digest",
+      "partition": "train"
+    },
+    {
+      "id": "observation-073",
+      "group_id": "observation-family-06",
+      "label": "observation",
+      "text": "I saw the command end with a brief terminal recap",
+      "partition": "train"
+    },
+    {
+      "id": "observation-074",
+      "group_id": "observation-family-07",
+      "label": "observation",
+      "text": "Refreshing the page left only the conversation shown on screen",
+      "partition": "train"
+    },
+    {
+      "id": "observation-075",
+      "group_id": "observation-family-07",
+      "label": "observation",
+      "text": "After navigation, the browser held no session beyond the one being displayed",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-001",
+      "group_id": "ownership-family-01",
+      "label": "ownership",
+      "text": "My schedule changed before lunch",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-002",
+      "group_id": "ownership-family-01",
+      "label": "ownership",
+      "text": "The schedule that changed before lunch is mine",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-003",
+      "group_id": "ownership-family-02",
+      "label": "ownership",
+      "text": "My prototype is ready for its first review",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-004",
+      "group_id": "ownership-family-02",
+      "label": "ownership",
+      "text": "The prototype awaiting its first review belongs to me",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-005",
+      "group_id": "ownership-family-03",
+      "label": "ownership",
+      "text": "My notes occupy two separate documents",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-006",
+      "group_id": "ownership-family-03",
+      "label": "ownership",
+      "text": "The notes spread over two documents are my own",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-007",
+      "group_id": "ownership-family-04",
+      "label": "ownership",
+      "text": "My local build finally passes every check",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-008",
+      "group_id": "ownership-family-04",
+      "label": "ownership",
+      "text": "The fully passing local build is mine",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-009",
+      "group_id": "ownership-family-05",
+      "label": "ownership",
+      "text": "My dataset contains fictional examples only",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-010",
+      "group_id": "ownership-family-05",
+      "label": "ownership",
+      "text": "The fictional-only dataset belongs to my project",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-011",
+      "group_id": "ownership-family-06",
+      "label": "ownership",
+      "text": "My workstation runs the classifier offline",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-012",
+      "group_id": "ownership-family-06",
+      "label": "ownership",
+      "text": "The offline classifier runs on my workstation",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-013",
+      "group_id": "ownership-family-07",
+      "label": "ownership",
+      "text": "My preferred design has fewer moving parts",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-014",
+      "group_id": "ownership-family-07",
+      "label": "ownership",
+      "text": "The simpler design is the option I prefer",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-015",
+      "group_id": "ownership-family-08",
+      "label": "ownership",
+      "text": "I recognize the blue notebook as my own",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-016",
+      "group_id": "ownership-family-08",
+      "label": "ownership",
+      "text": "I own the blue notebook beside the keyboard",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-017",
+      "group_id": "ownership-family-01",
+      "label": "ownership",
+      "text": "The revised lunch schedule belongs to me",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-018",
+      "group_id": "ownership-family-02",
+      "label": "ownership",
+      "text": "I am the owner of the prototype awaiting review",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-019",
+      "group_id": "ownership-family-03",
+      "label": "ownership",
+      "text": "Both of those separate note files are mine",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-020",
+      "group_id": "ownership-family-04",
+      "label": "ownership",
+      "text": "I own the local build that now passes its checks",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-021",
+      "group_id": "ownership-family-05",
+      "label": "ownership",
+      "text": "That fictional dataset is part of my own project",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-022",
+      "group_id": "ownership-family-06",
+      "label": "ownership",
+      "text": "The workstation running offline inference is my machine",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-023",
+      "group_id": "ownership-family-07",
+      "label": "ownership",
+      "text": "The design with fewer components is my choice",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-024",
+      "group_id": "ownership-family-08",
+      "label": "ownership",
+      "text": "I left my notebook beside the keyboard",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-025",
+      "group_id": "ownership-family-09",
+      "label": "ownership",
+      "text": "The red bicycle outside is mine",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-026",
+      "group_id": "ownership-family-09",
+      "label": "ownership",
+      "text": "I own the red bike parked by the entrance",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-027",
+      "group_id": "ownership-family-09",
+      "label": "ownership",
+      "text": "That bicycle near the front door belongs to me",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-028",
+      "group_id": "ownership-family-10",
+      "label": "ownership",
+      "text": "This repository is my personal experiment",
+      "partition": "development"
+    },
+    {
+      "id": "ownership-029",
+      "group_id": "ownership-family-10",
+      "label": "ownership",
+      "text": "The experimental repository belongs to my account",
+      "partition": "development"
+    },
+    {
+      "id": "ownership-030",
+      "group_id": "ownership-family-10",
+      "label": "ownership",
+      "text": "I am the owner of this small code repository",
+      "partition": "development"
+    },
+    {
+      "id": "ownership-031",
+      "group_id": "ownership-family-11",
+      "label": "ownership",
+      "text": "I am accountable for signing off the last review",
+      "partition": "development"
+    },
+    {
+      "id": "ownership-032",
+      "group_id": "ownership-family-11",
+      "label": "ownership",
+      "text": "I am responsible for completing the last review",
+      "partition": "development"
+    },
+    {
+      "id": "ownership-033",
+      "group_id": "ownership-family-11",
+      "label": "ownership",
+      "text": "Responsibility for the final review belongs to me",
+      "partition": "development"
+    },
+    {
+      "id": "ownership-034",
+      "group_id": "ownership-family-12",
+      "label": "ownership",
+      "text": "I wrote the migration script myself",
+      "partition": "calibration"
+    },
+    {
+      "id": "ownership-035",
+      "group_id": "ownership-family-12",
+      "label": "ownership",
+      "text": "The migration script is work I completed",
+      "partition": "calibration"
+    },
+    {
+      "id": "ownership-036",
+      "group_id": "ownership-family-12",
+      "label": "ownership",
+      "text": "I am the person who authored the migration script",
+      "partition": "calibration"
+    },
+    {
+      "id": "ownership-037",
+      "group_id": "ownership-family-13",
+      "label": "ownership",
+      "text": "Those deployment notes are my own",
+      "partition": "calibration"
+    },
+    {
+      "id": "ownership-038",
+      "group_id": "ownership-family-13",
+      "label": "ownership",
+      "text": "I own the notes prepared for deployment",
+      "partition": "calibration"
+    },
+    {
+      "id": "ownership-039",
+      "group_id": "ownership-family-13",
+      "label": "ownership",
+      "text": "The deployment notes belong to me",
+      "partition": "calibration"
+    },
+    {
+      "id": "ownership-040",
+      "group_id": "ownership-family-14",
+      "label": "ownership",
+      "text": "I own the update to those settings",
+      "partition": "id-test"
+    },
+    {
+      "id": "ownership-041",
+      "group_id": "ownership-family-14",
+      "label": "ownership",
+      "text": "The configuration change was my responsibility",
+      "partition": "id-test"
+    },
+    {
+      "id": "ownership-042",
+      "group_id": "ownership-family-14",
+      "label": "ownership",
+      "text": "I am accountable for changing that configuration",
+      "partition": "id-test"
+    },
+    {
+      "id": "ownership-043",
+      "group_id": "ownership-family-15",
+      "label": "ownership",
+      "text": "The access card on this desk is mine",
+      "partition": "id-test"
+    },
+    {
+      "id": "ownership-044",
+      "group_id": "ownership-family-15",
+      "label": "ownership",
+      "text": "I own the access card lying on the desk",
+      "partition": "id-test"
+    },
+    {
+      "id": "ownership-045",
+      "group_id": "ownership-family-15",
+      "label": "ownership",
+      "text": "The access badge beside the monitor was issued to me",
+      "partition": "id-test"
+    },
+    {
+      "id": "ownership-046",
+      "group_id": "ownership-family-05",
+      "label": "ownership",
+      "text": "I own the project dataset containing the fictional records",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-047",
+      "group_id": "ownership-family-05",
+      "label": "ownership",
+      "text": "The dataset with synthetic examples belongs to my project",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-048",
+      "group_id": "ownership-family-06",
+      "label": "ownership",
+      "text": "That offline workstation is my own machine",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-049",
+      "group_id": "ownership-family-06",
+      "label": "ownership",
+      "text": "I own the computer that runs our local classifier",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-050",
+      "group_id": "ownership-family-07",
+      "label": "ownership",
+      "text": "The simpler architecture is the design I chose",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-051",
+      "group_id": "ownership-family-07",
+      "label": "ownership",
+      "text": "I take ownership of the design with fewer moving parts",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-052",
+      "group_id": "ownership-family-10",
+      "label": "ownership",
+      "text": "This code experiment is mine and lives in my repository",
+      "partition": "development"
+    },
+    {
+      "id": "ownership-053",
+      "group_id": "ownership-family-10",
+      "label": "ownership",
+      "text": "I own the account that contains this experimental repository",
+      "partition": "development"
+    },
+    {
+      "id": "ownership-054",
+      "group_id": "ownership-family-11",
+      "label": "ownership",
+      "text": "I take responsibility for carrying out the final review",
+      "partition": "development"
+    },
+    {
+      "id": "ownership-055",
+      "group_id": "ownership-family-11",
+      "label": "ownership",
+      "text": "Completing that last review is my responsibility",
+      "partition": "development"
+    },
+    {
+      "id": "ownership-056",
+      "group_id": "ownership-family-12",
+      "label": "ownership",
+      "text": "I am responsible for the migration script I authored",
+      "partition": "calibration"
+    },
+    {
+      "id": "ownership-057",
+      "group_id": "ownership-family-12",
+      "label": "ownership",
+      "text": "The script for the migration is entirely my work",
+      "partition": "calibration"
+    },
+    {
+      "id": "ownership-058",
+      "group_id": "ownership-family-13",
+      "label": "ownership",
+      "text": "The deployment document belongs to me",
+      "partition": "calibration"
+    },
+    {
+      "id": "ownership-059",
+      "group_id": "ownership-family-13",
+      "label": "ownership",
+      "text": "Those release notes are mine and I prepared them",
+      "partition": "calibration"
+    },
+    {
+      "id": "ownership-060",
+      "group_id": "ownership-family-14",
+      "label": "ownership",
+      "text": "I am accountable for the change made to the configuration",
+      "partition": "id-test"
+    },
+    {
+      "id": "ownership-061",
+      "group_id": "ownership-family-14",
+      "label": "ownership",
+      "text": "I own the decision to update that configuration",
+      "partition": "id-test"
+    },
+    {
+      "id": "ownership-062",
+      "group_id": "ownership-family-15",
+      "label": "ownership",
+      "text": "The card resting beside the monitor is my property",
+      "partition": "id-test"
+    },
+    {
+      "id": "ownership-063",
+      "group_id": "ownership-family-15",
+      "label": "ownership",
+      "text": "That access badge is mine, not a shared card",
+      "partition": "id-test"
+    },
+    {
+      "id": "ownership-064",
+      "group_id": "ownership-family-01",
+      "label": "ownership",
+      "text": "The calendar adjustment before noon applies to my day",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-065",
+      "group_id": "ownership-family-01",
+      "label": "ownership",
+      "text": "I was the person whose timetable moved earlier that morning",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-066",
+      "group_id": "ownership-family-02",
+      "label": "ownership",
+      "text": "I built the prototype that is now queued for an initial review",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-067",
+      "group_id": "ownership-family-02",
+      "label": "ownership",
+      "text": "The review-ready prototype came from my own work",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-068",
+      "group_id": "ownership-family-03",
+      "label": "ownership",
+      "text": "I keep my notes split between a pair of files",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-069",
+      "group_id": "ownership-family-03",
+      "label": "ownership",
+      "text": "Two documents contain the notes I wrote",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-070",
+      "group_id": "ownership-family-04",
+      "label": "ownership",
+      "text": "The successful local build came from my checkout",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-071",
+      "group_id": "ownership-family-04",
+      "label": "ownership",
+      "text": "Every check now passes in the build running on my machine",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-072",
+      "group_id": "ownership-family-08",
+      "label": "ownership",
+      "text": "I brought the blue notebook lying beside the keyboard",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-073",
+      "group_id": "ownership-family-08",
+      "label": "ownership",
+      "text": "The blue notebook by the computer is my personal copy",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-074",
+      "group_id": "ownership-family-09",
+      "label": "ownership",
+      "text": "I rode the red bicycle parked near the entrance",
+      "partition": "train"
+    },
+    {
+      "id": "ownership-075",
+      "group_id": "ownership-family-09",
+      "label": "ownership",
+      "text": "The red bike waiting outside is the one I use",
+      "partition": "train"
+    },
+    {
+      "id": "question-001",
+      "group_id": "question-family-01",
+      "label": "question",
+      "text": "What should I inspect before anything else?",
+      "partition": "train"
+    },
+    {
+      "id": "question-002",
+      "group_id": "question-family-01",
+      "label": "question",
+      "text": "What deserves the first inspection?",
+      "partition": "train"
+    },
+    {
+      "id": "question-003",
+      "group_id": "question-family-02",
+      "label": "question",
+      "text": "Can the classifier run without a network connection?",
+      "partition": "train"
+    },
+    {
+      "id": "question-004",
+      "group_id": "question-family-02",
+      "label": "question",
+      "text": "Can I reproduce this evaluation entirely offline?",
+      "partition": "train"
+    },
+    {
+      "id": "question-005",
+      "group_id": "question-family-03",
+      "label": "question",
+      "text": "Which feature had the greatest influence?",
+      "partition": "train"
+    },
+    {
+      "id": "question-006",
+      "group_id": "question-family-03",
+      "label": "question",
+      "text": "Which signal pushed the prediction furthest?",
+      "partition": "train"
+    },
+    {
+      "id": "question-007",
+      "group_id": "question-family-04",
+      "label": "question",
+      "text": "When should the classifier be trained again?",
+      "partition": "train"
+    },
+    {
+      "id": "question-008",
+      "group_id": "question-family-04",
+      "label": "question",
+      "text": "When is another training run appropriate?",
+      "partition": "train"
+    },
+    {
+      "id": "question-009",
+      "group_id": "question-family-05",
+      "label": "question",
+      "text": "Does the report include class-level scores?",
+      "partition": "train"
+    },
+    {
+      "id": "question-010",
+      "group_id": "question-family-05",
+      "label": "question",
+      "text": "Does this output contain a confusion matrix?",
+      "partition": "train"
+    },
+    {
+      "id": "question-011",
+      "group_id": "question-family-06",
+      "label": "question",
+      "text": "Who is able to audit the serialized artifact?",
+      "partition": "train"
+    },
+    {
+      "id": "question-012",
+      "group_id": "question-family-06",
+      "label": "question",
+      "text": "Who can confirm that these weights are authentic?",
+      "partition": "train"
+    },
+    {
+      "id": "question-013",
+      "group_id": "question-family-07",
+      "label": "question",
+      "text": "Are all seven classes represented evenly?",
+      "partition": "train"
+    },
+    {
+      "id": "question-014",
+      "group_id": "question-family-07",
+      "label": "question",
+      "text": "Are the labels balanced across the corpus?",
+      "partition": "train"
+    },
+    {
+      "id": "question-015",
+      "group_id": "question-family-08",
+      "label": "question",
+      "text": "How many features remain after selection?",
+      "partition": "train"
+    },
+    {
+      "id": "question-016",
+      "group_id": "question-family-08",
+      "label": "question",
+      "text": "How many vocabulary entries did training retain?",
+      "partition": "train"
+    },
+    {
+      "id": "question-017",
+      "group_id": "question-family-01",
+      "label": "question",
+      "text": "What is the first thing I ought to examine?",
+      "partition": "train"
+    },
+    {
+      "id": "question-018",
+      "group_id": "question-family-02",
+      "label": "question",
+      "text": "Is a network connection required for this classifier?",
+      "partition": "train"
+    },
+    {
+      "id": "question-019",
+      "group_id": "question-family-03",
+      "label": "question",
+      "text": "What feature contributed most to this result?",
+      "partition": "train"
+    },
+    {
+      "id": "question-020",
+      "group_id": "question-family-04",
+      "label": "question",
+      "text": "At what point should I retrain the classifier?",
+      "partition": "train"
+    },
+    {
+      "id": "question-021",
+      "group_id": "question-family-05",
+      "label": "question",
+      "text": "Can I find per-class metrics in the report?",
+      "partition": "train"
+    },
+    {
+      "id": "question-022",
+      "group_id": "question-family-06",
+      "label": "question",
+      "text": "Who can verify the artifact and its weights?",
+      "partition": "train"
+    },
+    {
+      "id": "question-023",
+      "group_id": "question-family-07",
+      "label": "question",
+      "text": "Is the corpus balanced between all labels?",
+      "partition": "train"
+    },
+    {
+      "id": "question-024",
+      "group_id": "question-family-08",
+      "label": "question",
+      "text": "What is the size of the selected vocabulary?",
+      "partition": "train"
+    },
+    {
+      "id": "question-025",
+      "group_id": "question-family-09",
+      "label": "question",
+      "text": "Why did the verification reject this bundle?",
+      "partition": "train"
+    },
+    {
+      "id": "question-026",
+      "group_id": "question-family-09",
+      "label": "question",
+      "text": "What caused this bundle to fail verification?",
+      "partition": "train"
+    },
+    {
+      "id": "question-027",
+      "group_id": "question-family-09",
+      "label": "question",
+      "text": "Why was the artifact marked as invalid?",
+      "partition": "train"
+    },
+    {
+      "id": "question-028",
+      "group_id": "question-family-10",
+      "label": "question",
+      "text": "Where does the local report get written?",
+      "partition": "calibration"
+    },
+    {
+      "id": "question-029",
+      "group_id": "question-family-10",
+      "label": "question",
+      "text": "Which directory contains the generated report?",
+      "partition": "calibration"
+    },
+    {
+      "id": "question-030",
+      "group_id": "question-family-10",
+      "label": "question",
+      "text": "Where can I find the report after the run?",
+      "partition": "calibration"
+    },
+    {
+      "id": "question-031",
+      "group_id": "question-family-11",
+      "label": "question",
+      "text": "Could you explain how the threshold is chosen?",
+      "partition": "calibration"
+    },
+    {
+      "id": "question-032",
+      "group_id": "question-family-11",
+      "label": "question",
+      "text": "How does the program select its acceptance threshold?",
+      "partition": "calibration"
+    },
+    {
+      "id": "question-033",
+      "group_id": "question-family-11",
+      "label": "question",
+      "text": "What process determines the final threshold?",
+      "partition": "calibration"
+    },
+    {
+      "id": "question-034",
+      "group_id": "question-family-12",
+      "label": "question",
+      "text": "Is this command safe to run more than once?",
+      "partition": "development"
+    },
+    {
+      "id": "question-035",
+      "group_id": "question-family-12",
+      "label": "question",
+      "text": "Can the same command be repeated safely?",
+      "partition": "development"
+    },
+    {
+      "id": "question-036",
+      "group_id": "question-family-12",
+      "label": "question",
+      "text": "Would running this command again be safe?",
+      "partition": "development"
+    },
+    {
+      "id": "question-037",
+      "group_id": "question-family-13",
+      "label": "question",
+      "text": "When was the manifest generated?",
+      "partition": "development"
+    },
+    {
+      "id": "question-038",
+      "group_id": "question-family-13",
+      "label": "question",
+      "text": "At what time did the program create the manifest?",
+      "partition": "development"
+    },
+    {
+      "id": "question-039",
+      "group_id": "question-family-13",
+      "label": "question",
+      "text": "When did manifest generation finish?",
+      "partition": "development"
+    },
+    {
+      "id": "question-040",
+      "group_id": "question-family-14",
+      "label": "question",
+      "text": "Should I keep the original data file?",
+      "partition": "id-test"
+    },
+    {
+      "id": "question-041",
+      "group_id": "question-family-14",
+      "label": "question",
+      "text": "Do I need to retain the source dataset?",
+      "partition": "id-test"
+    },
+    {
+      "id": "question-042",
+      "group_id": "question-family-14",
+      "label": "question",
+      "text": "Is preserving the original fixture necessary?",
+      "partition": "id-test"
+    },
+    {
+      "id": "question-043",
+      "group_id": "question-family-15",
+      "label": "question",
+      "text": "How can I inspect one prediction in detail?",
+      "partition": "id-test"
+    },
+    {
+      "id": "question-044",
+      "group_id": "question-family-15",
+      "label": "question",
+      "text": "What command shows the full prediction trace?",
+      "partition": "id-test"
+    },
+    {
+      "id": "question-045",
+      "group_id": "question-family-15",
+      "label": "question",
+      "text": "How do I view the explanation for a single result?",
+      "partition": "id-test"
+    },
+    {
+      "id": "question-046",
+      "group_id": "question-family-04",
+      "label": "question",
+      "text": "When would another classifier training run be appropriate?",
+      "partition": "train"
+    },
+    {
+      "id": "question-047",
+      "group_id": "question-family-04",
+      "label": "question",
+      "text": "How can I tell that the model should be trained again?",
+      "partition": "train"
+    },
+    {
+      "id": "question-048",
+      "group_id": "question-family-05",
+      "label": "question",
+      "text": "What class-specific measurements does the report provide?",
+      "partition": "train"
+    },
+    {
+      "id": "question-049",
+      "group_id": "question-family-05",
+      "label": "question",
+      "text": "Can the report show me the confusion matrix?",
+      "partition": "train"
+    },
+    {
+      "id": "question-050",
+      "group_id": "question-family-07",
+      "label": "question",
+      "text": "Which labels have the same number of examples?",
+      "partition": "train"
+    },
+    {
+      "id": "question-051",
+      "group_id": "question-family-07",
+      "label": "question",
+      "text": "Does every class contain an equal number of records?",
+      "partition": "train"
+    },
+    {
+      "id": "question-052",
+      "group_id": "question-family-10",
+      "label": "question",
+      "text": "Where should I look for the report generated by this run?",
+      "partition": "calibration"
+    },
+    {
+      "id": "question-053",
+      "group_id": "question-family-10",
+      "label": "question",
+      "text": "What folder receives the completed evaluation report?",
+      "partition": "calibration"
+    },
+    {
+      "id": "question-054",
+      "group_id": "question-family-11",
+      "label": "question",
+      "text": "How is the minimum confidence threshold determined?",
+      "partition": "calibration"
+    },
+    {
+      "id": "question-055",
+      "group_id": "question-family-11",
+      "label": "question",
+      "text": "Could you tell me what selects the probability margin?",
+      "partition": "calibration"
+    },
+    {
+      "id": "question-056",
+      "group_id": "question-family-12",
+      "label": "question",
+      "text": "Can I safely repeat the exact same operation?",
+      "partition": "development"
+    },
+    {
+      "id": "question-057",
+      "group_id": "question-family-12",
+      "label": "question",
+      "text": "What happens if I run this command for a second time?",
+      "partition": "development"
+    },
+    {
+      "id": "question-058",
+      "group_id": "question-family-13",
+      "label": "question",
+      "text": "When did the application finish writing its manifest?",
+      "partition": "development"
+    },
+    {
+      "id": "question-059",
+      "group_id": "question-family-13",
+      "label": "question",
+      "text": "What timestamp belongs to the generated manifest?",
+      "partition": "development"
+    },
+    {
+      "id": "question-060",
+      "group_id": "question-family-14",
+      "label": "question",
+      "text": "Should the original dataset remain in the repository?",
+      "partition": "id-test"
+    },
+    {
+      "id": "question-061",
+      "group_id": "question-family-14",
+      "label": "question",
+      "text": "Which source files do I need to keep for reproduction?",
+      "partition": "id-test"
+    },
+    {
+      "id": "question-062",
+      "group_id": "question-family-15",
+      "label": "question",
+      "text": "How do I display every feature behind this prediction?",
+      "partition": "id-test"
+    },
+    {
+      "id": "question-063",
+      "group_id": "question-family-15",
+      "label": "question",
+      "text": "Where can I read the complete explanation for one result?",
+      "partition": "id-test"
+    },
+    {
+      "id": "question-064",
+      "group_id": "question-family-01",
+      "label": "question",
+      "text": "Where should I begin looking?",
+      "partition": "train"
+    },
+    {
+      "id": "question-065",
+      "group_id": "question-family-01",
+      "label": "question",
+      "text": "Which part calls for attention first?",
+      "partition": "train"
+    },
+    {
+      "id": "question-066",
+      "group_id": "question-family-02",
+      "label": "question",
+      "text": "Will the classifier still work in airplane mode?",
+      "partition": "train"
+    },
+    {
+      "id": "question-067",
+      "group_id": "question-family-02",
+      "label": "question",
+      "text": "Does inference need to contact any remote service?",
+      "partition": "train"
+    },
+    {
+      "id": "question-068",
+      "group_id": "question-family-03",
+      "label": "question",
+      "text": "What signal moved the score more than the others?",
+      "partition": "train"
+    },
+    {
+      "id": "question-069",
+      "group_id": "question-family-03",
+      "label": "question",
+      "text": "Which input term contributed the largest weight to this decision?",
+      "partition": "train"
+    },
+    {
+      "id": "question-070",
+      "group_id": "question-family-06",
+      "label": "question",
+      "text": "Who has permission to examine the stored model?",
+      "partition": "train"
+    },
+    {
+      "id": "question-071",
+      "group_id": "question-family-06",
+      "label": "question",
+      "text": "Who should independently check the serialized weights?",
+      "partition": "train"
+    },
+    {
+      "id": "question-072",
+      "group_id": "question-family-08",
+      "label": "question",
+      "text": "What vocabulary count remains once selection finishes?",
+      "partition": "train"
+    },
+    {
+      "id": "question-073",
+      "group_id": "question-family-08",
+      "label": "question",
+      "text": "After pruning, how large is the feature space?",
+      "partition": "train"
+    },
+    {
+      "id": "question-074",
+      "group_id": "question-family-09",
+      "label": "question",
+      "text": "Which contract check caused this bundle to be refused?",
+      "partition": "train"
+    },
+    {
+      "id": "question-075",
+      "group_id": "question-family-09",
+      "label": "question",
+      "text": "What evidence made verification stop?",
+      "partition": "train"
+    },
+    {
+      "id": "reason-001",
+      "group_id": "reason-family-01",
+      "label": "reason",
+      "text": "I paused because the requirements changed",
+      "partition": "train"
+    },
+    {
+      "id": "reason-002",
+      "group_id": "reason-family-01",
+      "label": "reason",
+      "text": "The changed requirements are why I stopped briefly",
+      "partition": "train"
+    },
+    {
+      "id": "reason-003",
+      "group_id": "reason-family-02",
+      "label": "reason",
+      "text": "Since the deadline moved, I reduced the scope",
+      "partition": "train"
+    },
+    {
+      "id": "reason-004",
+      "group_id": "reason-family-02",
+      "label": "reason",
+      "text": "I reduced the scope after the deadline was moved",
+      "partition": "train"
+    },
+    {
+      "id": "reason-005",
+      "group_id": "reason-family-03",
+      "label": "reason",
+      "text": "The missing fixture caused the build failure",
+      "partition": "train"
+    },
+    {
+      "id": "reason-006",
+      "group_id": "reason-family-03",
+      "label": "reason",
+      "text": "A build failure resulted from the absent fixture",
+      "partition": "train"
+    },
+    {
+      "id": "reason-007",
+      "group_id": "reason-family-04",
+      "label": "reason",
+      "text": "Strong type guarantees led me to choose Rust",
+      "partition": "train"
+    },
+    {
+      "id": "reason-008",
+      "group_id": "reason-family-04",
+      "label": "reason",
+      "text": "Rust was selected for its strong type guarantees",
+      "partition": "train"
+    },
+    {
+      "id": "reason-009",
+      "group_id": "reason-family-05",
+      "label": "reason",
+      "text": "That dependency explains the larger binary size",
+      "partition": "train"
+    },
+    {
+      "id": "reason-010",
+      "group_id": "reason-family-05",
+      "label": "reason",
+      "text": "The binary is larger on account of that dependency",
+      "partition": "train"
+    },
+    {
+      "id": "reason-011",
+      "group_id": "reason-family-06",
+      "label": "reason",
+      "text": "Noisy input produced an unstable measurement",
+      "partition": "train"
+    },
+    {
+      "id": "reason-012",
+      "group_id": "reason-family-06",
+      "label": "reason",
+      "text": "The unstable measurement came from noisy input",
+      "partition": "train"
+    },
+    {
+      "id": "reason-013",
+      "group_id": "reason-family-07",
+      "label": "reason",
+      "text": "We narrowed the experiment so its result stayed measurable",
+      "partition": "train"
+    },
+    {
+      "id": "reason-014",
+      "group_id": "reason-family-07",
+      "label": "reason",
+      "text": "Keeping the result measurable required a narrower experiment",
+      "partition": "train"
+    },
+    {
+      "id": "reason-015",
+      "group_id": "reason-family-08",
+      "label": "reason",
+      "text": "The comparison worked thanks to a reproducible seed",
+      "partition": "train"
+    },
+    {
+      "id": "reason-016",
+      "group_id": "reason-family-08",
+      "label": "reason",
+      "text": "A reproducible seed made the successful comparison possible",
+      "partition": "train"
+    },
+    {
+      "id": "reason-017",
+      "group_id": "reason-family-01",
+      "label": "reason",
+      "text": "The requirement update was the reason for my pause",
+      "partition": "train"
+    },
+    {
+      "id": "reason-018",
+      "group_id": "reason-family-02",
+      "label": "reason",
+      "text": "The shifted deadline is why the scope became smaller",
+      "partition": "train"
+    },
+    {
+      "id": "reason-019",
+      "group_id": "reason-family-03",
+      "label": "reason",
+      "text": "Because the fixture was absent, the build could not finish",
+      "partition": "train"
+    },
+    {
+      "id": "reason-020",
+      "group_id": "reason-family-04",
+      "label": "reason",
+      "text": "I chose Rust on account of its type guarantees",
+      "partition": "train"
+    },
+    {
+      "id": "reason-021",
+      "group_id": "reason-family-05",
+      "label": "reason",
+      "text": "The extra dependency is the reason the binary grew",
+      "partition": "train"
+    },
+    {
+      "id": "reason-022",
+      "group_id": "reason-family-06",
+      "label": "reason",
+      "text": "The measurement varied due to noise in the input",
+      "partition": "train"
+    },
+    {
+      "id": "reason-023",
+      "group_id": "reason-family-07",
+      "label": "reason",
+      "text": "We made the experiment narrower because measurability mattered",
+      "partition": "train"
+    },
+    {
+      "id": "reason-024",
+      "group_id": "reason-family-08",
+      "label": "reason",
+      "text": "The comparison succeeded because its seed was reproducible",
+      "partition": "train"
+    },
+    {
+      "id": "reason-025",
+      "group_id": "reason-family-09",
+      "label": "reason",
+      "text": "The stale cache caused yesterday's incorrect output",
+      "partition": "train"
+    },
+    {
+      "id": "reason-026",
+      "group_id": "reason-family-09",
+      "label": "reason",
+      "text": "Yesterday's output was wrong because the cache was stale",
+      "partition": "train"
+    },
+    {
+      "id": "reason-027",
+      "group_id": "reason-family-09",
+      "label": "reason",
+      "text": "A stale cache explains the incorrect result from yesterday",
+      "partition": "train"
+    },
+    {
+      "id": "reason-028",
+      "group_id": "reason-family-10",
+      "label": "reason",
+      "text": "We delayed the release since one test was still failing",
+      "partition": "id-test"
+    },
+    {
+      "id": "reason-029",
+      "group_id": "reason-family-10",
+      "label": "reason",
+      "text": "One failing test is why the release was postponed",
+      "partition": "id-test"
+    },
+    {
+      "id": "reason-030",
+      "group_id": "reason-family-10",
+      "label": "reason",
+      "text": "The release moved to a later date because a test failed",
+      "partition": "id-test"
+    },
+    {
+      "id": "reason-031",
+      "group_id": "reason-family-11",
+      "label": "reason",
+      "text": "The service stayed offline due to scheduled maintenance",
+      "partition": "id-test"
+    },
+    {
+      "id": "reason-032",
+      "group_id": "reason-family-11",
+      "label": "reason",
+      "text": "Scheduled maintenance explains why the service was unavailable",
+      "partition": "id-test"
+    },
+    {
+      "id": "reason-033",
+      "group_id": "reason-family-11",
+      "label": "reason",
+      "text": "Because maintenance was planned, the service remained offline",
+      "partition": "id-test"
+    },
+    {
+      "id": "reason-034",
+      "group_id": "reason-family-12",
+      "label": "reason",
+      "text": "I selected the smaller file because downloads must stay fast",
+      "partition": "calibration"
+    },
+    {
+      "id": "reason-035",
+      "group_id": "reason-family-12",
+      "label": "reason",
+      "text": "Fast downloads were the reason I chose the smaller file",
+      "partition": "calibration"
+    },
+    {
+      "id": "reason-036",
+      "group_id": "reason-family-12",
+      "label": "reason",
+      "text": "The need for speed led me to use a smaller file",
+      "partition": "calibration"
+    },
+    {
+      "id": "reason-037",
+      "group_id": "reason-family-13",
+      "label": "reason",
+      "text": "The count changed after duplicate rows were removed",
+      "partition": "calibration"
+    },
+    {
+      "id": "reason-038",
+      "group_id": "reason-family-13",
+      "label": "reason",
+      "text": "Removing duplicate rows caused the total to change",
+      "partition": "calibration"
+    },
+    {
+      "id": "reason-039",
+      "group_id": "reason-family-13",
+      "label": "reason",
+      "text": "The lower total resulted from deleting duplicate rows",
+      "partition": "calibration"
+    },
+    {
+      "id": "reason-040",
+      "group_id": "reason-family-14",
+      "label": "reason",
+      "text": "We kept the data local to protect private information",
+      "partition": "development"
+    },
+    {
+      "id": "reason-041",
+      "group_id": "reason-family-14",
+      "label": "reason",
+      "text": "Privacy requirements are why the data never leaves this device",
+      "partition": "development"
+    },
+    {
+      "id": "reason-042",
+      "group_id": "reason-family-14",
+      "label": "reason",
+      "text": "The data remains on the device because privacy comes first",
+      "partition": "development"
+    },
+    {
+      "id": "reason-043",
+      "group_id": "reason-family-15",
+      "label": "reason",
+      "text": "The command failed because its configuration was invalid",
+      "partition": "development"
+    },
+    {
+      "id": "reason-044",
+      "group_id": "reason-family-15",
+      "label": "reason",
+      "text": "An invalid configuration led to the command failure",
+      "partition": "development"
+    },
+    {
+      "id": "reason-045",
+      "group_id": "reason-family-15",
+      "label": "reason",
+      "text": "The failure occurred on account of a configuration error",
+      "partition": "development"
+    },
+    {
+      "id": "reason-046",
+      "group_id": "reason-family-04",
+      "label": "reason",
+      "text": "Strong compile-time checks are why I decided to use Rust",
+      "partition": "train"
+    },
+    {
+      "id": "reason-047",
+      "group_id": "reason-family-04",
+      "label": "reason",
+      "text": "I used Rust because its type system catches mistakes early",
+      "partition": "train"
+    },
+    {
+      "id": "reason-048",
+      "group_id": "reason-family-05",
+      "label": "reason",
+      "text": "The binary grew larger due to the additional dependency",
+      "partition": "train"
+    },
+    {
+      "id": "reason-049",
+      "group_id": "reason-family-05",
+      "label": "reason",
+      "text": "Adding that dependency caused the increase in binary size",
+      "partition": "train"
+    },
+    {
+      "id": "reason-050",
+      "group_id": "reason-family-07",
+      "label": "reason",
+      "text": "Measurable results were the reason we reduced the experiment",
+      "partition": "train"
+    },
+    {
+      "id": "reason-051",
+      "group_id": "reason-family-07",
+      "label": "reason",
+      "text": "We narrowed the scope because the outcome had to stay measurable",
+      "partition": "train"
+    },
+    {
+      "id": "reason-052",
+      "group_id": "reason-family-10",
+      "label": "reason",
+      "text": "The failing check explains why we held the release back",
+      "partition": "id-test"
+    },
+    {
+      "id": "reason-053",
+      "group_id": "reason-family-10",
+      "label": "reason",
+      "text": "We postponed shipping because one test remained red",
+      "partition": "id-test"
+    },
+    {
+      "id": "reason-054",
+      "group_id": "reason-family-11",
+      "label": "reason",
+      "text": "Planned maintenance caused the temporary service outage",
+      "partition": "id-test"
+    },
+    {
+      "id": "reason-055",
+      "group_id": "reason-family-11",
+      "label": "reason",
+      "text": "The service was unavailable because maintenance was under way",
+      "partition": "id-test"
+    },
+    {
+      "id": "reason-056",
+      "group_id": "reason-family-12",
+      "label": "reason",
+      "text": "I chose the compact download due to the speed requirement",
+      "partition": "calibration"
+    },
+    {
+      "id": "reason-057",
+      "group_id": "reason-family-12",
+      "label": "reason",
+      "text": "The smaller file won because it downloads more quickly",
+      "partition": "calibration"
+    },
+    {
+      "id": "reason-058",
+      "group_id": "reason-family-13",
+      "label": "reason",
+      "text": "Deleting repeated records explains the reduced row count",
+      "partition": "calibration"
+    },
+    {
+      "id": "reason-059",
+      "group_id": "reason-family-13",
+      "label": "reason",
+      "text": "The total fell because duplicate entries were taken out",
+      "partition": "calibration"
+    },
+    {
+      "id": "reason-060",
+      "group_id": "reason-family-14",
+      "label": "reason",
+      "text": "We chose local storage because the records are private",
+      "partition": "development"
+    },
+    {
+      "id": "reason-061",
+      "group_id": "reason-family-14",
+      "label": "reason",
+      "text": "Protecting private data is the reason nothing is uploaded",
+      "partition": "development"
+    },
+    {
+      "id": "reason-062",
+      "group_id": "reason-family-15",
+      "label": "reason",
+      "text": "A configuration mistake caused the command to stop",
+      "partition": "development"
+    },
+    {
+      "id": "reason-063",
+      "group_id": "reason-family-15",
+      "label": "reason",
+      "text": "The command stopped since its configuration could not be accepted",
+      "partition": "development"
+    },
+    {
+      "id": "reason-064",
+      "group_id": "reason-family-01",
+      "label": "reason",
+      "text": "I stopped for a moment after the specification was revised",
+      "partition": "train"
+    },
+    {
+      "id": "reason-065",
+      "group_id": "reason-family-01",
+      "label": "reason",
+      "text": "A requirements update prompted the brief pause",
+      "partition": "train"
+    },
+    {
+      "id": "reason-066",
+      "group_id": "reason-family-02",
+      "label": "reason",
+      "text": "The new due date forced me to trim what we would deliver",
+      "partition": "train"
+    },
+    {
+      "id": "reason-067",
+      "group_id": "reason-family-02",
+      "label": "reason",
+      "text": "We cut several features in response to the revised deadline",
+      "partition": "train"
+    },
+    {
+      "id": "reason-068",
+      "group_id": "reason-family-03",
+      "label": "reason",
+      "text": "The build stopped when it could not locate a required fixture",
+      "partition": "train"
+    },
+    {
+      "id": "reason-069",
+      "group_id": "reason-family-03",
+      "label": "reason",
+      "text": "Without the expected fixture, compilation could not complete",
+      "partition": "train"
+    },
+    {
+      "id": "reason-070",
+      "group_id": "reason-family-06",
+      "label": "reason",
+      "text": "Input interference made the reading fluctuate",
+      "partition": "train"
+    },
+    {
+      "id": "reason-071",
+      "group_id": "reason-family-06",
+      "label": "reason",
+      "text": "The measurement would not settle while the source remained noisy",
+      "partition": "train"
+    },
+    {
+      "id": "reason-072",
+      "group_id": "reason-family-08",
+      "label": "reason",
+      "text": "A fixed random seed let both comparison runs agree",
+      "partition": "train"
+    },
+    {
+      "id": "reason-073",
+      "group_id": "reason-family-08",
+      "label": "reason",
+      "text": "The results matched because each run reused the same seed",
+      "partition": "train"
+    },
+    {
+      "id": "reason-074",
+      "group_id": "reason-family-09",
+      "label": "reason",
+      "text": "Yesterday's bad result came from data left in an old cache",
+      "partition": "train"
+    },
+    {
+      "id": "reason-075",
+      "group_id": "reason-family-09",
+      "label": "reason",
+      "text": "An out-of-date cache explains why the prior output was incorrect",
+      "partition": "train"
+    }
+  ],
+  "ood_development": [
+    {
+      "id": "ood-dev-001",
+      "family_id": "astronomy-orbits",
+      "domain_group": "astronomy",
+      "stratum": "semantic",
+      "text": "Calculate the orbital period of a satellite at this altitude"
+    },
+    {
+      "id": "ood-dev-002",
+      "family_id": "astronomy-orbits",
+      "domain_group": "astronomy",
+      "stratum": "semantic",
+      "text": "Estimate the escape velocity from this moon"
+    },
+    {
+      "id": "ood-dev-003",
+      "family_id": "astronomy-orbits",
+      "domain_group": "astronomy",
+      "stratum": "semantic",
+      "text": "Determine when the two spacecraft trajectories intersect"
+    },
+    {
+      "id": "ood-dev-004",
+      "family_id": "astronomy-observation",
+      "domain_group": "astronomy",
+      "stratum": "semantic",
+      "text": "Choose an eyepiece for observing a faint nebula"
+    },
+    {
+      "id": "ood-dev-005",
+      "family_id": "astronomy-observation",
+      "domain_group": "astronomy",
+      "stratum": "semantic",
+      "text": "Explain how to align an equatorial telescope mount"
+    },
+    {
+      "id": "ood-dev-006",
+      "family_id": "astronomy-observation",
+      "domain_group": "astronomy",
+      "stratum": "semantic",
+      "text": "Compare these filters for photographing Jupiter"
+    },
+    {
+      "id": "ood-dev-007",
+      "family_id": "baking-bread",
+      "domain_group": "baking",
+      "stratum": "semantic",
+      "text": "Convert this sourdough formula to seventy percent hydration"
+    },
+    {
+      "id": "ood-dev-008",
+      "family_id": "baking-bread",
+      "domain_group": "baking",
+      "stratum": "semantic",
+      "text": "Scale a bread recipe from two loaves to five"
+    },
+    {
+      "id": "ood-dev-009",
+      "family_id": "baking-bread",
+      "domain_group": "baking",
+      "stratum": "semantic",
+      "text": "Choose a fermentation temperature for this rye dough"
+    },
+    {
+      "id": "ood-dev-010",
+      "family_id": "baking-pastry",
+      "domain_group": "baking",
+      "stratum": "semantic",
+      "text": "Describe how to laminate dough for croissants"
+    },
+    {
+      "id": "ood-dev-011",
+      "family_id": "baking-pastry",
+      "domain_group": "baking",
+      "stratum": "semantic",
+      "text": "Tell me when to blind-bake a tart shell"
+    },
+    {
+      "id": "ood-dev-012",
+      "family_id": "baking-pastry",
+      "domain_group": "baking",
+      "stratum": "semantic",
+      "text": "Stabilize this meringue before it goes into the oven"
+    },
+    {
+      "id": "ood-dev-013",
+      "family_id": "filesystem-mutation",
+      "domain_group": "filesystem-operations",
+      "stratum": "capability",
+      "text": "Rename every markdown file in this directory"
+    },
+    {
+      "id": "ood-dev-014",
+      "family_id": "filesystem-mutation",
+      "domain_group": "filesystem-operations",
+      "stratum": "capability",
+      "text": "Delete the temporary build folders from my computer"
+    },
+    {
+      "id": "ood-dev-015",
+      "family_id": "filesystem-mutation",
+      "domain_group": "filesystem-operations",
+      "stratum": "capability",
+      "text": "Move these reports into a new archive directory"
+    },
+    {
+      "id": "ood-dev-016",
+      "family_id": "filesystem-archives",
+      "domain_group": "filesystem-operations",
+      "stratum": "capability",
+      "text": "Extract the encrypted archive on my desktop"
+    },
+    {
+      "id": "ood-dev-017",
+      "family_id": "filesystem-archives",
+      "domain_group": "filesystem-operations",
+      "stratum": "capability",
+      "text": "Create a password-protected zip from these folders"
+    },
+    {
+      "id": "ood-dev-018",
+      "family_id": "filesystem-archives",
+      "domain_group": "filesystem-operations",
+      "stratum": "capability",
+      "text": "Restore the missing file from yesterday's backup"
+    },
+    {
+      "id": "ood-dev-019",
+      "family_id": "network-fetch",
+      "domain_group": "network-operations",
+      "stratum": "capability",
+      "text": "Fetch tomorrow's live weather forecast for Reykjavik"
+    },
+    {
+      "id": "ood-dev-020",
+      "family_id": "network-fetch",
+      "domain_group": "network-operations",
+      "stratum": "capability",
+      "text": "Look up the cheapest direct flight to Singapore"
+    },
+    {
+      "id": "ood-dev-021",
+      "family_id": "network-fetch",
+      "domain_group": "network-operations",
+      "stratum": "capability",
+      "text": "Retrieve the scorers from last night's football match"
+    },
+    {
+      "id": "ood-dev-022",
+      "family_id": "remote-account-action",
+      "domain_group": "network-operations",
+      "stratum": "capability",
+      "text": "Send this message from my email account"
+    },
+    {
+      "id": "ood-dev-023",
+      "family_id": "remote-account-action",
+      "domain_group": "network-operations",
+      "stratum": "capability",
+      "text": "Reset the password for my remote service"
+    },
+    {
+      "id": "ood-dev-024",
+      "family_id": "remote-account-action",
+      "domain_group": "network-operations",
+      "stratum": "capability",
+      "text": "Post this update to my social profile"
+    },
+    {
+      "id": "ood-dev-025",
+      "family_id": "mojibake-stream",
+      "domain_group": "corrupted-encoding",
+      "stratum": "noise",
+      "text": "FranÃ§oisâ€™s cafÃ© â€” rÃ©sumÃ© unavailable"
+    },
+    {
+      "id": "ood-dev-026",
+      "family_id": "mojibake-stream",
+      "domain_group": "corrupted-encoding",
+      "stratum": "noise",
+      "text": "â€œBroken textâ€ arrived with Ã± and Ã¼"
+    },
+    {
+      "id": "ood-dev-027",
+      "family_id": "mojibake-stream",
+      "domain_group": "corrupted-encoding",
+      "stratum": "noise",
+      "text": "Encoding fault: â˜ƒ becomes Ã¢Â˜Âƒ"
+    },
+    {
+      "id": "ood-dev-028",
+      "family_id": "truncated-record",
+      "domain_group": "corrupted-encoding",
+      "stratum": "noise",
+      "text": "status=2 payload=[unfinished record"
+    },
+    {
+      "id": "ood-dev-029",
+      "family_id": "truncated-record",
+      "domain_group": "corrupted-encoding",
+      "stratum": "noise",
+      "text": "header::value:: body terminates at"
+    },
+    {
+      "id": "ood-dev-030",
+      "family_id": "truncated-record",
+      "domain_group": "corrupted-encoding",
+      "stratum": "noise",
+      "text": "row 18 column 4 data={missing"
+    },
+    {
+      "id": "ood-dev-031",
+      "family_id": "symbol-stream",
+      "domain_group": "synthetic-symbols",
+      "stratum": "noise",
+      "text": "glyph-alpha 🪐🛰️🧪 ⇢ ∅ ∴"
+    },
+    {
+      "id": "ood-dev-032",
+      "family_id": "symbol-stream",
+      "domain_group": "synthetic-symbols",
+      "stratum": "noise",
+      "text": "glyph-beta ◇◇◆ ⟟ ⟲ ⚙︎"
+    },
+    {
+      "id": "ood-dev-033",
+      "family_id": "symbol-stream",
+      "domain_group": "synthetic-symbols",
+      "stratum": "noise",
+      "text": "glyph-gamma ⧉ ☍ ⌁ ⟡ ⊘"
+    },
+    {
+      "id": "ood-dev-034",
+      "family_id": "invented-tokens",
+      "domain_group": "synthetic-symbols",
+      "stratum": "noise",
+      "text": "Frabjous quendlers vorticate zymurgy"
+    },
+    {
+      "id": "ood-dev-035",
+      "family_id": "invented-tokens",
+      "domain_group": "synthetic-symbols",
+      "stratum": "noise",
+      "text": "Plenko varmits snorble the quast"
+    },
+    {
+      "id": "ood-dev-036",
+      "family_id": "invented-tokens",
+      "domain_group": "synthetic-symbols",
+      "stratum": "noise",
+      "text": "Zindle croven marbits flumeward"
+    }
+  ],
+  "ood_test": [
+    {
+      "id": "ood-test-001",
+      "family_id": "botany-identification",
+      "domain_group": "botany",
+      "stratum": "semantic",
+      "text": "Identify this tree from its leaf arrangement"
+    },
+    {
+      "id": "ood-test-002",
+      "family_id": "botany-identification",
+      "domain_group": "botany",
+      "stratum": "semantic",
+      "text": "Distinguish these two fern species by their fronds"
+    },
+    {
+      "id": "ood-test-003",
+      "family_id": "botany-identification",
+      "domain_group": "botany",
+      "stratum": "semantic",
+      "text": "Classify the wildflower shown in this field guide"
+    },
+    {
+      "id": "ood-test-004",
+      "family_id": "botany-nutrition",
+      "domain_group": "botany",
+      "stratum": "semantic",
+      "text": "Interpret the nitrogen deficiency in these tomato leaves"
+    },
+    {
+      "id": "ood-test-005",
+      "family_id": "botany-nutrition",
+      "domain_group": "botany",
+      "stratum": "semantic",
+      "text": "Choose a soil amendment for an iron-starved citrus plant"
+    },
+    {
+      "id": "ood-test-006",
+      "family_id": "botany-nutrition",
+      "domain_group": "botany",
+      "stratum": "semantic",
+      "text": "Calculate a fertilizer ratio for young apple trees"
+    },
+    {
+      "id": "ood-test-007",
+      "family_id": "music-harmony",
+      "domain_group": "music-theory",
+      "stratum": "semantic",
+      "text": "Analyze the harmonic function of this chord progression"
+    },
+    {
+      "id": "ood-test-008",
+      "family_id": "music-harmony",
+      "domain_group": "music-theory",
+      "stratum": "semantic",
+      "text": "Resolve this altered dominant into the next measure"
+    },
+    {
+      "id": "ood-test-009",
+      "family_id": "music-harmony",
+      "domain_group": "music-theory",
+      "stratum": "semantic",
+      "text": "Transpose these jazz voicings into E-flat major"
+    },
+    {
+      "id": "ood-test-010",
+      "family_id": "music-rhythm",
+      "domain_group": "music-theory",
+      "stratum": "semantic",
+      "text": "Count the polyrhythm between these two percussion lines"
+    },
+    {
+      "id": "ood-test-011",
+      "family_id": "music-rhythm",
+      "domain_group": "music-theory",
+      "stratum": "semantic",
+      "text": "Rewrite this phrase from seven-eight into common time"
+    },
+    {
+      "id": "ood-test-012",
+      "family_id": "music-rhythm",
+      "domain_group": "music-theory",
+      "stratum": "semantic",
+      "text": "Mark the syncopated accents in this drum pattern"
+    },
+    {
+      "id": "ood-test-013",
+      "family_id": "calendar-event-mutation",
+      "domain_group": "calendar-operations",
+      "stratum": "capability",
+      "text": "Create a calendar event for next Thursday afternoon"
+    },
+    {
+      "id": "ood-test-014",
+      "family_id": "calendar-event-mutation",
+      "domain_group": "calendar-operations",
+      "stratum": "capability",
+      "text": "Cancel tomorrow's planning meeting on my calendar"
+    },
+    {
+      "id": "ood-test-015",
+      "family_id": "calendar-event-mutation",
+      "domain_group": "calendar-operations",
+      "stratum": "capability",
+      "text": "Move my weekly review to Friday morning"
+    },
+    {
+      "id": "ood-test-016",
+      "family_id": "calendar-timezone-booking",
+      "domain_group": "calendar-operations",
+      "stratum": "capability",
+      "text": "Book a meeting across Zurich, Tokyo and Vancouver"
+    },
+    {
+      "id": "ood-test-017",
+      "family_id": "calendar-timezone-booking",
+      "domain_group": "calendar-operations",
+      "stratum": "capability",
+      "text": "Find a shared hour for colleagues in three time zones"
+    },
+    {
+      "id": "ood-test-018",
+      "family_id": "calendar-timezone-booking",
+      "domain_group": "calendar-operations",
+      "stratum": "capability",
+      "text": "Reserve the first slot that works in London and Sydney"
+    },
+    {
+      "id": "ood-test-019",
+      "family_id": "image-generation",
+      "domain_group": "image-operations",
+      "stratum": "capability",
+      "text": "Render a photorealistic mountain landscape at sunset"
+    },
+    {
+      "id": "ood-test-020",
+      "family_id": "image-generation",
+      "domain_group": "image-operations",
+      "stratum": "capability",
+      "text": "Generate a watercolor poster of a coastal village"
+    },
+    {
+      "id": "ood-test-021",
+      "family_id": "image-generation",
+      "domain_group": "image-operations",
+      "stratum": "capability",
+      "text": "Create a transparent icon of a mechanical bird"
+    },
+    {
+      "id": "ood-test-022",
+      "family_id": "image-editing",
+      "domain_group": "image-operations",
+      "stratum": "capability",
+      "text": "Remove the background from the attached photograph"
+    },
+    {
+      "id": "ood-test-023",
+      "family_id": "image-editing",
+      "domain_group": "image-operations",
+      "stratum": "capability",
+      "text": "Replace the red jacket in this image with a blue one"
+    },
+    {
+      "id": "ood-test-024",
+      "family_id": "image-editing",
+      "domain_group": "image-operations",
+      "stratum": "capability",
+      "text": "Increase the resolution of this scanned illustration"
+    },
+    {
+      "id": "ood-test-025",
+      "family_id": "alphanumeric-scramble",
+      "domain_group": "identifier-scramble",
+      "stratum": "noise",
+      "text": "Q7MV-22LX-9PRA-004K"
+    },
+    {
+      "id": "ood-test-026",
+      "family_id": "alphanumeric-scramble",
+      "domain_group": "identifier-scramble",
+      "stratum": "noise",
+      "text": "ZX81N4Q0V7C2B6"
+    },
+    {
+      "id": "ood-test-027",
+      "family_id": "alphanumeric-scramble",
+      "domain_group": "identifier-scramble",
+      "stratum": "noise",
+      "text": "AA9F KQ2Z LM77 PX0D"
+    },
+    {
+      "id": "ood-test-028",
+      "family_id": "delimiter-scramble",
+      "domain_group": "identifier-scramble",
+      "stratum": "noise",
+      "text": "delimiter-alpha ::://\\\\|||<<<>>>***"
+    },
+    {
+      "id": "ood-test-029",
+      "family_id": "delimiter-scramble",
+      "domain_group": "identifier-scramble",
+      "stratum": "noise",
+      "text": "delimiter-beta [[{{((==??==))}}]]"
+    },
+    {
+      "id": "ood-test-030",
+      "family_id": "delimiter-scramble",
+      "domain_group": "identifier-scramble",
+      "stratum": "noise",
+      "text": "delimiter-gamma __--__//::;;,,!!"
+    },
+    {
+      "id": "ood-test-031",
+      "family_id": "incomplete-json",
+      "domain_group": "code-fragments",
+      "stratum": "noise",
+      "text": "{\"event\":\"open\",\"payload\":[1,2,"
+    },
+    {
+      "id": "ood-test-032",
+      "family_id": "incomplete-json",
+      "domain_group": "code-fragments",
+      "stratum": "noise",
+      "text": "{\"ok\":false,\"error\":{\"code\":"
+    },
+    {
+      "id": "ood-test-033",
+      "family_id": "incomplete-json",
+      "domain_group": "code-fragments",
+      "stratum": "noise",
+      "text": "[{\"id\":7},{\"id\":8},{\"id\":"
+    },
+    {
+      "id": "ood-test-034",
+      "family_id": "stacktrace-fragment",
+      "domain_group": "code-fragments",
+      "stratum": "noise",
+      "text": "at module.run source.rs:44:9 caused by"
+    },
+    {
+      "id": "ood-test-035",
+      "family_id": "stacktrace-fragment",
+      "domain_group": "code-fragments",
+      "stratum": "noise",
+      "text": "thread worker panicked at unwrap on none"
+    },
+    {
+      "id": "ood-test-036",
+      "family_id": "stacktrace-fragment",
+      "domain_group": "code-fragments",
+      "stratum": "noise",
+      "text": "frame 07 dispatcher invoke offset 0x00af"
+    }
+  ],
+  "contrast_test": [
+    {
+      "id": "contrast-001",
+      "pair_id": "contrast-pair-01",
+      "variant": "a",
+      "label": "greeting",
+      "text": "Hello, I am here after a difficult morning"
+    },
+    {
+      "id": "contrast-002",
+      "pair_id": "contrast-pair-01",
+      "variant": "b",
+      "label": "feeling",
+      "text": "I feel low after a difficult morning"
+    },
+    {
+      "id": "contrast-003",
+      "pair_id": "contrast-pair-02",
+      "variant": "a",
+      "label": "feeling",
+      "text": "I feel tense because the deadline moved"
+    },
+    {
+      "id": "contrast-004",
+      "pair_id": "contrast-pair-02",
+      "variant": "b",
+      "label": "reason",
+      "text": "The deadline moved because the client changed scope"
+    },
+    {
+      "id": "contrast-005",
+      "pair_id": "contrast-pair-03",
+      "variant": "a",
+      "label": "reason",
+      "text": "This draft changed because the requirements shifted"
+    },
+    {
+      "id": "contrast-006",
+      "pair_id": "contrast-pair-03",
+      "variant": "b",
+      "label": "ownership",
+      "text": "This draft is mine and the requirements are noted"
+    },
+    {
+      "id": "contrast-007",
+      "pair_id": "contrast-pair-04",
+      "variant": "a",
+      "label": "ownership",
+      "text": "My deployment checklist covers the release"
+    },
+    {
+      "id": "contrast-008",
+      "pair_id": "contrast-pair-04",
+      "variant": "b",
+      "label": "question",
+      "text": "Does my deployment checklist cover the release?"
+    },
+    {
+      "id": "contrast-009",
+      "pair_id": "contrast-pair-05",
+      "variant": "a",
+      "label": "question",
+      "text": "Can I map the migration steps this afternoon?"
+    },
+    {
+      "id": "contrast-010",
+      "pair_id": "contrast-pair-05",
+      "variant": "b",
+      "label": "goal",
+      "text": "I will map the migration steps this afternoon"
+    },
+    {
+      "id": "contrast-011",
+      "pair_id": "contrast-pair-06",
+      "variant": "a",
+      "label": "goal",
+      "text": "I plan to review the quiet service logs tonight"
+    },
+    {
+      "id": "contrast-012",
+      "pair_id": "contrast-pair-06",
+      "variant": "b",
+      "label": "observation",
+      "text": "The quiet service logs show retries tonight"
+    },
+    {
+      "id": "contrast-013",
+      "pair_id": "contrast-pair-07",
+      "variant": "a",
+      "label": "observation",
+      "text": "The workshop room looks ready for everyone"
+    },
+    {
+      "id": "contrast-014",
+      "pair_id": "contrast-pair-07",
+      "variant": "b",
+      "label": "greeting",
+      "text": "Welcome everyone, the workshop room looks ready"
+    },
+    {
+      "id": "contrast-015",
+      "pair_id": "contrast-pair-08",
+      "variant": "a",
+      "label": "greeting",
+      "text": "Good morning, the build failed after the update"
+    },
+    {
+      "id": "contrast-016",
+      "pair_id": "contrast-pair-08",
+      "variant": "b",
+      "label": "reason",
+      "text": "The build failed because of the morning update"
+    },
+    {
+      "id": "contrast-017",
+      "pair_id": "contrast-pair-09",
+      "variant": "a",
+      "label": "feeling",
+      "text": "I am proud of this small prototype"
+    },
+    {
+      "id": "contrast-018",
+      "pair_id": "contrast-pair-09",
+      "variant": "b",
+      "label": "ownership",
+      "text": "This small prototype is my own work"
+    },
+    {
+      "id": "contrast-019",
+      "pair_id": "contrast-pair-10",
+      "variant": "a",
+      "label": "reason",
+      "text": "The cache missed because its key changed"
+    },
+    {
+      "id": "contrast-020",
+      "pair_id": "contrast-pair-10",
+      "variant": "b",
+      "label": "question",
+      "text": "Why did the cache miss when its key changed?"
+    },
+    {
+      "id": "contrast-021",
+      "pair_id": "contrast-pair-11",
+      "variant": "a",
+      "label": "ownership",
+      "text": "My release notes belong with this version"
+    },
+    {
+      "id": "contrast-022",
+      "pair_id": "contrast-pair-11",
+      "variant": "b",
+      "label": "goal",
+      "text": "I intend to finish the release notes for this version"
+    },
+    {
+      "id": "contrast-023",
+      "pair_id": "contrast-pair-12",
+      "variant": "a",
+      "label": "question",
+      "text": "Is the north sensor reporting a stable value?"
+    },
+    {
+      "id": "contrast-024",
+      "pair_id": "contrast-pair-12",
+      "variant": "b",
+      "label": "observation",
+      "text": "The north sensor is reporting a stable value"
+    },
+    {
+      "id": "contrast-025",
+      "pair_id": "contrast-pair-13",
+      "variant": "a",
+      "label": "goal",
+      "text": "I will welcome the new maintainer at noon"
+    },
+    {
+      "id": "contrast-026",
+      "pair_id": "contrast-pair-13",
+      "variant": "b",
+      "label": "greeting",
+      "text": "Welcome, new maintainer; good to meet you at noon"
+    },
+    {
+      "id": "contrast-027",
+      "pair_id": "contrast-pair-14",
+      "variant": "a",
+      "label": "observation",
+      "text": "The empty office feels unusually quiet today"
+    },
+    {
+      "id": "contrast-028",
+      "pair_id": "contrast-pair-14",
+      "variant": "b",
+      "label": "feeling",
+      "text": "I feel unusually lonely in the empty office today"
+    }
+  ]
+}

@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'none'; connect-src 'self'; worker-src 'none'; manifest-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta
+      name="description"
+      content="ELIZA Lab is a reproducible, local machine-learning pipeline for training and inspecting an uncertainty-aware intent classifier."
+    />
+    <meta name="theme-color" content="#f2ecdf" />
+    <meta property="og:title" content="ELIZA Lab — Train it. Inspect it." />
+    <meta
+      property="og:description"
+      content="Train a small intent model, reproduce its evaluation and inspect every local prediction."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ejupi-djenis30.github.io/PsychologistRustBot/" />
+    <meta property="og:image" content="https://ejupi-djenis30.github.io/PsychologistRustBot/assets/social-preview.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="675" />
+    <meta property="og:image:alt" content="ELIZA Lab showing a local intent prediction and its inspectable feature trace." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ELIZA Lab — Train it. Inspect it." />
+    <meta name="twitter:description" content="Train a small intent model, reproduce its evaluation and inspect every local prediction." />
+    <meta name="twitter:image" content="https://ejupi-djenis30.github.io/PsychologistRustBot/assets/social-preview.png" />
+    <meta name="twitter:image:alt" content="ELIZA Lab showing a local intent prediction and its inspectable feature trace." />
+    <link rel="canonical" href="https://ejupi-djenis30.github.io/PsychologistRustBot/" />
+    <link rel="icon" href="assets/eliza-lab-mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css?v=1.4.0" />
+    <title>ELIZA Lab — Train it. Inspect it.</title>
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="ELIZA Lab home">
+        <img src="assets/eliza-lab-mark.svg" width="42" height="42" alt="" />
+        <span>ELIZA <strong>LAB</strong></span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#experiment">Inference</a>
+        <a href="#method">Pipeline</a>
+        <a href="#open-set-v3">Model report</a>
+        <a href="#safety">Boundaries</a>
+      </nav>
+      <a class="source-link" href="https://github.com/ejupi-djenis30/PsychologistRustBot">
+        Source <span aria-hidden="true">↗</span>
+      </a>
+    </header>
+
+    <main id="main-content" tabindex="-1">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span>01</span> Local ML, fully inspectable</p>
+          <h1 id="hero-title">Train the model.<br /><em>Inspect the decision.</em></h1>
+          <p class="hero-lead">
+            ELIZA Lab is a complete intent-classification pipeline in Rust: validated data,
+            deterministic training, versioned weights, measured uncertainty and a hard abstention path.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#experiment">Inspect a prediction</a>
+            <a class="button button-release" href="https://github.com/ejupi-djenis30/PsychologistRustBot/releases/latest">
+              Get the latest release <span aria-hidden="true">↗</span>
+            </a>
+            <a class="button button-quiet" href="#method">Open the pipeline</a>
+          </div>
+          <ul class="hero-facts" aria-label="Project facts">
+            <li>525 reviewed prompts</li>
+            <li>105 paraphrase families</li>
+            <li>No prompt telemetry</li>
+          </ul>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+          <div class="hero-art__grid"></div>
+          <div class="dialogue-flow model-flow">
+            <div class="dialogue-card dialogue-card-a">
+              <span>FEATURE SPACE</span>
+              <p>TF-IDF word and character n-grams / development-selected feature budget</p>
+            </div>
+            <span class="flow-track"></span>
+            <div class="trace-stamp"><span>OPEN-SET V3</span><strong>7 INTENTS + ABSTAIN</strong></div>
+            <span class="flow-track"></span>
+            <div class="dialogue-card dialogue-card-b">
+              <span>DECISION GATE</span>
+              <p>Accept only when confidence and top-two margin clear their thresholds.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="experiment section" id="experiment" aria-labelledby="experiment-title">
+        <div class="section-heading">
+          <p class="eyebrow"><span>02</span> Local inference</p>
+          <h2 id="experiment-title">Make one prediction.<br />See what moved it.</h2>
+          <p>
+            Use a harmless, fictional prompt. The inspector exposes the predicted class,
+            probability, margin and strongest positive feature contributions. Input stays in this tab.
+          </p>
+        </div>
+
+        <div class="lab-shell" aria-busy="true">
+          <div class="lab-topbar">
+            <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <p role="status" aria-live="polite" data-model-status>MODEL LOADING</p>
+            <button class="reset-button" type="button" data-reset data-model-gated disabled>Clear session</button>
+          </div>
+          <div class="lab-grid">
+            <div class="conversation-panel">
+              <div class="transcript" data-transcript role="log" aria-label="Conversation transcript" aria-live="polite" aria-relevant="additions">
+                <article class="message message-system">
+                  <span>ELIZA / 00</span>
+                  <p>Hello. What would you like to examine today?</p>
+                </article>
+              </div>
+              <form class="composer" data-form>
+                <label for="message">Your fictional prompt</label>
+                <div class="composer-row">
+                  <input
+                    id="message"
+                    name="message"
+                    data-model-gated
+                    disabled
+                    autocomplete="off"
+                    required
+                    aria-describedby="message-boundary"
+                    placeholder="I want to finish the prototype this week…"
+                  />
+                  <button type="submit" aria-label="Send prompt" data-model-gated disabled>Send <span aria-hidden="true">↗</span></button>
+                </div>
+                <p class="composer-boundary" id="message-boundary">Fictional text only · 512-code-point limit · 40 visible turns</p>
+              </form>
+              <div class="samples" aria-label="Example prompts">
+                <button type="button" data-sample="Today I feel calm" data-model-gated disabled>Feeling</button>
+                <button type="button" data-sample="I want to finish the prototype this week" data-model-gated disabled>Goal</button>
+                <button type="button" data-sample="Calculate the orbital period of a satellite" data-model-gated disabled>OOD probe</button>
+              </div>
+            </div>
+
+            <aside class="inspector" aria-labelledby="inspector-title">
+              <div class="inspector-heading">
+                <p id="inspector-title">Prediction trace</p>
+                <span role="status" aria-live="polite" data-trace-status>IDLE</span>
+              </div>
+              <dl>
+                <div><dt>Boundary</dt><dd data-rule>waiting-for-input</dd></div>
+                <div><dt>Decision</dt><dd data-decision>—</dd></div>
+                <div><dt>Confidence</dt><dd data-confidence>—</dd></div>
+                <div><dt>Top-two margin</dt><dd data-margin>—</dd></div>
+                <div class="inspector-wide"><dt>Positive evidence</dt><dd data-evidence>—</dd></div>
+                <div><dt>Prompt network</dt><dd>0 requests</dd></div>
+                <div><dt>Persistence</dt><dd>none</dd></div>
+                <div><dt>Session cap</dt><dd>40 visible turns</dd></div>
+              </dl>
+              <div class="inspector-note">
+                <span aria-hidden="true">✳</span>
+                <p>A score explains this model's decision. It does not make the response intelligent or true.</p>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="method section" id="method" aria-labelledby="method-title">
+        <div class="section-heading compact">
+          <p class="eyebrow"><span>03</span> Reproducible pipeline</p>
+          <h2 id="method-title">Every stage is code.<br />Every artifact can be checked.</h2>
+        </div>
+        <div class="method-grid">
+          <article>
+            <span>01 / VALIDATE</span>
+            <h3>Reject bad rows.</h3>
+            <p>The parser enforces equal family support, unique model features and bounded near-duplicate review.</p>
+          </article>
+          <article>
+            <span>02 / SPLIT</span>
+            <h3>Separate the roles.</h3>
+            <p>Whole groups enter train, development, calibration or ID-test. Every class remains represented.</p>
+          </article>
+          <article>
+            <span>03 / VECTORIZE</span>
+            <h3>Build the feature space.</h3>
+            <p>Word uni- and bigrams combine with character 3–5 grams, TF-IDF weighting and L2 normalization.</p>
+          </article>
+          <article>
+            <span>04 / LEARN</span>
+            <h3>Fit real weights.</h3>
+            <p>Only the 315 training rows fit TF-IDF and multinomial logistic-regression parameters.</p>
+          </article>
+          <article>
+            <span>05 / ABSTAIN</span>
+            <h3>Calibrate, then stop.</h3>
+            <p>Calibration fits temperature. Development plus OOD-development select the abstention policy.</p>
+          </article>
+        </div>
+
+        <div class="pipeline-map" aria-label="Machine-learning pipeline from corpus to decision">
+          <div class="pipeline-node"><span>01</span><strong>Grouped TSV</strong><small>525 prompts / 105 families</small></div>
+          <i aria-hidden="true"></i>
+          <div class="pipeline-node"><span>02</span><strong>SplitPlan</strong><small>315 / 70 / 70 / 70</small></div>
+          <i aria-hidden="true"></i>
+          <div class="pipeline-node"><span>03</span><strong>Fit + scale</strong><small>weights / temperature</small></div>
+          <i aria-hidden="true"></i>
+          <div class="pipeline-node"><span>04</span><strong>Freeze policy</strong><small>development + OOD-dev</small></div>
+          <i aria-hidden="true"></i>
+          <div class="pipeline-node pipeline-node-accent"><span>05</span><strong>Open tests</strong><small>ID + OOD + contrast</small></div>
+        </div>
+      </section>
+
+      <section class="open-set-report section" id="open-set-v3" aria-labelledby="open-set-v3-title">
+        <div class="section-heading compact">
+          <p class="eyebrow"><span>04</span> Verified model report</p>
+          <h2 id="open-set-v3-title">Choose, calibrate and test<br />on different evidence.</h2>
+          <p>
+            The v3 experiment gives training, development, probability calibration and ID-test
+            their own group-disjoint partitions. OOD threshold data, OOD-test and the paired
+            contrast test stay separate too.
+          </p>
+          <p class="report-kicker" role="status" aria-live="polite" data-v3-status>REPORT LOADING</p>
+        </div>
+
+        <div class="v3-protocol" aria-label="Leak-resistant open-set evaluation protocol">
+          <article><span>01</span><strong>Train</strong><small data-v3-count="train">315 grouped rows</small></article>
+          <i aria-hidden="true"></i>
+          <article><span>02</span><strong>Development</strong><small data-v3-count="development">70 rows for model selection and thresholds</small></article>
+          <i aria-hidden="true"></i>
+          <article><span>03</span><strong>Calibration</strong><small data-v3-count="calibration">70 rows for temperature</small></article>
+          <i aria-hidden="true"></i>
+          <article class="v3-protocol-test"><span>04</span><strong>ID-test</strong><small data-v3-count="id-test">70 untouched rows</small></article>
+        </div>
+
+        <div class="report-grid v3-report-grid">
+          <dl class="metric-panel">
+            <div><dt>ID-test accuracy</dt><dd data-v3-metric="accuracy">—</dd><small data-v3-interval="accuracy">available after bundle verification</small></div>
+            <div><dt>ID-test macro F1</dt><dd data-v3-metric="macro-f1">—</dd><small data-v3-interval="macro-f1">available after bundle verification</small></div>
+            <div><dt>Learned vs unigram</dt><dd data-v3-metric="baseline-delta">—</dd><small>macro-F1 difference on the same ID-test</small></div>
+            <div><dt>Decision coverage</dt><dd data-v3-metric="coverage">—</dd><small>accepted rows after the frozen gate</small></div>
+            <div><dt>ID-test NLL</dt><dd data-v3-metric="nll">—</dd><small>measured only after the policy was frozen</small></div>
+            <div><dt>OOD-test AUROC</dt><dd data-v3-metric="ood-auroc">—</dd><small data-v3-interval="ood-auroc">domain-cluster interval after verification</small></div>
+            <div><dt>OOD-test FPR @ 95 TPR</dt><dd data-v3-metric="ood-fpr95">—</dd><small>lower is better</small></div>
+            <div><dt>OOD-test coverage</dt><dd data-v3-metric="ood-coverage">—</dd><small>reported across 36 untouched prompts</small></div>
+            <div><dt>Contrast pair accuracy</dt><dd data-v3-metric="contrast-pair-accuracy">—</dd><small>both meaning-changing variants correct</small></div>
+          </dl>
+          <div class="report-limitations v3-limitations">
+            <p class="report-kicker">WHAT THE CONTRACT PROVES — AND WHAT IT DOES NOT</p>
+            <h3>No test row chooses a weight, temperature or threshold.</h3>
+            <p>
+              Temperature scaling sees only calibration rows. Confidence and probability-margin
+              thresholds see only development plus OOD-development. The ID, OOD and paired
+              contrast tests are opened afterward. Family and domain-cluster intervals preserve
+              dependence instead of pretending every sentence is an independent experiment.
+            </p>
+            <p>
+              The report also reconstructs majority and unigram baselines and separates semantic,
+              capability and noise OOD behaviour. Fourteen paired contrasts probe lexical
+              shortcuts without entering any tuning API. All prompts remain synthetic and
+              English-only. This is an auditable experiment, not a production-language claim.
+            </p>
+            <a href="data/open-set-v3/metrics.json">Inspect the complete v3 metrics <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+      </section>
+
+      <section class="robustness section" id="robustness" aria-labelledby="robustness-title">
+        <div class="section-heading compact">
+          <p class="eyebrow"><span>05</span> Post-training robustness</p>
+          <h2 id="robustness-title">Stable under format.<br />Measured under noise.</h2>
+          <p>
+            A fixed metamorphic suite now probes the verified model after every training and
+            policy choice is frozen. It checks exact preprocessing invariants separately from
+            controlled typo stress, then reports only aggregate drift.
+          </p>
+        </div>
+
+        <div class="robustness-dashboard">
+          <div class="robustness-metrics" aria-label="Frozen ID-test robustness results">
+            <article>
+              <span>Formatting decision agreement</span>
+              <strong data-robustness-metric="formatting-decision-agreement">100%</strong>
+              <small data-robustness-metric="formatting-variant-count">280 variants across four invariants</small>
+              <i class="robustness-bar robustness-bar--format" aria-hidden="true"></i>
+            </article>
+            <article>
+              <span>Typographic label agreement</span>
+              <strong data-robustness-metric="typographic-label-agreement">97.619%</strong>
+              <small data-robustness-metric="typographic-variant-count">210 single-edit typo variants</small>
+              <i class="robustness-bar robustness-bar--typo-label" aria-hidden="true"></i>
+            </article>
+            <article>
+              <span>Typographic decision agreement</span>
+              <strong data-robustness-metric="typographic-decision-agreement">95.714%</strong>
+              <small>accepted label or stable abstention</small>
+              <i class="robustness-bar robustness-bar--typo-decision" aria-hidden="true"></i>
+            </article>
+            <article>
+              <span>Maximum normalized JS drift</span>
+              <strong data-robustness-metric="maximum-js-divergence">0.073315</strong>
+              <small>bounded probability-distribution change</small>
+              <i class="robustness-bar robustness-bar--drift" aria-hidden="true"></i>
+            </article>
+          </div>
+          <aside class="robustness-boundary">
+            <p class="report-kicker" data-robustness-metric="audit-population-summary">70 FROZEN INPUTS / 490 DETERMINISTIC VARIANTS</p>
+            <h3>Consistency is not correctness.</h3>
+            <p>
+              Formatting changes must preserve the exact routed decision. Typographic edits are
+              diagnostic only: they receive no universal pass threshold and never feed back into
+              fitting, calibration or selection.
+            </p>
+            <p>
+              The audit runs locally over bounded JSONL or the verified bundle’s frozen ID-test.
+              Reports omit IDs, prompts, transformed text and row-level predictions.
+            </p>
+            <a href="https://github.com/ejupi-djenis30/PsychologistRustBot/blob/master/docs/ROBUSTNESS.md">
+              Read the robustness contract <span aria-hidden="true">↗</span>
+            </a>
+          </aside>
+        </div>
+      </section>
+
+      <section class="safety section" id="safety" aria-labelledby="safety-title">
+        <div>
+          <p class="eyebrow"><span>06</span> A hard boundary</p>
+          <h2 id="safety-title">A classifier is not a clinician.</h2>
+        </div>
+        <div class="safety-copy">
+          <p>
+            ELIZA Lab is educational software. It does not understand a person, assess risk,
+            provide treatment or replace qualified care.
+          </p>
+          <p>
+            A small list of explicit safety phrases runs before learned inference, stops the
+            simulation and points toward immediate human help. It is a boundary, not crisis detection.
+          </p>
+          <a href="https://github.com/ejupi-djenis30/PsychologistRustBot/blob/master/SECURITY.md">
+            Read the safety and privacy model <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="provenance section" aria-labelledby="provenance-title">
+        <p class="eyebrow"><span>07</span> Refactored with intent</p>
+        <h2 id="provenance-title">The useful question survived.<br />The unsafe product did not.</h2>
+        <p>
+          The original 2023 Telegram prototype stored conversations and implied therapeutic use.
+          This edition removes Telegram, MySQL, OpenAI and the PHP admin panel. What remains is a
+          reproducible Rust ML pipeline, verified open-set inference, visible abstention and a
+          transparent browser lab.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <div class="brand footer-brand">
+        <img src="assets/eliza-lab-mark.svg" width="36" height="36" alt="" />
+        <span>ELIZA <strong>LAB</strong></span>
+      </div>
+      <p>Train locally. Measure honestly. Abstain visibly.</p>
+      <a href="https://github.com/ejupi-djenis30/PsychologistRustBot">ELIZA Lab contributors ↗</a>
+    </footer>
+
+    <script type="module" src="app.js?v=3.0.0-1"></script>
+  </body>
+</html>

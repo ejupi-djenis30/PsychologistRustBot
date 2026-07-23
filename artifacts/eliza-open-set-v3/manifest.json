@@ -1,0 +1,14 @@
+{
+  "schema_version": 3,
+  "bundle_kind": "eliza-open-set-bundle",
+  "bundle_version": "3.0.0",
+  "model_version": "3.0.0",
+  "dataset_sha256": "efc3d4a3f38d8bf3f81026b72bbd5394de779e654d793bae638fed48485f269c",
+  "split_plan_sha256": "94b02ab4dcc7b8ec34ed7e1c6b9c2aef4b67801d5b2389d7ba54551d5362c333",
+  "files": {
+    "metrics.json": "35e5b12796ba9c015505f053628662ad63ea03f4c5739c53aae0eaa2dddc0399",
+    "model.json": "b907a3d3485a8c822b54bc35d1db4c614d275c068cc33cd6031d2ad30717b12e",
+    "policy.json": "93f9e1c535617574dc296e3f29c435afd011c39f85d32bf284ded5992fa67d96",
+    "split-plan.json": "94b02ab4dcc7b8ec34ed7e1c6b9c2aef4b67801d5b2389d7ba54551d5362c333"
+  }
+}

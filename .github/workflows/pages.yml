@@ -1,0 +1,106 @@
+name: Pages
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - "site/**"
+      - "models/**"
+      - "reports/**"
+      - "artifacts/**"
+      - "fixtures/**"
+      - "src/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "package.json"
+      - "package-lock.json"
+      - "scripts/verify-robustness-report.mjs"
+      - ".github/workflows/pages.yml"
+  push:
+    branches: [master]
+    paths:
+      - "site/**"
+      - "models/**"
+      - "reports/**"
+      - "artifacts/**"
+      - "fixtures/**"
+      - "src/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "package.json"
+      - "package-lock.json"
+      - "scripts/verify-robustness-report.mjs"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.ref) || 'pages-production' }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    timeout-minutes: 10
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.23.1
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: ./node_modules/.bin/playwright install --with-deps chromium
+      - run: npm run test:responsive
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
+        with:
+          toolchain: 1.81.0
+      - run: node --test site/tests/*.test.mjs
+      - name: Reproduce the model and report before deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo run --locked -- train \
+            --output target/pages-model.json \
+            --report target/pages-report.json
+          cmp models/eliza-intent-v1.json target/pages-model.json
+          cmp reports/eliza-intent-v1.json target/pages-report.json
+          cargo run --locked -- train-v3 --output target/pages-open-set-v3
+          diff --recursive --brief artifacts/eliza-open-set-v3 target/pages-open-set-v3
+          cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v3
+          cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v3
+          cargo run --locked -- robustness audit --bundle-id-test \
+            > target/pages-robustness-id-test-report.json
+          node scripts/verify-robustness-report.mjs \
+            target/pages-robustness-id-test-report.json
+      - name: Stage the site with the verified v3 bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p pages-dist/data
+          cp -R site/. pages-dist/
+          cp -R artifacts/eliza-open-set-v3 pages-dist/data/open-set-v3
+      - run: node site/scripts/validate-site.mjs --stage pages-dist
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: pages-dist
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

@@ -1,0 +1,417 @@
+name: Release
+
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Optional tag to validate against Cargo.toml (for example v1.4.0)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ startsWith(github.ref, 'refs/tags/') && 'eliza-release-publication' || format('release-{0}-{1}', github.workflow, github.ref) }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  quality:
+    name: Quality and supply-chain gates
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install Rust 1.81.0
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
+        with:
+          toolchain: 1.81.0
+          components: clippy, rustfmt
+
+      - name: Install Node.js 22.23.1
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.23.1
+
+      - name: Verify release contract
+        id: contract
+        env:
+          EXPECTED_COMMIT: ${{ github.sha }}
+          IS_TAG_EVENT: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+          VALIDATION_TAG: ${{ github.event_name == 'push' && github.ref_type == 'tag' && github.ref_name || inputs.release_tag }}
+        run: |
+          actual_commit="$(git rev-parse 'HEAD^{commit}')"
+          if [[ "$IS_TAG_EVENT" == "true" ]]; then
+            actual_commit="$(git rev-list -n 1 "$VALIDATION_TAG")"
+          fi
+          node scripts/release-contract.mjs verify \
+            --tag "$VALIDATION_TAG" \
+            --expected-commit "$EXPECTED_COMMIT" \
+            --actual-commit "$actual_commit" \
+            --output release-evidence/release-contract.json
+
+      - name: Enforce explicit license approval before a tag can publish
+        if: github.event_name == 'push' && github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+        run: node scripts/release-policy.mjs verify
+
+      - name: Test release tooling
+        run: node --test scripts/tests/*.test.mjs
+
+      - name: Verify Rust source
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets --locked -- -D warnings
+          cargo test --all --locked
+
+      - name: Reproduce every embedded ML artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo run --locked -- train \
+            --output target/release-model-v1.json \
+            --report target/release-report-v1.json
+          cmp models/eliza-intent-v1.json target/release-model-v1.json
+          cmp reports/eliza-intent-v1.json target/release-report-v1.json
+          cargo run --locked -- train-v3 --output target/release-open-set-v3
+          diff --recursive --brief artifacts/eliza-open-set-v3 target/release-open-set-v3
+          cargo run --locked -- bundle verify --bundle artifacts/eliza-open-set-v3
+          cargo run --locked -- bundle reproduce --bundle artifacts/eliza-open-set-v3
+          cargo run --locked -- robustness audit --bundle-id-test \
+            > target/release-robustness-id-test-report.json
+          node scripts/verify-robustness-report.mjs \
+            target/release-robustness-id-test-report.json
+
+      - name: Audit locked Rust dependencies against pinned RustSec data
+        shell: bash
+        run: |
+          set -euo pipefail
+          audit_version="$(node -p "require('./.github/rustsec-audit-policy.json').tool.version")"
+          audit_rust_version="$(node -p "require('./.github/rustsec-audit-policy.json').tool.rustVersion")"
+          audit_database_url="$(node -p "require('./.github/rustsec-audit-policy.json').database.url")"
+          audit_database_commit="$(node -p "require('./.github/rustsec-audit-policy.json').database.commit")"
+          rustup toolchain install "$audit_rust_version" --profile minimal
+          cargo "+$audit_rust_version" install cargo-audit --version "$audit_version" --locked
+          installed_version="$(cargo "+$audit_rust_version" audit --version | awk '{print $NF}')"
+          test "$installed_version" = "$audit_version"
+
+          audit_database="$RUNNER_TEMP/rustsec-advisory-db"
+          mkdir "$audit_database"
+          git -C "$audit_database" init --quiet
+          git -C "$audit_database" remote add origin "$audit_database_url"
+          git -C "$audit_database" fetch --depth=1 origin "$audit_database_commit"
+          git -C "$audit_database" checkout --detach FETCH_HEAD --quiet
+          test "$(git -C "$audit_database" rev-parse HEAD)" = "$audit_database_commit"
+          actual_database_epoch="$(git -C "$audit_database" show -s --format=%ct HEAD)"
+          node scripts/release-contract.mjs audit-policy \
+            --database-commit "$audit_database_commit" \
+            --database-epoch "$actual_database_epoch"
+
+          cargo "+$audit_rust_version" audit \
+            --db "$audit_database" \
+            --no-fetch \
+            --deny warnings \
+            --file Cargo.lock \
+            --json > "$RUNNER_TEMP/rustsec-audit-report.json"
+          node scripts/release-contract.mjs audit-evidence \
+            --report "$RUNNER_TEMP/rustsec-audit-report.json" \
+            --output release-evidence/rustsec-audit.json \
+            --tool-version "$installed_version" \
+            --database-commit "$audit_database_commit" \
+            --database-epoch "$actual_database_epoch" \
+            --policy .github/rustsec-audit-policy.json \
+            --lock Cargo.lock
+          cp .github/rustsec-audit-policy.json release-evidence/rustsec-audit-policy.json
+
+      - name: Verify static site
+        run: |
+          node --test site/tests/*.test.mjs
+          node site/scripts/validate-site.mjs
+
+      - name: Generate dependency evidence and SPDX SBOM
+        env:
+          SBOM_PATH: release-evidence/eliza-lab-v${{ steps.contract.outputs.version }}.spdx.json
+        run: |
+          cargo metadata --locked --format-version 1 > release-evidence/cargo-metadata.json
+          cargo tree --locked --all-features > release-evidence/cargo-tree.txt
+          cp Cargo.lock release-evidence/Cargo.lock
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+          node scripts/release-contract.mjs sbom \
+            --metadata release-evidence/cargo-metadata.json \
+            --output "$SBOM_PATH"
+
+      - name: Upload verified supply-chain evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-evidence
+          path: release-evidence
+          if-no-files-found: error
+          retention-days: 14
+
+  build:
+    name: Build ${{ matrix.label }}
+    needs: quality
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Linux x64
+            runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            binary: target/x86_64-unknown-linux-gnu/release/eliza-lab
+            macos_deployment_target: ""
+          - label: Windows x64
+            runner: windows-2022
+            target: x86_64-pc-windows-msvc
+            binary: target/x86_64-pc-windows-msvc/release/eliza-lab.exe
+            macos_deployment_target: ""
+          - label: macOS Intel
+            runner: macos-15-intel
+            target: x86_64-apple-darwin
+            binary: target/x86_64-apple-darwin/release/eliza-lab
+            macos_deployment_target: "12.0"
+          - label: macOS Apple Silicon
+            runner: macos-15
+            target: aarch64-apple-darwin
+            binary: target/aarch64-apple-darwin/release/eliza-lab
+            macos_deployment_target: "12.0"
+    env:
+      CARGO_TERM_COLOR: always
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macos_deployment_target }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Node.js 22.23.1
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.23.1
+
+      - name: Install Rust 1.81.0 target
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
+        with:
+          toolchain: 1.81.0
+          targets: ${{ matrix.target }}
+
+      - name: Build locked release binary
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Smoke-test built CLI
+        env:
+          BINARY_PATH: ${{ matrix.binary }}
+        shell: pwsh
+        run: >-
+          node scripts/release-contract.mjs smoke
+          --binary "$env:BINARY_PATH"
+          --bundle artifacts/eliza-open-set-v3
+          --legacy-model models/eliza-intent-v1.json
+
+      - name: Package binary with checksum and provenance metadata
+        id: package
+        env:
+          BINARY_PATH: ${{ matrix.binary }}
+          RELEASE_TARGET: ${{ matrix.target }}
+          SOURCE_COMMIT: ${{ github.sha }}
+        shell: pwsh
+        run: >-
+          node scripts/release-contract.mjs package
+          --target "$env:RELEASE_TARGET"
+          --source "$env:BINARY_PATH"
+          --output release-assets
+          --commit "$env:SOURCE_COMMIT"
+
+      - name: Extract and smoke-test packaged archive
+        env:
+          ARCHIVE_PATH: release-assets/${{ steps.package.outputs.artifact }}
+          RELEASE_TARGET: ${{ matrix.target }}
+        shell: pwsh
+        run: >-
+          node scripts/release-contract.mjs smoke-archive
+          --archive "$env:ARCHIVE_PATH"
+          --target "$env:RELEASE_TARGET"
+          --bundle artifacts/eliza-open-set-v3
+          --legacy-model models/eliza-intent-v1.json
+
+      - name: Upload packaged binary
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: binary-${{ matrix.target }}
+          path: release-assets
+          if-no-files-found: error
+          retention-days: 14
+
+  assemble:
+    name: Verify and assemble release inventory
+    needs: [quality, build]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Node.js 22.23.1
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.23.1
+
+      - name: Download platform binaries
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: binary-*
+          path: release-staging/binaries
+          merge-multiple: true
+
+      - name: Download supply-chain evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: release-evidence
+          path: release-staging/evidence
+
+      - name: Reject incomplete or modified release assets
+        env:
+          EXPECTED_COMMIT: ${{ github.sha }}
+          VALIDATION_TAG: ${{ github.event_name == 'push' && github.ref_type == 'tag' && github.ref_name || inputs.release_tag }}
+        run: >-
+          node scripts/release-contract.mjs verify-assets
+          --input release-staging/binaries
+          --evidence release-staging/evidence
+          --output release-assets
+          --expected-commit "$EXPECTED_COMMIT"
+          --tag "$VALIDATION_TAG"
+
+      - name: Upload verified release inventory
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: verified-release-assets
+          path: release-assets
+          if-no-files-found: error
+          retention-days: 14
+
+  release_candidate_gate:
+    name: Release candidate gate
+    if: always()
+    needs: [quality, build, assemble]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 2
+    steps:
+      - name: Require every release candidate stage to pass
+        env:
+          ASSEMBLE_RESULT: ${{ needs.assemble.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          QUALITY_RESULT: ${{ needs.quality.result }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$QUALITY_RESULT" == "success" ]]
+          [[ "$BUILD_RESULT" == "success" ]]
+          [[ "$ASSEMBLE_RESULT" == "success" ]]
+
+  attest:
+    name: Attest verified release inventory
+    if: github.event_name == 'push' && github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+    needs: release_candidate_gate
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+    steps:
+      - name: Download verified release inventory
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: verified-release-assets
+          path: release-assets
+
+      - name: Attest release assets
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4
+        with:
+          subject-path: release-assets/*
+
+  publish:
+    name: Publish GitHub Release
+    if: github.event_name == 'push' && github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+    needs: [release_candidate_gate, attest]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    permissions:
+      attestations: read
+      contents: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Node.js 22.23.1
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.23.1
+
+      - name: Install verified GitHub CLI
+        shell: bash
+        env:
+          GH_CLI_VERSION: "2.94.0"
+          GH_CLI_SHA256: "a757f1ba6db18f4de8cbadb244843a5f89bc75b5e7c6fc127d2bd77fbd12ed62"
+        run: |
+          set -euo pipefail
+          archive="${RUNNER_TEMP}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz"
+          curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
+            "https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz" \
+            --output "${archive}"
+          printf '%s  %s\n' "${GH_CLI_SHA256}" "${archive}" | sha256sum --check --strict
+          tar --extract --gzip --file "${archive}" --directory "${RUNNER_TEMP}"
+          gh_directory="${RUNNER_TEMP}/gh_${GH_CLI_VERSION}_linux_amd64/bin"
+          [[ "$("${gh_directory}/gh" --version | head -n 1)" == "gh version ${GH_CLI_VERSION} (2026-06-10)" ]]
+          printf '%s\n' "${gh_directory}" >> "${GITHUB_PATH}"
+
+      - name: Download verified release inventory
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: verified-release-assets
+          path: release-assets
+
+      - name: Verify release attestations before publication
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mapfile -d '' assets < <(find release-assets -maxdepth 1 -type f -print0 | sort -z)
+          (( ${#assets[@]} > 0 ))
+          for asset in "${assets[@]}"; do
+            gh attestation verify "${asset}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --signer-workflow "${GITHUB_REPOSITORY}/.github/workflows/release.yml" \
+              --source-digest "${GITHUB_SHA}" \
+              --source-ref "${GITHUB_REF}" \
+              --predicate-type "https://slsa.dev/provenance/v1" \
+              --cert-oidc-issuer "https://token.actions.githubusercontent.com" \
+              --deny-self-hosted-runners
+          done
+
+      - name: Publish only an exact verified remote inventory
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          node scripts/release-publish.mjs publish
+          --repo "$GITHUB_REPOSITORY"
+          --tag "$GITHUB_REF_NAME"
+          --commit "$GITHUB_SHA"
+          --assets release-assets
